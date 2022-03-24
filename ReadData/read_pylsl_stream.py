@@ -11,61 +11,79 @@ filter_title = 'EEG'            # Title of the stream
 data = []
 
 
-def read():
+def read_stream():
     print("looking for an EEG stream...")
-    streams = []
-    bool_stream = True
+    data = []
+    bool_stream, inlet = init(stream())
+    read(data, bool_stream, inlet)
 
-    # Search for Stream
-    try:
-        streams = resolve_byprop(filter_type, filter_title, timeout=max_time_search_stream)
-    except:
-        print("Exception by searching for streams")
-        bool_stream = False
+def init(streams):
 
     # create a new inlet to read from the stream
     if len(streams) > 0:
         try:
             inlet = StreamInlet(streams[0], recover=bool_recover)
             print("EEG stream started")
+            return True, inlet
         except:
             print("Exception by StreamInlet")
-            bool_stream = False
+            return False, None
     else:
-        bool_stream = False
         print('Stream not found')
+        return False, None
+
+
+def stream():
+    streams = []
+    try:
+        streams = resolve_byprop(filter_type, filter_title, timeout=max_time_search_stream)
+    except:
+        print("Exception by searching for streams")
+        return None
+
+    return streams
+
+
+def read_first(inlet, data, offset_data, bool_start):
+    while bool_start:
+        try:
+            chunk, timestamp = inlet.pull_chunk()
+        except:
+            print('lost stream')
+            bool_start = False
+            return False
+        if chunk:
+            pushed_elements_count = 0
+            # print(chunk)
+            for sample in chunk:
+                # print(sample)
+                data.append(sample)
+                pushed_elements_count += 1
+                if window_size == len(data):
+                    bool_start = False
+                break
+    print('first window ready  window size = ', len(data))
+    # ToDo call Algorithm with data and offset
+
+    # handle rest of samples in  the chunk
+    for i in range(len(chunk)):
+        if i >= pushed_elements_count:
+            offset_data.append(chunk[i])
+
+    return True
+
+
+
+def read(data, bool_stream, inlet):
+
 
     if bool_stream:
-        bool_read = True
+
         bool_start = True
         offset_data = []
-        pushed_elements_count = 0  # counts the samples which are pushed into data from one chunk
 
         # fill the first window
-        while bool_start:
-            try:
-                chunk, timestamp = inlet.pull_chunk()
-            except:
-                print('lost stream')
-                bool_start = False
-                bool_read = False
-            if chunk:
-                pushed_elements_count = 0
-                # print(chunk)
-                for sample in chunk:
-                    # print(sample)
-                    data.append(sample)
-                    pushed_elements_count += 1
-                    if window_size == len(data):
-                        bool_start = False
-                    break
-        print('first window ready  window size = ', len(data))
-        # ToDo call Algorithm with data and offset
-
-        # handle rest of samples in  the chunk
-        for i in range(len(chunk)):
-            if i >= pushed_elements_count:
-                offset_data.append(chunk[i])
+        bool_read = read_first(inlet, data, offset_data, bool_start)
 
         # gather data for the offset
         while bool_read:
@@ -75,22 +93,24 @@ def read():
             except:
                 bool_read = False
                 print('lost stream')
+                return False
             if chunk:
                 # print(chunk);
                 for sample in chunk:
                     # print(sample)
                     offset_data.append(sample)
                     if len(offset_data) == offset:
-                        create_sliding_window(offset_data)
+                        create_sliding_window(offset_data, data)
                         # print(offset_data)
                         offset_data.clear()
 
         inlet.close_stream()
 
 
+
 # fill new offset in the sliding window and shift the oldest offset out
 # offset_data array with the eeg data;
-def create_sliding_window(offset_data):
+def create_sliding_window(offset_data, data):
     for i in range(offset):
         data.append(offset_data[i])
 
@@ -105,4 +125,4 @@ def create_sliding_window(offset_data):
     # print(data[offset])
 
 
-read()
+read_stream()
