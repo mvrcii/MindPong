@@ -1,8 +1,6 @@
 import mne
-import numpy
 import numpy as np
 from config import CONFIG
-from data.datasets.datasets import DATASETS
 from scipy import integrate
 from numpy_ringbuffer import RingBuffer
 
@@ -34,6 +32,7 @@ the motor area (small laplacian)
 '''
 
 # Global variables
+r = None
 
 
 def calculate_small_laplacian(signal1, signal2, signal3, signal4):
@@ -124,60 +123,69 @@ def integrate_psd_values(signal, frequencyList):
     return area
 
 
-def get_dataset_and_perform_algorithm():
-    # TODO: initialize ringbuffer 1x
-    r = RingBuffer(capacity=144, dtype=np.float)
-    # Load BCIC dataset
-    dataset = DATASETS['BCIC']
-    used_subjects = [5]
-    validation_subjects = []
-    n_class = 2
-    ch_names = ['C3', 'C4', 'FC1', 'FC2', 'CP1', 'CP2']
-    # ch_names = dataset.CONSTANTS.CHANNELS
-    ds_tmin = 0
-    ds_tmax = 4
+def manage_ringbuffer():
+    # Das ist ein Singleton :)
+    global r
+    if not r:
+        # TODO: define adjustable capacity of the ringbuffer
+        r = RingBuffer(capacity=144, dtype=np.float)
 
-    CONFIG.set_eeg_config(dataset.CONSTANTS.CONFIG)  # Data set specific default initialization
-    CONFIG.EEG.set_times(ds_tmin, ds_tmax, dataset.CONSTANTS.CONFIG.CUE_OFFSET)
+    return r
 
-    print("  - ds_tmin, ds_tmax =", ds_tmin, ds_tmax)
-    preloaded_data, preloaded_labels = dataset.load_subjects_data(used_subjects + validation_subjects, n_class,
-                                                                  ch_names)
 
-    for i in range(144):
-        # 1. Spatial Filtering
-        signal_c3a, signal_c4a = calculate_spatial_filtering(preloaded_data[0][i][:][:])
+def perform_algorithm(sliding_window):
+    # 1. Spatial Filtering
+    signal_c3a, signal_c4a = calculate_spatial_filtering(sliding_window)
 
-        # 2. PSD calculation via FFT
-        psds_c3a_f, freq_c3a_f = perform_rfft(signal_c3a)
-        psds_c4a_f, freq_c4a_f = perform_rfft(signal_c4a)
+    # 2. PSD calculation via FFT
+    psds_c3a_f, freq_c3a_f = perform_rfft(signal_c3a)
+    psds_c4a_f, freq_c4a_f = perform_rfft(signal_c4a)
 
-        # 3. Alpha Band Power calculation
-        area_c3 = integrate_psd_values(psds_c3a_f, freq_c3a_f)
-        area_c4 = integrate_psd_values(psds_c4a_f, freq_c4a_f)
-        # print(f'C3pow = {area_c3}, C4pow = {area_c4}')
-        # print(f'Hcon: {area_c4-area_c3}')
+    # 3. Alpha Band Power calculation
+    area_c3 = integrate_psd_values(psds_c3a_f, freq_c3a_f)
+    area_c4 = integrate_psd_values(psds_c4a_f, freq_c4a_f)
 
-        # Derive cursor control signals
-        hcon = area_c4 - area_c3
-        r.append(hcon)
-        values = np.array(r)
+    # Derive cursor control signals
+    hcon = area_c4 - area_c3
+
+    ringbuffer = manage_ringbuffer()
+    ringbuffer.append(hcon)
+    values = np.array(ringbuffer)
+    mean = np.mean(values)
+    standard_deviation = np.std(values)
+    normalized_hcon = (hcon - mean) / standard_deviation if standard_deviation else hcon
+
+    return normalized_hcon
+
+
+def load_values_in_ringbuffer(sliding_window):
+    # 1. Spatial Filtering
+    signal_c3a, signal_c4a = calculate_spatial_filtering(sliding_window)
+
+    # 2. PSD calculation via FFT
+    psds_c3a_f, freq_c3a_f = perform_rfft(signal_c3a)
+    psds_c4a_f, freq_c4a_f = perform_rfft(signal_c4a)
+
+    # 3. Alpha Band Power calculation
+    area_c3 = integrate_psd_values(psds_c3a_f, freq_c3a_f)
+    area_c4 = integrate_psd_values(psds_c4a_f, freq_c4a_f)
+
+    # Derive cursor control signals
+    hcon = area_c4 - area_c3
+
+    ringbuffer = manage_ringbuffer()
+    ringbuffer.append(hcon)
+
+
+def print_normalized_vconses(labels):
+    ringbuffer = manage_ringbuffer()
+    values = np.array(ringbuffer)
+    counter = 0
+    for hcon in values:
         mean = np.mean(values)
         standard_deviation = np.std(values)
         normalized_hcon = (hcon - mean) / standard_deviation if standard_deviation else hcon
 
-        # label stuff
-        label = preloaded_labels[0][i]
-        if label == 0:
-            side = 'Left'
-        elif label == 1:
-            side = 'Right'
-        else:
-            side = 'Nicht definiert'
-
-        print(f'Hcon: {normalized_hcon}')
-        print(f'Label: {label} ({side})\n')
-
-
-if __name__ == '__main__':
-    get_dataset_and_perform_algorithm()
+        print(normalized_hcon)
+        print(f'LabeL: {labels[counter]}')
+        counter += 1
