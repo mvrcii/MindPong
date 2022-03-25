@@ -49,8 +49,8 @@ class MindPong(Tk):
         self.clear()
 
         # Update
-        self.paddle.update(delta_time=delta / 4)
-        self.ball.update(delta_time=delta / 4)
+        self.paddle.update(delta_time=delta/4)
+        self.ball.update(delta_time=delta/4)
 
         # Draw
         self.paddle.draw()

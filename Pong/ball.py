@@ -31,7 +31,7 @@ class Ball:
         self.id = None
         self.hit_bottom = False
 
-        self.init_ball()
+        self.init()
 
     def update(self, delta_time):
         # Update velocity according to the time
@@ -39,11 +39,11 @@ class Ball:
         self.v_y = self.speed_factor * math.sin(math.radians(self.angle)) * delta_time
 
         # Check if ball will collide in next tick
-        collision_type = self.check_collision(pos=self.pos)
+        collision_type = self.check_collision()
 
         if collision_type == CollisionType.BOTTOM:
             self.canvas.delete(self.id)
-            self.init_ball()
+            self.init()
 
         self.update_angle(collision_type)
 
@@ -51,7 +51,7 @@ class Ball:
         self.canvas.move(self.id, self.v_x, self.v_y)
         self.pos = self.canvas.coords(self.id)
 
-    def init_ball(self):
+    def init(self):
         """Initializes the ball object and its position."""
         self.id = self.canvas.create_oval(10, 10, self.size, self.size, fill=self.color)
         # Move to initial position
@@ -66,12 +66,13 @@ class Ball:
         self.vec_y = -1
         self.angle = get_angle_for_vector(vec_x=self.vec_x, vec_y=self.vec_y)
 
-    def check_collision(self, pos) -> CollisionType:
+    def check_collision(self) -> CollisionType:
         """Checks if the ball will collide with any CollisionType in the next tick."""
         # TODO: Task MIN-32: Verbesserte Lösung für das Border Problem.
         #                    Derzeit Collision Check im nächsten Tick mit verdoppelter Geschwindigkeit.
         v_x = self.v_x * 2
         v_y = self.v_y * 2
+        pos = self.pos
         if (pos[0] + v_x) <= 0:
             return CollisionType.LEFT
         elif (pos[1] + v_y) <= 0:
