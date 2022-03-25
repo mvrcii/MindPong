@@ -2,6 +2,7 @@ from pylsl import StreamInlet, resolve_byprop
 
 window_size = 125  # size of sliding window in amount of samples, *8ms for time
 offset = 12  # size of offset in amount of samples, *8ms for time
+time_for_one_sample = 0.008 #time which is needed for one sample in s
 
 max_time_search_stream = 10  # in s
 bool_recover = True  # Setting if the script should terminate or try to recover if  it lost the stream
@@ -10,6 +11,16 @@ filter_title = 'EEG'  # Title of the stream
 
 data = []
 offset_data = []
+
+""""
+converts given parameters in s into amounts of samples, declare the parameters with this function
+window_size_sec: sliding window size in s
+offset_sec: offset size in s
+"""
+def set_parameters(window_size_sec, offset_sec):
+    window_size = int(window_size_sec/time_for_one_sample)
+    offset = int(offset_sec/time_for_one_sample)
+    return window_size, offset
 
 
 # start reading stream
