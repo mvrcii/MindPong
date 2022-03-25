@@ -60,6 +60,11 @@ class Paddle:
         self.canvas.move(self.id, self.v_x, 0)
         self.pos = self.canvas.coords(self.id)
 
+    def reset(self):
+        self.canvas.delete(self.id)
+        self.start_pos = True
+        self.init()
+
     def init(self):
         """Initializes the paddle object and its position."""
         self.id = self.canvas.create_rectangle(0, 0, self.width, self.height, fill=self.color)

@@ -1,9 +1,7 @@
 from tkinter import *
-from Pong.ball import *
-from Pong.paddle import *
+from scripts.pong.ball import *
+from scripts.pong.paddle import *
 import time
-
-fps = 60
 
 
 class MindPong(Tk):
@@ -47,11 +45,9 @@ class MindPong(Tk):
 
         # Clear
         self.clear()
-
         # Update
-        self.paddle.update(delta_time=delta/4)
-        self.ball.update(delta_time=delta/4)
-
+        self.paddle.update(delta_time=delta / 4)
+        self.ball.update(delta_time=delta / 4)
         # Draw
         self.paddle.draw()
         self.ball.draw()

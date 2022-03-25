@@ -1,6 +1,6 @@
 import random
 import math
-from Pong.paddle import Paddle
+from scripts.pong.paddle import Paddle
 from enum import *
 
 
@@ -42,14 +42,19 @@ class Ball:
         collision_type = self.check_collision()
 
         if collision_type == CollisionType.BOTTOM:
-            self.canvas.delete(self.id)
-            self.init()
+            self.hit_bottom = True
+            self.reset()
+            self.paddle.reset()
 
         self.update_angle(collision_type)
 
     def draw(self):
         self.canvas.move(self.id, self.v_x, self.v_y)
         self.pos = self.canvas.coords(self.id)
+
+    def reset(self):
+        self.canvas.delete(self.id)
+        self.init()
 
     def init(self):
         """Initializes the ball object and its position."""
