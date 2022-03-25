@@ -160,6 +160,7 @@ def perform_algorithm(sliding_window):
 
 def load_values_in_ringbuffer(sliding_window):
     # 1. Spatial Filtering
+
     signal_c3a, signal_c4a = calculate_spatial_filtering(sliding_window)
 
     # 2. PSD calculation via FFT
@@ -181,11 +182,25 @@ def print_normalized_vconses(labels):
     ringbuffer = manage_ringbuffer()
     values = np.array(ringbuffer)
     counter = 0
+    accuracy = 0
+    undefined = 0.3
     for hcon in values:
         mean = np.mean(values)
         standard_deviation = np.std(values)
         normalized_hcon = (hcon - mean) / standard_deviation if standard_deviation else hcon
+        if normalized_hcon > undefined:
+            calculated_label = 0
+        elif normalized_hcon < -undefined:
+            calculated_label = 1
+        else:
+            calculated_label = -1
 
-        print(normalized_hcon)
+        if calculated_label == labels[counter]:
+            accuracy += 1
+
+        print(f'Clabel = {calculated_label} ({normalized_hcon})')
         print(f'LabeL: {labels[counter]}')
         counter += 1
+    accuracy /= len(labels)
+    print(f'Accuracy: {accuracy}')
+    
