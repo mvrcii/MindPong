@@ -1,6 +1,6 @@
 import random
 import math
-from scripts.pong.paddle import Paddle
+
 from enum import *
 
 
@@ -16,7 +16,10 @@ class CollisionType(Enum):
 
 
 class Ball:
-    def __init__(self, canvas, color, size, paddle: Paddle):
+    def __init__(self, root, canvas, color, size, paddle):
+        from scripts.pong.main import MindPong
+        self.root: MindPong = root
+
         self.canvas = canvas
         self.canvas_width = canvas.winfo_reqwidth()
         self.canvas_height = canvas.winfo_reqheight()
@@ -42,6 +45,8 @@ class Ball:
         collision_type = self.check_collision()
 
         if collision_type == CollisionType.BOTTOM:
+            from scripts.pong.main import Restart
+            self.root.change(Restart)
             self.hit_bottom = True
             self.reset()
             self.paddle.reset()
@@ -58,7 +63,7 @@ class Ball:
 
     def init(self):
         """Initializes the ball object and its position."""
-        self.id = self.canvas.create_oval(10, 10, self.size, self.size, fill=self.color)
+        self.id = self.canvas.create_oval(0, 0, self.size, self.size, fill=self.color)
         # Move to initial position
         self.canvas.move(self.id, (self.canvas_width - self.size) / 2, self.canvas_height/2)
         # Update position
@@ -87,6 +92,7 @@ class Ball:
         elif (pos[3] + v_y) >= self.canvas_height:
             return CollisionType.BOTTOM
         elif self.check_collision_with_paddle(pos, v_x, v_y):
+            self.root.score += 1
             return CollisionType.PADDLE
         else:
             return CollisionType.NONE

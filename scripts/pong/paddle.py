@@ -1,6 +1,8 @@
 # Define paddle properties and functions
 class Paddle:
-    def __init__(self, canvas, width, height, color):
+    def __init__(self, root, canvas, width, height, color):
+        self.root = root
+
         self.canvas = canvas
         self.canvas_width = canvas.winfo_reqwidth()
         self.canvas_height = canvas.winfo_reqheight()
