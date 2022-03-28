@@ -70,8 +70,8 @@ def calculate_spatial_filtering(signal_list):
 
 
 def perform_multitaper(signal, jobs=-1):
-    psds, freqs = mne.time_frequency.psd_array_multitaper(x=np.array(signal), sfreq=CONFIG.EEG.SAMPLERATE,
-                                                          bandwidth=32.0, n_jobs=jobs)
+    array = np.array(signal)
+    psds, freqs = mne.time_frequency.psd_array_multitaper(array, sfreq=CONFIG.EEG.SAMPLERATE, n_jobs=jobs)
     psds_abs = np.abs(psds)
     return psds_abs, freqs
 
@@ -134,6 +134,7 @@ def manage_ringbuffer():
 
 
 def perform_algorithm(sliding_window):
+
     # 1. Spatial Filtering
     signal_c3a, signal_c4a = calculate_spatial_filtering(sliding_window)
 
@@ -158,24 +159,33 @@ def perform_algorithm(sliding_window):
     return normalized_hcon
 
 
-def load_values_in_ringbuffer(sliding_window):
+def load_values_in_ringbuffer(sliding_window, y):
     # 1. Spatial Filtering
-
     signal_c3a, signal_c4a = calculate_spatial_filtering(sliding_window)
 
     # 2. PSD calculation via FFT
     psds_c3a_f, freq_c3a_f = perform_rfft(signal_c3a)
     psds_c4a_f, freq_c4a_f = perform_rfft(signal_c4a)
+    psds_c3a_m, freq_c3a_m = perform_multitaper(signal_c3a)
+    psds_c4a_m, freq_c4a_m = perform_multitaper(signal_c4a)
 
     # 3. Alpha Band Power calculation
-    area_c3 = integrate_psd_values(psds_c3a_f, freq_c3a_f)
-    area_c4 = integrate_psd_values(psds_c4a_f, freq_c4a_f)
+    area_c3_f = integrate_psd_values(psds_c3a_f, freq_c3a_f)
+    area_c3_m = integrate_psd_values(psds_c3a_m, freq_c3a_m)
+    area_c4_m = integrate_psd_values(psds_c4a_m, freq_c4a_m)
 
     # Derive cursor control signals
-    hcon = area_c4 - area_c3
+    hcon = area_c4_m - area_c3_m
+    # fig, axs = plt.subplots(2)
+    # axs[0].plot(signal_c3a, 'r')
+    # axs[0].plot(psds_c3a_f, 'g')
+    # axs[1].plot(signal_c3a, 'r')
+    # axs[1].plot(psds_c3a_m, 'g')
+    # plt.show()
 
     ringbuffer = manage_ringbuffer()
     ringbuffer.append(hcon)
+    return hcon
 
 
 def print_normalized_vconses(labels):
@@ -183,11 +193,12 @@ def print_normalized_vconses(labels):
     values = np.array(ringbuffer)
     counter = 0
     accuracy = 0
-    undefined = 0.3
+    undefined = 0.5
     for hcon in values:
         mean = np.mean(values)
         standard_deviation = np.std(values)
         normalized_hcon = (hcon - mean) / standard_deviation if standard_deviation else hcon
+
         if normalized_hcon > undefined:
             calculated_label = 0
         elif normalized_hcon < -undefined:
@@ -203,4 +214,3 @@ def print_normalized_vconses(labels):
         counter += 1
     accuracy /= len(labels)
     print(f'Accuracy: {accuracy}')
-    
