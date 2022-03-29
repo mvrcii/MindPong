@@ -23,10 +23,6 @@ class TestReadStream(unittest.TestCase):
         self.assertEqual(rps.offset_data[0], rps.data[rps.window_size - rps.offset])
         self.assertEqual(test_array, rps.data[0])
 
-    def test_set_parameters(self):
-        rps.window_size, rps.offset = rps.set_parameters(2, 0.03)
-        self.assertEqual(rps.window_size, 250)
-        self.assertEqual(rps.offset, 3)
 
 
 if __name__ == '__main__':

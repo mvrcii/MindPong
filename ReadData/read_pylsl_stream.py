@@ -1,42 +1,40 @@
 from pylsl import StreamInlet, resolve_byprop
 
-window_size = 125  # size of sliding window in amount of samples, *8ms for time
-offset = 12  # size of offset in amount of samples, *8ms for time
-time_for_one_sample = 0.008 #time which is needed for one sample in s
+time_for_one_sample = 0.008  # time which is needed for one sample in s, T = 1/f = 1/125 = 0.008
 
-max_time_search_stream = 10  # in s
-bool_recover = True  # Setting if the script should terminate or try to recover if  it lost the stream
+window_size_sec = 0.2  # size of sliding window in s
+window_size = int(window_size_sec/time_for_one_sample)  # size of sliding window in amount of samples, *8ms for time
+
+offset_sec = 0.1  # size of offset in s
+offset = int(offset_sec/time_for_one_sample)  # size of offset in amount of samples, *8ms for time
+
+
+max_time_search_stream = 10  # in s, Maximum time until the program stops searching for the stream if none is found
+bool_recover = True  # Controls the behavior when the stream is lost:
+                     # Attempts to recover stream if true, script termination if false.
 filter_type = 'type'  # Setting if search by type or name
 filter_title = 'EEG'  # Title of the stream
 
 data = []
 offset_data = []
 
-""""
-converts given parameters in s into amounts of samples, declare the parameters with this function
-window_size_sec: sliding window size in s
-offset_sec: offset size in s
-"""
-def set_parameters(window_size_sec, offset_sec):
-    window_size = int(window_size_sec/time_for_one_sample)
-    offset = int(offset_sec/time_for_one_sample)
-    return window_size, offset
-
-
-# start reading stream
+### starting point ###
+# start reading the stream
 def read_stream():
     print("looking for an EEG stream...")
     bool_stream, inlet = init(stream())
     if bool_stream:
         # fill the first window
-        bool_read = read_first(inlet)
+        bool_read = read_first_sliding_window(inlet)
         if bool_read:
             read(inlet)
+
 
 
 # starts the stream
 def init(streams):
     # create a new inlet to read from the stream
+    # If multiple streams were found, the first one will be taken
     if len(streams) > 0:
         try:
             inlet = StreamInlet(streams[0], recover=bool_recover)
@@ -50,7 +48,7 @@ def init(streams):
         return False, None
 
 
-# search stream
+# search for streams
 def stream():
     streams = []
     try:
@@ -62,9 +60,9 @@ def stream():
 
 
 # fill the first window
-def read_first(inlet):
-    bool_first = True
-    while bool_first:
+def read_first_sliding_window(inlet):
+    sufficient_samples_read = True
+    while sufficient_samples_read:
         try:
             chunk, timestamp = inlet.pull_chunk()
         except:
@@ -72,13 +70,11 @@ def read_first(inlet):
             return False
         if chunk:
             pushed_elements_count = 0
-            # print(chunk)
             for sample in chunk:
-                # print(sample)
                 data.append(sample)
                 pushed_elements_count += 1
                 if window_size == len(data):
-                    bool_first = False
+                    sufficient_samples_read = False
                     break
 
     print('first window ready  window size = ', len(data))
@@ -104,13 +100,10 @@ def read(inlet):
             print('lost stream')
             return False
         if chunk:
-            # print(chunk);
             for sample in chunk:
-                # print(sample)
                 offset_data.append(sample)
                 if len(offset_data) == offset:
                     create_sliding_window()
-                    # print(offset_data)
                     offset_data.clear()
     inlet.close_stream()
 
@@ -120,15 +113,15 @@ def read(inlet):
 def create_sliding_window():
     for i in range(offset):
         data.append(offset_data[i])
-
-    for i in range(offset):
         data.pop(0)
+
+
 
     # ToDo call Algorithm with data and offset
 
     print('next window ready   window size = ', len(data))
-    # print (data)
-    # print(data[0])
-    # print(data[offset])
 
-# read_stream()
+
+#read_stream()
+
+
