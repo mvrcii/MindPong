@@ -1,8 +1,10 @@
+import matplotlib.pyplot as plt
 import mne
 import numpy as np
 from config import CONFIG
 from scipy import integrate
 from numpy_ringbuffer import RingBuffer
+from spectrum import pburg
 
 """
 Documentation: Pin mapping
@@ -35,13 +37,16 @@ the motor area (small laplacian)
 r = None
 
 
-def calculate_small_laplacian(signal1, signal2, signal3, signal4):
+def calculate_small_laplacian(signal):
     counter = 0
-    length = len(signal1)
+    length = len(signal[0])
     result = list()
 
     while counter < length:
-        average = (signal1[counter] + signal2[counter] + signal3[counter] + signal4[counter]) / 4
+        average = 0
+        for i in range(len(signal)):
+            average += signal[i][counter]
+        average /= len(signal)
         result.append(average)
         counter += 1
 
@@ -57,7 +62,7 @@ def calculate_spatial_filtering(signal_list):
     signal_c3a = list()
     signal_c4a = list()
     # TODO: ((maybe)) adjust structure of the lists
-    signal_average = calculate_small_laplacian(signal_list[2], signal_list[3], signal_list[4], signal_list[5])
+    signal_average = calculate_small_laplacian(signal_list[2:])
 
     length = len(signal_list[0])
     counter = 0
@@ -71,7 +76,7 @@ def calculate_spatial_filtering(signal_list):
 
 def perform_multitaper(signal, jobs=-1):
     array = np.array(signal)
-    psds, freqs = mne.time_frequency.psd_array_multitaper(array, sfreq=CONFIG.EEG.SAMPLERATE, n_jobs=jobs)
+    psds, freqs = mne.time_frequency.psd_array_multitaper(array, sfreq=128, n_jobs=jobs, bandwidth=6.0, fmin=9.0, fmax=15.0)
     psds_abs = np.abs(psds)
     return psds_abs, freqs
 
@@ -84,18 +89,23 @@ def perform_rfft(signal):
     return fft_spectrum_abs, freq
 
 
-def integrate_psd_values(signal, frequencyList):
+def perform_burg(signal):
+ #  AR, P, k = arburg(signal, 10, sampling=128)
+    pass
+
+
+def integrate_psd_values(signal, frequency_list):
     # calculate alpha frequency array
     counter = 0
-    length = len(frequencyList)
+    length = len(frequency_list)
     alpha_band_power = list()
     requested_frequency_range = list()
 
     # TODO: evaluate if necessary !!!
     while counter < length:
-        if 15.0 >= frequencyList[counter] >= 9.0:
+        if 15.0 >= frequency_list[counter] >= 9.0:
             alpha_band_power.append(signal[counter])
-            requested_frequency_range.append(frequencyList[counter])
+            requested_frequency_range.append(frequency_list[counter])
         counter += 1
 
     # print(f'alpha band power {alpha_band_power}\nfrequency range {requested_frequency_range}')
@@ -128,19 +138,18 @@ def manage_ringbuffer():
     global r
     if not r:
         # TODO: define adjustable capacity of the ringbuffer
-        r = RingBuffer(capacity=144, dtype=np.float)
+        r = RingBuffer(capacity=300, dtype=np.float)
 
     return r
 
 
 def perform_algorithm(sliding_window):
-
     # 1. Spatial Filtering
     signal_c3a, signal_c4a = calculate_spatial_filtering(sliding_window)
 
     # 2. PSD calculation via FFT
-    psds_c3a_f, freq_c3a_f = perform_rfft(signal_c3a)
-    psds_c4a_f, freq_c4a_f = perform_rfft(signal_c4a)
+    psds_c3a_f, freq_c3a_f = perform_multitaper(signal_c3a)
+    psds_c4a_f, freq_c4a_f = perform_multitaper(signal_c4a)
 
     # 3. Alpha Band Power calculation
     area_c3 = integrate_psd_values(psds_c3a_f, freq_c3a_f)
@@ -159,58 +168,56 @@ def perform_algorithm(sliding_window):
     return normalized_hcon
 
 
-def load_values_in_ringbuffer(sliding_window, y):
-    # 1. Spatial Filtering
-    signal_c3a, signal_c4a = calculate_spatial_filtering(sliding_window)
-
-    # 2. PSD calculation via FFT
-    psds_c3a_f, freq_c3a_f = perform_rfft(signal_c3a)
-    psds_c4a_f, freq_c4a_f = perform_rfft(signal_c4a)
-    psds_c3a_m, freq_c3a_m = perform_multitaper(signal_c3a)
-    psds_c4a_m, freq_c4a_m = perform_multitaper(signal_c4a)
-
-    # 3. Alpha Band Power calculation
-    area_c3_f = integrate_psd_values(psds_c3a_f, freq_c3a_f)
-    area_c3_m = integrate_psd_values(psds_c3a_m, freq_c3a_m)
-    area_c4_m = integrate_psd_values(psds_c4a_m, freq_c4a_m)
-
-    # Derive cursor control signals
-    hcon = area_c4_m - area_c3_m
-    # fig, axs = plt.subplots(2)
-    # axs[0].plot(signal_c3a, 'r')
-    # axs[0].plot(psds_c3a_f, 'g')
-    # axs[1].plot(signal_c3a, 'r')
-    # axs[1].plot(psds_c3a_m, 'g')
-    # plt.show()
-
-    ringbuffer = manage_ringbuffer()
-    ringbuffer.append(hcon)
-    return hcon
-
-
-def print_normalized_vconses(labels):
-    ringbuffer = manage_ringbuffer()
-    values = np.array(ringbuffer)
-    counter = 0
-    accuracy = 0
-    undefined = 0.5
-    for hcon in values:
-        mean = np.mean(values)
-        standard_deviation = np.std(values)
-        normalized_hcon = (hcon - mean) / standard_deviation if standard_deviation else hcon
-
-        if normalized_hcon > undefined:
-            calculated_label = 0
-        elif normalized_hcon < -undefined:
-            calculated_label = 1
-        else:
-            calculated_label = -1
-
-        if calculated_label == labels[counter]:
-            accuracy += 1
-
-        print(f'Clabel = {calculated_label} ({normalized_hcon})')
-        print(f'LabeL: {labels[counter]}')
-        counter += 1
-    accuracy /= len(labels)
-    print(f'Accuracy: {accuracy}')
+# def load_values_in_ringbuffer(sliding_window):
+#     # 1. Spatial Filtering
+#     signal_c3a, signal_c4a = calculate_spatial_filtering(sliding_window)
+#
+#     # 2. PSD calculation via FFT
+#     psds_c3a_f, freq_c3a_f = perform_rfft(signal_c3a)
+#     psds_c4a_f, freq_c4a_f = perform_rfft(signal_c4a)
+#     psds_c3a_m, freq_c3a_m = perform_multitaper(signal_c3a)
+#     psds_c4a_m, freq_c4a_m = perform_multitaper(signal_c4a)
+#
+#     # 3. Alpha Band Power calculation
+#     area_c3_f = integrate_psd_values(psds_c3a_f, freq_c3a_f)
+#     area_c3_m = integrate_psd_values(psds_c3a_m, freq_c3a_m)
+#     area_c4_m = integrate_psd_values(psds_c4a_m, freq_c4a_m)
+#
+#     # Derive cursor control signals
+#     hcon = area_c4_m - area_c3_m
+#     # fig, axs = plt.subplots(2)
+#     # axs[0].plot(signal_c3a, 'r')
+#     # axs[0].plot(psds_c3a_f, 'g')
+#     # axs[1].plot(signal_c3a, 'r')
+#     # axs[1].plot(psds_c3a_m, 'g')
+#     # plt.show()
+#
+#     ringbuffer = manage_ringbuffer()
+#     ringbuffer.append(hcon)
+#     return hcon
+#
+#
+# def print_normalized_vconses(labels, counter):
+#     ringbuffer = manage_ringbuffer()
+#     values = np.array(ringbuffer)
+#     accuracy = 0
+#     undefined = 0.5
+#     for hcon in values:
+#         mean = np.mean(values)
+#         standard_deviation = np.std(values)
+#         normalized_hcon = (hcon - mean) / standard_deviation if standard_deviation else hcon
+#
+#         if normalized_hcon > undefined:
+#             calculated_label = 0
+#         elif normalized_hcon < -undefined:
+#             calculated_label = 1
+#         else:
+#             calculated_label = -1
+#
+#         if labels[counter] is not None and calculated_label == labels[counter]:
+#             accuracy += 1
+#
+#         print(f'Clabel = {calculated_label} ({normalized_hcon})')
+#         print(f'LabeL: {labels[counter]}')
+#     accuracy /= len(labels)
+#     print(f'Accuracy: {accuracy}')
