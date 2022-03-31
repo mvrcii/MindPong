@@ -1,8 +1,11 @@
 from tkinter import *
 import time
 
-from scripts.pong.ball import Ball
-from scripts.pong.paddle import Paddle
+import scripts.pong.ball as ball
+import scripts.pong.paddle as paddle
+
+
+RESTART_TIME = 3
 
 
 class GameState(object):
@@ -53,7 +56,7 @@ class MindPong(Tk):
         self.state = Idle()
         self.score = 0
 
-        self.restart_time = 0
+        self.curr_restart_time = 0
 
         self.updateCounter = 0
         self.lastUpdate = 0
@@ -65,8 +68,8 @@ class MindPong(Tk):
         self.init_labels()
         self.canvas.pack()
 
-        self.paddle = Paddle(self, self.canvas, 100, 10, 'blue')
-        self.ball = Ball(self, self.canvas, 'red', 15, paddle=self.paddle)
+        self.paddle = paddle.Paddle(self, self.canvas, 100, 10, 'blue')
+        self.ball = ball.Ball(self, self.canvas, 'red', 15, paddle=self.paddle)
 
         self.change(Playing)
         self.bindings()
@@ -91,8 +94,8 @@ class MindPong(Tk):
             self.ball.draw()
 
         elif curr_state is Restart.name:
-            if self.restart_time == 0:
-                self.restart_time = time.time()
+            if self.curr_restart_time == 0:
+                self.curr_restart_time = time.time()
                 self.canvas.itemconfig(self.score_label, text="Score: " + str(self.score), state=NORMAL)
                 self.canvas.itemconfig(self.timer_label, state=NORMAL)
                 self.canvas.itemconfig(self.paddle.id, state=HIDDEN)
@@ -100,15 +103,15 @@ class MindPong(Tk):
                 self.score = 0
 
             curr_time = time.time()
-            if curr_time - self.restart_time > 3:
-                self.restart_time = 0
+            if curr_time - self.curr_restart_time > RESTART_TIME:
+                self.curr_restart_time = 0
                 self.change(Playing)
                 self.canvas.itemconfig(self.score_label, state=HIDDEN)
                 self.canvas.itemconfig(self.timer_label, state=HIDDEN)
                 self.canvas.itemconfig(self.paddle.id, state=NORMAL)
                 self.canvas.itemconfig(self.ball.id, state=NORMAL)
             else:
-                seconds_until_restart = round(3 - (curr_time - self.restart_time), 1)
+                seconds_until_restart = round(3 - (curr_time - self.curr_restart_time), 1)
                 self.canvas.itemconfig(self.timer_label, text="Restarting in " + str(seconds_until_restart),
                                        state=NORMAL)
 

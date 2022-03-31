@@ -1,3 +1,6 @@
+import scripts.pong.main as main
+
+
 # Define paddle properties and functions
 class Paddle:
     def __init__(self, root, canvas, width, height, color):
@@ -76,11 +79,19 @@ class Paddle:
         self.pos = self.canvas.coords(self.id)
 
     def move_left(self, evt):
-        if self.start_pos is True:
+        # Prevent paddle movement while the game state is not playing
+        if self.root.state.name is not main.Playing.name:
+            return
+
+        if self.start_pos:
             self.start_pos = False
         self.direction = -1
 
     def move_right(self, evt):
+        # Prevent paddle movement while the game state is not playing
+        if self.root.state.name is not main.Playing.name:
+            return
+
         if self.start_pos is True:
             self.start_pos = False
         self.direction = 1
