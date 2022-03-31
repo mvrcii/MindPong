@@ -10,6 +10,14 @@ LABELSTREAM = list()
 plot_data = list()
 plot_label = list()
 num_used_channels = 0
+'''
+Sliding window size: 
+    1 -> 200ms
+    2 -> 400ms
+    ...
+    5 -> 1s
+'''
+sliding_window_size_factor = 5
 
 
 def loadBCICDataset(ch_weight):
@@ -47,38 +55,42 @@ def slice_array(array):
     :param array: trial
     :return: small slices of data
     """
+    # 100ms = 25 samples; 200ms = 50 samples; ... ; 1s -> 250samples
     slices = list()
-    for i in range(75):
-        index = i * 25
-        slices.append(array[index:index + 25])
+    sliding_window_size = sliding_window_size_factor * 25
+    for i in range(int(len(array)/sliding_window_size)):
+        index = i * sliding_window_size
+        slices.append(array[index:index + sliding_window_size])
     return slices
 
 
 def calculate_sliding_windows(data, labels):
     global DATASTREAM
-    DATASTREAM = [[] for i in range(num_used_channels)]
+    DATASTREAM = [[] for _ in range(num_used_channels)]
+    sliding_window_size = sliding_window_size_factor * 25
     for i in range(0, 144):
         for j in range(num_used_channels):
             DATASTREAM[j] += slice_array(data[0][i][j][:])
 
-        for a in range(30):
+        num_sliding_windows_label = (1875/sliding_window_size)
+        for a in range(int(num_sliding_windows_label*0.4)):
             LABELSTREAM.append(None)
-        for b in range(30):
+        for b in range(int(num_sliding_windows_label*0.4)):
             LABELSTREAM.append(labels[0][i])
-        for c in range(15):
+        for c in range(int(num_sliding_windows_label*0.2)):
             LABELSTREAM.append(None)
 
 
-def test_algorithm(num_channels):
+def test_algorithm():
     """
     Calls the algorithm function and tries to plot the data
     :return: None
     """
     counter = 0
     accuracy = 0
-    undefined = 0.25
+    undefined = 0.3
     num_valid_sliding_windows = 0
-    while counter < 10800 - 1:
+    while counter < int(1875/(25*sliding_window_size_factor))*144 - 1:
         samples = []
         for i in range(num_used_channels):
             current_samples1 = DATASTREAM[:][i][counter]
@@ -87,7 +99,7 @@ def test_algorithm(num_channels):
             samples.append(sample)
 
         normalized_hcon = cursor_online_control.perform_algorithm(samples)
-        print(normalized_hcon)
+        print(f'{counter}: {normalized_hcon}')
 
         if normalized_hcon > undefined:
             calculated_label = 0
@@ -98,7 +110,7 @@ def test_algorithm(num_channels):
 
         if LABELSTREAM[counter] is not None:
             num_valid_sliding_windows += 1
-            plot_data.append(normalized_hcon)
+            plot_data.append(calculated_label)
             plot_label.append(LABELSTREAM[counter])
             if calculated_label == LABELSTREAM[counter]:
                 accuracy += 1
@@ -108,7 +120,7 @@ def test_algorithm(num_channels):
     accuracy /= num_valid_sliding_windows
     print(f'Accuracy = {accuracy}')
     plt.plot(plot_data, 'r')
-
+    plt.plot(plot_label, 'b')
     plt.show()
 
 
@@ -136,7 +148,8 @@ def test_algorithm(num_channels):
 
 if __name__ == '__main__':
     #                 Fz  FC3  FC1  FCz  FC2  FC4  C5  C3  C1  Cz  C2  C4  C6  CP3  CP1  CPz  CP2  CP4  P1  Pz  P2  POz
-    ch_names_weight = [1,  0,   0,   0,   0,   0,   0,  1,  1,  0,  0,  1,  0,  1,   1,   0,   0,   0,   0,  0,  0,  0]
+    ch_names_weight = [0,  1,   1,   1,   1,   1,   1,  1,  1,  1,  1,  1,  1,  1,   1,   1,   1,   1,   0,  0,  0,  0]
     preloaded_data, preloaded_labels, used_channels = loadBCICDataset(ch_names_weight)
     calculate_sliding_windows(preloaded_data, preloaded_labels)
-    test_algorithm(used_channels)
+    test_algorithm()
+
