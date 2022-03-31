@@ -1,24 +1,17 @@
-import os
-import sys
+import platform
+import AppKit
+import winsound
 
-import matplotlib
-from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg, NavigationToolbar2Tk
-from matplotlib.figure import Figure
-import matplotlib.animation as animation
-from matplotlib import style
-
+import time
 import tkinter as tk
-from tkinter import ttk
 from tkinter import *
+from tkinter import ttk
 from tkinter.ttk import *
 
-import threading
-import queue
-import time
-import urllib
-import json
-import pandas as pd
-import numpy as np
+import matplotlib
+from matplotlib import style
+from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg, NavigationToolbar2Tk
+from matplotlib.figure import Figure
 
 matplotlib.use("TkAgg")
 LARGE_FONT = ("Verdana", 16)
@@ -28,32 +21,30 @@ f = Figure(figsize=(10, 6), dpi=100)
 a = f.add_subplot(111)
 
 #  3 Timer in seconds
-t1 = 3          #Point
-t2 = 3          #Black
-t3 = 3          #before Game
+t1 = 3  # Point
+t2 = 3  # Black
+t3 = 3  # before Game
 
 
 def beep():
-    os_info = sys.platform
-    if os_info == 'darwin':
-        import AppKit                                                           # Mac Beep
-        #os.system('play -nq -t alsa synth {} sine {}'.format(2000, 1500))
-        AppKit.NSBeep()         # BeepTon Mac
-    elif os_info == 'linux':                                                    # Linux Beep
+    current_os = platform.system()
+    if current_os == 'Darwin':  # Mac Beep
+        # os.system('play -nq -t alsa synth {} sine {}'.format(2000, 1500))
+        AppKit.NSBeep()  # BeepTon Mac
+    elif current_os == 'Linux':  # Linux Beep
         print()
-    else:
-        import winsound                                                         # Microsoft Beep
-        winsound.Beep(2000, 1500)
+    elif current_os == 'Windows':  # Microsoft Beep
+        winsound.Beep(1500, 1500)
 
 
-def hierspiel(self, parent):                                                    # TEST
+def hierspiel(self, parent):  # TEST
     tk.Frame.__init__(self, parent)
     label = tk.Label(self, text="Gaaaame", font=LARGE_FONT)
     label.pack(pady=200)
     print('1')
 
 
-def countdown(t):                                                               # define countdown
+def countdown(t):  # define countdown
     while t:
         mins, secs = divmod(t, 60)
         timer = '{:02d}:{:02d}'.format(mins, secs)
@@ -63,7 +54,7 @@ def countdown(t):                                                               
 
 
 def punkt(self):
-    #self.show_frame(Point)
+    # self.show_frame(Point)
     print('Point Window - Timer start')
     countdown(t1)
     beep()
@@ -116,6 +107,7 @@ def balken(self, controller, point, name):
             time.sleep(0.005)
             i += 0.25
         controller.show_frame(point)
+
     Button(self, text=name, command=balkenladen).pack(pady=10)
 
 
@@ -129,7 +121,7 @@ class App(tk.Tk):
 
     def __init__(self, *args, **kwargs):
         tk.Tk.__init__(self, *args, **kwargs)
-        #tk.Tk.iconbitmap(self, default="clienticon.ico")
+        # tk.Tk.iconbitmap(self, default="clienticon.ico")
         tk.Tk.wm_title(self, "MindPong")
         container = tk.Frame(self)
         container.pack(side="top", fill="both", expand=True)
@@ -175,7 +167,7 @@ class App(tk.Tk):
         frame.tkraise()
 
     def punkt(self):
-        #self.show_frame(Point)
+        # self.show_frame(Point)
         print('Point Window - Timer start')
         countdown(t1)
         beep()
@@ -192,11 +184,11 @@ class App(tk.Tk):
     def visualwindow(self):
         if app.windowcheck == FALSE:
             app.windowcheck = TRUE
-            newWindow = Toplevel(self)                                                              # Fenster Erzeugen
+            newWindow = Toplevel(self)  # Fenster Erzeugen
             newWindow.title('Visualisierte EEG-Daten')
             newWindow.geometry('600x360')
             newWindow.geometry("+%d+%d" % (810, 43))
-            canvas = FigureCanvasTkAgg(f, newWindow)                                                # Diagram erzeugen
+            canvas = FigureCanvasTkAgg(f, newWindow)  # Diagram erzeugen
             canvas.draw()
             toolbar = NavigationToolbar2Tk(canvas, newWindow)
             toolbar.pack(side=TOP, fill=X)
@@ -270,7 +262,7 @@ class Point(tk.Frame):
         tk.Frame.__init__(self, parent)
         label = tk.Label(self, text="O", font=LARGE_FONT)
         label.pack(pady=200)
-        #app.bind('<n>', lambda e: punkt)
+        # app.bind('<n>', lambda e: punkt)
         button2 = ttk.Button(self, text='Beginnen', command=lambda: app.punkt())
         button2.pack(side='bottom')
 
@@ -292,11 +284,11 @@ class Game(tk.Frame):
 
 app = App()
 
-#app.bind('<FocusOut>', lambda event: app.quit()) #FocusOut
+# app.bind('<FocusOut>', lambda event: app.quit()) #FocusOut
 
 app.bind('<Key>', lambda event: app.quit)
 app.bind('<v>', lambda event: app.visualwindow())
 app.bind('<q>', lambda event: app.quit())
 app.bind('<space>', lambda event: app.show_frame(KalibrierungOne))
-#ani = animation.FuncAnimation(f, animate, interval=1000)
+# ani = animation.FuncAnimation(f, animate, interval=1000)
 app.mainloop()
