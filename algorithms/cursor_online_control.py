@@ -35,6 +35,8 @@ the motor area (small laplacian)
 
 # Global variables
 r = None
+_fmin = 9.0
+_fmax = 15.0
 
 
 def calculate_small_laplacian(signal):
@@ -76,7 +78,7 @@ def calculate_spatial_filtering(signal_list):
 
 def perform_multitaper(signal, jobs=-1):
     array = np.array(signal)
-    psds, freqs = mne.time_frequency.psd_array_multitaper(array, sfreq=128, n_jobs=jobs, bandwidth=6.0, fmin=9.0, fmax=15.0)
+    psds, freqs = mne.time_frequency.psd_array_multitaper(array, sfreq=128, n_jobs=jobs, bandwidth=6.0, fmin=_fmin, fmax=_fmax)
     psds_abs = np.abs(psds)
     return psds_abs, freqs
 
@@ -103,9 +105,9 @@ def integrate_psd_values(signal, frequency_list):
 
     # TODO: evaluate if necessary !!!
     while counter < length:
-        if 15.0 >= frequency_list[counter] >= 9.0:
-            alpha_band_power.append(signal[counter])
-            requested_frequency_range.append(frequency_list[counter])
+        # if 15.0 >= frequency_list[counter] >= 9.0:
+        alpha_band_power.append(signal[counter])
+        requested_frequency_range.append(frequency_list[counter])
         counter += 1
 
     # print(f'alpha band power {alpha_band_power}\nfrequency range {requested_frequency_range}')
