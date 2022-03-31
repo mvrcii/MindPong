@@ -1,6 +1,5 @@
+import os
 import platform
-import AppKit
-import winsound
 
 import time
 import tkinter as tk
@@ -14,7 +13,7 @@ from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg, NavigationToolb
 from matplotlib.figure import Figure
 
 matplotlib.use("TkAgg")
-LARGE_FONT = ("Verdana", 16)
+LARGE_FONT = ("Verdana", 18)
 style.use("ggplot")
 
 f = Figure(figsize=(10, 6), dpi=100)
@@ -29,19 +28,19 @@ t3 = 3  # before Game
 def beep():
     current_os = platform.system()
     if current_os == 'Darwin':  # Mac Beep
-        # os.system('play -nq -t alsa synth {} sine {}'.format(2000, 1500))
+        import AppKit
         AppKit.NSBeep()  # BeepTon Mac
     elif current_os == 'Linux':  # Linux Beep
-        print()
+        os.system('play -nq -t alsa synth {} sine {}'.format(1500, 1500))
     elif current_os == 'Windows':  # Microsoft Beep
+        import winsound
         winsound.Beep(1500, 1500)
 
 
-def hierspiel(self, parent):  # TEST
+def game1(self, parent):  # Testort1 für Game
     tk.Frame.__init__(self, parent)
     label = tk.Label(self, text="Gaaaame", font=LARGE_FONT)
     label.pack(pady=200)
-    print('1')
 
 
 def countdown(t):  # define countdown
@@ -51,6 +50,7 @@ def countdown(t):  # define countdown
         print(timer)
         time.sleep(1)
         t -= 1
+    beep()
 
 
 def punkt(self):
@@ -107,8 +107,7 @@ def balken(self, controller, point, name):
             time.sleep(0.005)
             i += 0.25
         controller.show_frame(point)
-
-    Button(self, text=name, command=balkenladen).pack(pady=10)
+    Button(self, text=name, command=balkenladen).pack(pady=30)
 
 
 def closewindow(window):
@@ -127,7 +126,7 @@ class App(tk.Tk):
         container.pack(side="top", fill="both", expand=True)
         container.grid_rowconfigure(0, weight=1)
         container.grid_columnconfigure(0, weight=1)
-        self.geometry("800x520")
+        self.geometry("800x480")
         self.frames = {}
 
         for F in (StartPage, KalibrierungOne):
@@ -166,29 +165,25 @@ class App(tk.Tk):
         frame = self.frames[cont]
         frame.tkraise()
 
-    def punkt(self):
-        # self.show_frame(Point)
-        print('Point Window - Timer start')
-        countdown(t1)
-        beep()
-        print('Point Window - Timer ende')
-        self.show_frame(KalibrierungTwo)
+    def timer(self, timer, nxt, name):    # Timer für Point und Black Screen
+        print(name, ' Window - Timer start')
+        countdown(timer)
+        print(name, ' Window - Timer ende')
+        self.show_frame(nxt)
 
-    def blackwindow(self):
-        print('Black Window - Timer start')
-        countdown(t2)
-        beep()
-        print('Black Window - Timer ende')
-        self.show_frame(KalibrierungEnde)
+    def game2(self):     # Testort2 für Game
+        print('Game Window - Timer start')
+        countdown(t3)
+        print('Game Window - Game start')
 
-    def visualwindow(self):
+    def visualwindow(self):     # Erzeuge Fenster für Visualisierung
         if app.windowcheck == FALSE:
             app.windowcheck = TRUE
             newWindow = Toplevel(self)  # Fenster Erzeugen
             newWindow.title('Visualisierte EEG-Daten')
             newWindow.geometry('600x360')
             newWindow.geometry("+%d+%d" % (810, 43))
-            canvas = FigureCanvasTkAgg(f, newWindow)  # Diagram erzeugen
+            canvas = FigureCanvasTkAgg(f, newWindow)    # Diagram erzeugen
             canvas.draw()
             toolbar = NavigationToolbar2Tk(canvas, newWindow)
             toolbar.pack(side=TOP, fill=X)
@@ -200,15 +195,6 @@ class App(tk.Tk):
             button2.pack(side='right')
             newWindow.bind('<q>', lambda event: closewindow(newWindow))
 
-    def game(self):
-        print('Game Window - Timer start')
-        countdown(t3)
-        beep()
-        print('Game Window - Game start')
-        tk.Frame.__init__(self)
-        label = tk.Label(self, text='Game', font=LARGE_FONT)
-        label.pack(pady=200)
-
 
 class StartPage(tk.Frame):
     def __init__(self, parent, controller):
@@ -217,7 +203,7 @@ class StartPage(tk.Frame):
         zunächst mit Timern in zwei automatisierten aufeinanderfolgenden Schritten
         kalibriert werden.\n\n\n'Space' zum Fortfahren\n\n\n'V' zum Anzeigen der EEG-Daten\n\n\n'Q' zum Beenden'''),
                          font=LARGE_FONT)
-        label.pack(pady=90)
+        label.pack(pady=110)
         button2 = ttk.Button(self, text='Beenden', command=quit)
         button2.pack(side='bottom')
 
@@ -226,9 +212,9 @@ class KalibrierungOne(tk.Frame):
     def __init__(self, parent, controller):
         tk.Frame.__init__(self, parent)
         label = tk.Label(self, compound=CENTER, text=('''Bitte fokussieren Sie nach Ablauf des 
-        Timers für''', t1, '''Sekunden den eingeblendeten
-        Punkt in der Mitte des Fenster, bis Sie einen Piepton hören'''), font=LARGE_FONT)
-        label.pack(pady=90)
+Timers für %s Sekunden den eingeblendeten
+Punkt in der Mitte des Fenster, bis Sie einen Piepton hören''' % t1), font=LARGE_FONT)
+        label.pack(pady=140)
         button1 = ttk.Button(self, text='Beenden', command=quit)
         button1.pack(side='bottom')
         balken(self, controller, Point, 'Kalibrierung Starten')
@@ -237,8 +223,8 @@ class KalibrierungOne(tk.Frame):
 class KalibrierungTwo(tk.Frame):
     def __init__(self, parent, controller):
         tk.Frame.__init__(self, parent)
-        label = tk.Label(self, text=('''Bitte schließen Sie nach Ablauf des Timers für ''', t1, ''' 
-Sekunden Ihre Augen, bis Sie einen Piep Ton hören.'''), font=LARGE_FONT)
+        label = tk.Label(self, text=('''Bitte schließen Sie nach Ablauf des Timers für %s 
+Sekunden Ihre Augen, bis Sie einen Piep Ton hören.''' % t2), font=LARGE_FONT)
         label.pack(pady=140)
         button1 = ttk.Button(self, text='Beenden', command=quit)
         button1.pack(side='bottom')
@@ -251,7 +237,7 @@ class KalibrierungEnde(tk.Frame):
         label = tk.Label(self, text=('''Kalibrierung abgeschlossen!\n
 Sobald der Ball den Boden berührt \n startet das Spiel nach ein paar 
 Sekunden automatisch neu.\n\n Das Spiel beginnt in Kürze!'''), font=LARGE_FONT)
-        label.pack(pady=140)
+        label.pack(pady=90)
         button1 = ttk.Button(self, text='Beenden', command=quit)
         button1.pack(side='bottom')
         balken(self, controller, Game, 'Spiel starten')
@@ -262,8 +248,7 @@ class Point(tk.Frame):
         tk.Frame.__init__(self, parent)
         label = tk.Label(self, text="O", font=LARGE_FONT)
         label.pack(pady=200)
-        # app.bind('<n>', lambda e: punkt)
-        button2 = ttk.Button(self, text='Beginnen', command=lambda: app.punkt())
+        button2 = ttk.Button(self, text='Beginnen', command=lambda: app.timer(t1, KalibrierungTwo, 'Point'))
         button2.pack(side='bottom')
 
 
@@ -271,7 +256,7 @@ class Black(tk.Frame):
     def __init__(self, parent, controller):
         tk.Frame.__init__(self, parent)
         self.configure(bg='black')
-        button2 = ttk.Button(self, text='Beginnen', command=lambda: app.blackwindow())
+        button2 = ttk.Button(self, text='Beginnen', command=lambda: app.timer(t2, KalibrierungEnde, 'Black'))
         button2.pack(side='bottom')
 
 
@@ -283,10 +268,6 @@ class Game(tk.Frame):
 
 
 app = App()
-
-# app.bind('<FocusOut>', lambda event: app.quit()) #FocusOut
-
-app.bind('<Key>', lambda event: app.quit)
 app.bind('<v>', lambda event: app.visualwindow())
 app.bind('<q>', lambda event: app.quit())
 app.bind('<space>', lambda event: app.show_frame(KalibrierungOne))
