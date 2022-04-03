@@ -14,9 +14,9 @@ WINDOW_SIZE_FACTOR = 1
 
 def calculate_laplacian(signal):
     """
-    Calculate average signal of the n electrodes surrounding the hand knob of
+    Calculate average signal of the j electrodes surrounding the hand knob of
     the motor area
-    n = num channels without C3/C4
+    j = num channels without C3/C4
     :param signal: signals of each channel
     :return: calculated average
     """
@@ -79,23 +79,12 @@ def perform_rfft(signal):
     return fft_spectrum_abs, freqs
 
 
-def perform_burg(signal):
-    """
-    Perform the burg algorithm
-    STILL IN PROCESS ...
-    :param signal:
-    :return:
-    """
-    #  AR, P, k = arburg(signal, 10, sampling=128)
-    pass
-
-
-def integrate_psd_values(signal, frequency_list, use_frequence_filter=False):
+def integrate_psd_values(signal, frequency_list, use_frequency_filter=False):
     """
     Integrates over the calculated PSD values in between the specified frequencies (FMIN, FMAX)
     :param signal: F(C3), F(C4)
     :param frequency_list: list of the included frequencies
-    :param use_frequence_filter: FALSE: if frequencies are already filtered (e.g. with multitaper algorithm),
+    :param use_frequency_filter: FALSE: if frequencies are already filtered (e.g. with multitaper algorithm),
                                  TRUE: use intern filter
     :return: sum of all PSDs in the given frequency range
     """
@@ -103,15 +92,13 @@ def integrate_psd_values(signal, frequency_list, use_frequence_filter=False):
     psds_in_band_power = list()
     requested_frequency_range = list()
 
-    if (use_frequence_filter):
+    if (use_frequency_filter):
         for i in range(len(frequency_list)):
             if FMAX >= frequency_list[i] >= FMIN:
                 psds_in_band_power.append(signal[i])
                 requested_frequency_range.append(frequency_list[i])
 
-    band_power = integrate.simps(psds_in_band_power,
-                                 requested_frequency_range) if use_frequence_filter \
-        else integrate.simps(signal, frequency_list)
+    band_power = integrate.simps(psds_in_band_power, requested_frequency_range) if use_frequency_filter else integrate.simps(signal, frequency_list)
 
     return band_power
 
@@ -119,7 +106,7 @@ def integrate_psd_values(signal, frequency_list, use_frequence_filter=False):
 def manage_ringbuffer():
     """
     Das ist ein Singleton :)
-    count of samples within 30 seconds = 30s / 1/250Hz count of samples within 30 seconds
+    amount of samples within 30 seconds = 30s / 1/250Hz
     size of Ringbuffer = samples within 30s / (sliding_window_factor * 50)
     :return: Ringbuffer instance
     """
@@ -138,8 +125,8 @@ def perform_algorithm(sliding_window, window_size_factor=1):
         (2) Spectral analysis
         (3) Band Power calculation
         (4) Derive normalized cursor control signal
-    :param sliding_window: A sliding window (SW) with n channel, n must contain C3 and C4
-           (SW(t) should be overlapping SW(t+1))
+    :param sliding_window: A sliding window (SW) with n channels, n must contain C3 and C4
+           (SW(t) should be overlapping with SW(t+1))
     :param window_size_factor: n: n*200ms
     :return: the normalized value representing horizontal movement
     """

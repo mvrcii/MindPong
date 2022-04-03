@@ -20,11 +20,11 @@ Sliding window size:
 sliding_window_size_factor = 5
 
 
-def loadBCICDataset(ch_weight):
+def loadBCICDataset(weighted_channel_names):
     """
     - converts ch_weight into the corresponding channels and inserts C3 and C4 to the first two places in the list
     - provides the BCIC dataset for further processing
-    :param ch_weight: weighted array to set channel selection
+    :param weighted_channel_names: weighted array to set channel selection
     :return: loaded_data: contains the samples of all channels for each trial
                 Structure of 4-dim array from the data loader:
                         dim 0: subject
@@ -42,7 +42,7 @@ def loadBCICDataset(ch_weight):
     used_ch_names = []
     # map ch_weight(channel selection) with channels names in BCI dataset to load to selected channels
     for i in range(len(ch_names)):
-        if ch_weight[i] != 0:
+        if weighted_channel_names[i] != 0:
             if ch_names[i] == 'C3':
                 used_ch_names.insert(0, ch_names[i])
             elif ch_names[i] == 'C4':
@@ -80,7 +80,7 @@ def slice_array(array):
 
 def calculate_sliding_windows(data, labels):
     """
-    converts BCIC dta into beautiful equally sized  windows
+    converts BCIC data into beautiful equally sized  windows
     - window size is adjustable in global variable sliding_window_size_factor (in steps of 200ms)
     :param data: preloaded BCIC data
     :param labels: list of labels
@@ -89,13 +89,16 @@ def calculate_sliding_windows(data, labels):
     global DATASTREAM
     DATASTREAM = [[] for _ in range(num_used_channels)]
     sliding_window_size = sliding_window_size_factor * 25
+    # 144 = num of trials
     for i in range(0, 144):
         # generate half sliding windows
         for j in range(num_used_channels):
             DATASTREAM[j] += slice_array(data[0][i][j][:])
 
         # scale LABELSTREAM to the same dimensions as DATASTREAM
+        # 1875 = num of samples per trial
         num_sliding_windows_label = (1875 / sliding_window_size)
+        # TODO: change scale
         for a in range(int(num_sliding_windows_label * 0.4)):
             LABELSTREAM.append(None)
         for b in range(int(num_sliding_windows_label * 0.4)):
@@ -112,7 +115,7 @@ def test_algorithm():
     :return: None
     """
     accuracy = 0
-    undefined = 0.3
+    threshold = 0.3
     num_valid_sliding_windows = 0
     num_sliding_windows = int(1875 / (25 * sliding_window_size_factor)) * 144 - 1
     for i in range(num_sliding_windows):
@@ -129,9 +132,9 @@ def test_algorithm():
         print(f'{i}: {normalized_hcon}')
 
         # converts the returned hcon to the corresponding label
-        if normalized_hcon > undefined:
+        if normalized_hcon > threshold:
             calculated_label = 0
-        elif normalized_hcon < -undefined:
+        elif normalized_hcon < -threshold:
             calculated_label = 1
         else:
             calculated_label = -1
