@@ -43,6 +43,7 @@ def search_port():
     """
     - search for the name of the used usb port
     :return: name of the used serial port
+    :rtype: str
     """
     port_name = None
     print('Search...')
@@ -72,7 +73,9 @@ def get_trial_data(duration_in_ms: int) -> np.ndarray:
     - get the latest egg data from the ringbuffer which recorded within the time period duration_in_ms
 
     :param duration_in_ms: in ms, time span in which the required egg data was collected
-    :return: tow demensional ndarray with the requiered egg data
+    :type duration_in_ms: int
+    :return: tow dimensional ndarray with the required egg data
+    :rtype: np.ndarray
     :raises Throws IndexError if not enough data is in the buffer for the given duration
     """
     copied_buffer = copy.deepcopy(buffer)
