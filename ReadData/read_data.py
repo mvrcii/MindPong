@@ -1,4 +1,3 @@
-import numpy
 import numpy as np
 from numpy_ringbuffer import RingBuffer
 import time
@@ -9,13 +8,21 @@ import copy
 import brainflow
 from brainflow.board_shim import BoardShim, BrainFlowInputParams
 
-time_for_one_sample = 0.008  # time which is needed for one sample in s, T = 1/f = 1/125 = 0.008
-bool_stream = False
+# time which is needed for one sample in s, T = 1/f = 1/125 = 0.008
+time_for_one_sample = 1 / BoardShim.get_sampling_rate(brainflow.board_shim.BoardIds.CYTON_DAISY_BOARD)
+
+bool_stream = False  # indicates if stream is available
 board: BoardShim
 buffer = [RingBuffer(capacity=10 * 125, dtype=float) for x in range(16)]
 
 
 def init():
+    """
+    - start function
+    - initialize the board
+    - search for the serial port
+    - starts the data acquisition
+    """
     params = BrainFlowInputParams()
     params.serial_port = search_port()
 
@@ -33,6 +40,10 @@ def init():
 
 
 def search_port():
+    """
+    - search for the name of the used usb port
+    :return: name of the used serial port
+    """
     port_name = None
     print('Search...')
     ports = serial.tools.list_ports.comports(include_links=False)
@@ -45,23 +56,27 @@ def search_port():
 
 
 def handle_samples():
-    count = 0
+    """
+    - reads data from port and writes it in the ringbuffer
+    """
     while bool_stream:
         data = board.get_board_data(1)[board.get_eeg_channels(
             brainflow.board_shim.BoardIds.CYTON_DAISY_BOARD)]  # get all data and remove it from internal buffer
         if len(data[0]) > 0:
             for i in range(len(data)):
                 buffer[i].append(data[i][0])
-            count += 1
-            if count == 100:
-                # print(buffer)
-                print(get_trial_data(500000000000000000))
-                stop_stream()
 
 
 def get_trial_data(duration_in_ms: int) -> np.ndarray:
+    """
+    - get the latest egg data from the ringbuffer which recorded within the time period duration_in_ms
+
+    :param duration_in_ms: in ms, time span in which the required egg data was collected
+    :return: tow demensional ndarray with the requiered egg data
+    :raises Throws IndexError if not enough data is in the buffer for the given duration
+    """
     copied_buffer = copy.deepcopy(buffer)
-    duration_in_samples = int(duration_in_ms/(time_for_one_sample*1000))
+    duration_in_samples = int(duration_in_ms / (time_for_one_sample * 1000))
     i = len(copied_buffer[0]) - duration_in_samples
     if i < 0:
         print('not enough data')
@@ -73,6 +88,9 @@ def get_trial_data(duration_in_ms: int) -> np.ndarray:
 
 
 def stop_stream():
+    """
+    -stops data stream and releases session
+    """
     global bool_stream
     bool_stream = False
     time.sleep(1)
