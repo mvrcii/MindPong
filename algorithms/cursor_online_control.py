@@ -1,6 +1,5 @@
 import mne
 import numpy as np
-from config import CONFIG
 from scipy import integrate
 from numpy_ringbuffer import RingBuffer
 
