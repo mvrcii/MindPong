@@ -1,7 +1,8 @@
+import os
 from typing import List
 import mne
 import numpy as np
-import os
+from pathlib import Path
 
 CHANNELS = [
             'Fz', 'FC3', 'FC1', 'FCz', 'FC2', 'FC4', 'C5',
@@ -11,7 +12,7 @@ CHANNELS = [
 SAMPLERATE = 250
 TMIN = -2
 TMAX = 5.5
-path = '/BCIC_dataset/'
+path = 'BCIC_dataset'
 NOTCH_FILTER_FREQ: float = 50
 
 
@@ -30,9 +31,9 @@ def calc_n_samples(tmin: float, tmax: float, samplerate: float):
 
 def get_subject_fname(subject: int, training: int = 1):
     if training == 1:
-        return os.getcwd() + path + 'A0' + str(subject) + 'T.npz'
-    elif training == 0:
-        return os.getcwd() + path + 'A0' + str(subject) + 'E.npz'
+        abs_path = Path(path)
+        abs_parent_path = abs_path.parent.absolute().parent
+        return abs_parent_path.joinpath(path + '/A0' + str(subject) + 'T.npz')
     else:
         print('Error: Illegal parameter')
     return None
