@@ -18,21 +18,21 @@ buffer = [RingBuffer(capacity=10 * 125, dtype=float) for x in range(16)]
 
 def init():
     """
-    - start function
-    - initialize the board
-    - search for the serial port
-    - starts the data acquisition
+    --- starting point ---
+    Initializing steps:
+    (1) initialize the board
+    (2) search for the serial port
+    (3) starts the data acquisition
     """
     params = BrainFlowInputParams()
     params.serial_port = search_port()
 
     if params.serial_port is not None:
         BoardShim.enable_dev_board_logger()
-        global board
+        global board, bool_stream
         board = BoardShim(brainflow.board_shim.BoardIds.CYTON_DAISY_BOARD, params)
         board.prepare_session()
         board.start_stream()
-        global bool_stream
         bool_stream = True
         handle_samples()
     else:
@@ -41,7 +41,7 @@ def init():
 
 def search_port():
     """
-    - search for the name of the used usb port
+    Search for the name of the used usb port
     :return: name of the used serial port
     :rtype: str
     """
@@ -58,7 +58,7 @@ def search_port():
 
 def handle_samples():
     """
-    - reads data from port and writes it in the ringbuffer
+    Reads EEG data from port and writes into in the ringbuffer
     """
     while bool_stream:
         data = board.get_board_data(1)[board.get_eeg_channels(
@@ -70,17 +70,18 @@ def handle_samples():
 
 def get_trial_data(duration_in_ms: int) -> np.ndarray:
     """
-    - get the latest egg data from the ringbuffer which recorded within the time period duration_in_ms
+    Get the latest EGG data from the ringbuffer which was recorded in the last duration_in_ms milliseconds.
 
-    :param duration_in_ms: in ms, time span in which the required egg data was collected
+    :param duration_in_ms: in ms, time span in which the required EGG data was collected
     :type duration_in_ms: int
-    :return: tow dimensional ndarray with the required egg data
+    :return: two dimensional ndarray with the required EGG data
     :rtype: np.ndarray
-    :raises Throws IndexError if not enough data is in the buffer for the given duration
+    :raises  Throws IndexError if not enough data is in the buffer for the given duration
     """
     copied_buffer = copy.deepcopy(buffer)
     duration_in_samples = int(duration_in_ms / (time_for_one_sample * 1000))
     i = len(copied_buffer[0]) - duration_in_samples
+    #The requested trial duration exceeds the buffer size
     if i < 0:
         print('not enough data')
         raise IndexError('Duration to long!')
@@ -92,7 +93,7 @@ def get_trial_data(duration_in_ms: int) -> np.ndarray:
 
 def stop_stream():
     """
-    -stops data stream and releases session
+    Stops the data stream and the releases session
     """
     global bool_stream
     bool_stream = False
