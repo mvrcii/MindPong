@@ -166,6 +166,6 @@ if __name__ == '__main__':
 
     app = QtWidgets.QApplication(sys.argv)
     w = MainWindow()
-    w.showFullScreen()
     w.show()
-    sys.exit(app.exec_())
+    window = app.exec()
+    sys.exit(window)
