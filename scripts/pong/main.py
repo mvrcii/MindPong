@@ -8,12 +8,41 @@ from scripts.config import *
 
 
 class GameState(object):
+    """
+    A class used to handle the state management in the Game
+
+    Attribute:
+    ----------
+    name : str
+        the name of the state
+    allowed : [str]
+        a list of the allowed state names to switch to
+
+    Methods
+    -------
+    switch(state)
+        Switches the current state to the passed state if it is listed in the allowed states
+    """
+
     name = "state"
     allowed = []
 
     def switch(self, state):
-        """ Switch to new state
-        Use this method and do not set the state attribute manually! """
+        """Switches to the given state.
+
+        If the argument `state` is not listed in the allowed attribute, the state will not switch.
+        Use this method and do not set the state attribute manually!
+
+        Parameters
+        ----------
+            state : GameState
+                the state to switch to
+
+        Returns
+        -------
+        None
+        """
+
         if state.name in self.allowed:
             print('Current State:', self, ' => switched to new state', state.name)
             self.__class__ = state
@@ -26,25 +55,70 @@ class GameState(object):
 
 
 class Playing(GameState):
-    """ State of actively playing the game """
+    """A child of GameState defining the state playing"""
     name = "playing"
     allowed = ['idle', 'restart']
 
 
 class Idle(GameState):
-    """ State of being in idle mode to pause the game """
+    """A child of GameState defining the state idle"""
     name = "idle"
     allowed = ['playing']
 
 
 class Restart(GameState):
-    """ State of restarting the game after a loose """
+    """A child of GameState defining the state idle"""
     name = "restart"
     allowed = ['playing']
 
 
 class MindPong(tk.Frame):
-    """ A class representing the game """
+    """
+    A class representing the pong game
+
+    Attributes:
+    ----------
+        width : int
+            the width of the pong window
+        height : int
+            the height of the pong window
+        state : GameState
+            the current game state
+        score : int
+            the current game score
+        curr_restart_timer : float
+            the current restart timer, which will be set to a value and then count down until it reaches zero.
+            This variable is also displayed while the game is being restarted.
+        update_counter : int
+            the tick counter
+        last_update : float
+            the timestamp of the last update
+        passed_time : float
+            the time that has passed since last_update
+        canvas : Canvas
+            the canvas to draw on
+        paddle : Paddle
+            the paddle object
+        ball : Ball
+            the ball object
+
+    Methods
+    -------
+    update()
+        Calls the update methods of all objects and is responsible for the game loop and state handling
+    handle_time()
+        Handles the time and returns a delta for correction
+    clear()
+        Clears the canvas background. Very important function to avoid flickering and artifacts
+    change(state)
+        Changes the internal state to state if possible
+    set_speed_factors(evt)
+        Takes one of the key events from 1-9 and adapts the balls and paddles speed according to the pressed key.
+        Whereas key 1 corresponds to the slowest and also standard game speed and key 9 to the highest game speed.
+
+    -------
+    A child of tk.Frame
+    """
 
     def __init__(self, parent, controller):
         tk.Frame.__init__(self, parent)
@@ -144,12 +218,10 @@ class MindPong(tk.Frame):
         self.last_update = now
         return delta
 
-
     def clear(self):
         self.canvas.configure(bg="white")
 
     def change(self, state):
-        """ Change the game state """
         self.state.switch(state)
 
     def set_speed_factors(self, evt):
