@@ -88,9 +88,6 @@ def loadBCICDataset(ch_weight):
              loaded_labels: contains the corresponding label for each trial
     """
     # Load BCIC dataset
-    used_subjects = [4]
-    validation_subjects = []
-    n_class = 2
     used_ch_names = []
     # map ch_weight(channel selection) with channels names in BCI dataset to load to selected channels
     for i in range(len(bdl.CHANNELS)):
@@ -145,7 +142,7 @@ def test_algorithm(chan_data, label_data):
 
         try:
             global QUEUE_DATA, QUEUE_LABEL
-            QUEUE_DATA.put(calculated_label)
+            QUEUE_DATA.put(normalized_hcon)
             QUEUE_LABEL.put(label[i])
         except:
             print('Fehler: kann nicht reingeldaden werden')

@@ -1,6 +1,6 @@
 import mne
 import numpy as np
-from scipy import integrate
+from scipy import integrate, signal
 from numpy_ringbuffer import RingBuffer
 
 
@@ -11,50 +11,64 @@ FMAX = 15.0
 WINDOW_SIZE_FACTOR = 1
 
 
-def calculate_laplacian(signal):
+def mute_outliers(samples):
+    mean = np.mean(samples)
+    std = np.std(samples)
+    x = 2.0
+    output = samples
+    for i in range(len(samples)):
+        if samples[i] > mean + x * std:
+            output[i] = mean + x * std
+        if samples[i] < mean - x * std:
+            output[i] = mean - x * std
+
+    return output
+
+
+def calculate_laplacian(samples):
     """
-    Calculate average signal of the j electrodes surrounding the hand knob of
+    Calculate average samples of the j electrodes surrounding the hand knob of
     the motor area
     j = num channels without C3/C4
-    :param signal: signals of each channel
+    :param samples: samples of each channel
     :return: calculated average
     """
     result = list()
-    for i in range(len(signal[0])):
+    for i in range(len(samples[0])):
         average = 0
-        for j in range(len(signal)):
-            average += signal[j][i]
-        average /= len(signal)
+        for j in range(len(samples)):
+            average += samples[j][i]
+        average /= len(samples)
         result.append(average)
 
     return result
 
 
-def calculate_spatial_filtering(signal_list):
+def calculate_spatial_filtering(samples_list):
     """
-    Subtract the calculated average signal from C3 and C4 to perform the spatial filtering
-    :param signal_list: signals of all channels (with C3 at position 0 and C4 at position 1)
-    :return: filtered C3, C4 signals
+    Subtract the calculated average samples from C3 and C4 to perform the spatial filtering
+    :param samples_list: samples of all channels (with C3 at position 0 and C4 at position 1)
+    :return: filtered C3, C4 samples
     """
-    signal_c3a = list()
-    signal_c4a = list()
-    signal_average = calculate_laplacian(signal_list[2:])
-    for i in range(len(signal_list[0])):
-        signal_c3a.append(signal_list[0][i] - signal_average[i])
-        signal_c4a.append(signal_list[1][i] - signal_average[i])
+    samples_c3a = list()
+    samples_c4a = list()
+    samples_average = calculate_laplacian(samples_list[2:])
+    for i in range(len(samples_list[0])):
+        samples_c3a.append(samples_list[0][i] - samples_average[i])
+        samples_c4a.append(samples_list[1][i] - samples_average[i])
 
-    return signal_c3a, signal_c4a
+    return samples_c3a, samples_c4a
 
 
-def perform_multitaper(signal, jobs=-1):
+def perform_multitaper(samples, jobs=-1):
     """
-    Performs multitaper function to convert all signals from time into frequency domain
-    :param signal: all signals from a channel (should be filtered)
+    Performs multitaper function to convert all samples from time into frequency domain
+    :param samples: all samples from a channel (should be filtered)
     :param jobs: number of jobs to run in parallel (-1 = num of available CPU cores)
-    :return: psd_abs: power spectral density (PSD) of the signal
+    :return: psd_abs: power spectral density (PSD) of the samples
              freqs: the corresponding frequencies
     """
-    array = np.array(signal)
+    array = np.array(samples)
     _bandwidth = FMAX - FMIN if FMAX - FMIN > 0 else 1
     psds, freqs = mne.time_frequency.psd_array_multitaper(array, sfreq=128, n_jobs=jobs, bandwidth=_bandwidth,
                                                           fmin=FMIN, fmax=FMAX, verbose=False)
@@ -63,25 +77,29 @@ def perform_multitaper(signal, jobs=-1):
     return psds_abs, freqs
 
 
-def perform_rfft(signal):
+def perform_periodogram(samples):
+    return signal.periodogram(samples, 250)
+
+
+def perform_rfft(samples):
     """
     See: https://klyshko.github.io/teaching/2019-02-22-teaching
-    Performs fft function to convert all signals from time into frequency domain
-    :param signal: all signals from a channel (should be filtered)
-    :return: fft_spectrum_abs: power spectral density (PSD) of the signal
+    Performs fft function to convert all samples from time into frequency domain
+    :param samples: all samples from a channel (should be filtered)
+    :return: fft_spectrum_abs: power spectral density (PSD) of the samples
              freqs: the corresponding frequencies
     """
-    fft_spectrum = np.fft.rfft(signal)
-    freqs = np.fft.rfftfreq(len(signal), d=1 / CONFIG.EEG.SAMPLERATE)
+    fft_spectrum = np.fft.rfft(samples)
+    freqs = np.fft.rfftfreq(len(samples), d=1 / CONFIG.EEG.SAMPLERATE)
     fft_spectrum_abs = np.abs(fft_spectrum)
 
     return fft_spectrum_abs, freqs
 
 
-def integrate_psd_values(signal, frequency_list, use_frequency_filter=False):
+def integrate_psd_values(samples, frequency_list, use_frequency_filter=False):
     """
     Integrates over the calculated PSD values in between the specified frequencies (FMIN, FMAX)
-    :param signal: F(C3), F(C4)
+    :param samples: F(C3), F(C4)
     :param frequency_list: list of the included frequencies
     :param use_frequency_filter: FALSE: if frequencies are already filtered (e.g. with multitaper algorithm),
                                  TRUE: use intern filter
@@ -94,10 +112,10 @@ def integrate_psd_values(signal, frequency_list, use_frequency_filter=False):
     if (use_frequency_filter):
         for i in range(len(frequency_list)):
             if FMAX >= frequency_list[i] >= FMIN:
-                psds_in_band_power.append(signal[i])
+                psds_in_band_power.append(samples[i])
                 requested_frequency_range.append(frequency_list[i])
 
-    band_power = integrate.simps(psds_in_band_power, requested_frequency_range) if use_frequency_filter else integrate.simps(signal, frequency_list)
+    band_power = integrate.simps(psds_in_band_power, requested_frequency_range) if use_frequency_filter else integrate.simps(samples, frequency_list)
 
     return band_power
 
@@ -123,7 +141,7 @@ def perform_algorithm(sliding_window, window_size_factor=1):
         (1) Spatial filtering
         (2) Spectral analysis
         (3) Band Power calculation
-        (4) Derive normalized cursor control signal
+        (4) Derive normalized cursor control samples
     :param sliding_window: A sliding window (SW) with n channels, n must contain C3 and C4
            (SW(t) should be overlapping with SW(t+1))
     :param window_size_factor: n: n*200ms
@@ -132,21 +150,27 @@ def perform_algorithm(sliding_window, window_size_factor=1):
     global WINDOW_SIZE_FACTOR
     WINDOW_SIZE_FACTOR = window_size_factor
 
+    # 0. mute outliers
+    for i in range(len(sliding_window)):
+        sliding_window[i] = mute_outliers(sliding_window[i])
+
     # 1. Spatial filtering
-    signal_c3a, signal_c4a = calculate_spatial_filtering(sliding_window)
+    samples_c3a, samples_c4a = calculate_spatial_filtering(sliding_window)
 
     # 2. Spectral analysis
-    psds_c3a_f, freq_c3a_f = perform_multitaper(signal_c3a)
-    psds_c4a_f, freq_c4a_f = perform_multitaper(signal_c4a)
+    # psds_c3a_f, freq_c3a_f = perform_multitaper(samples_c3a)
+    # psds_c4a_f, freq_c4a_f = perform_multitaper(samples_c4a)
+    f_c3a, psd_c3a = perform_periodogram(samples_c3a)
+    f_c4a, psd_c4a = perform_periodogram(samples_c4a)
 
     # 3. Band Power calculation
-    area_c3 = integrate_psd_values(psds_c3a_f, freq_c3a_f)
-    area_c4 = integrate_psd_values(psds_c4a_f, freq_c4a_f)
+    area_c3 = integrate_psd_values(psd_c3a, f_c3a)
+    area_c4 = integrate_psd_values(psd_c4a, f_c4a)
 
-    # 4. Derive cursor control signal
+    # 4. Derive cursor control samples
     hcon = area_c4 - area_c3
 
-    # normalize to zero mean and unit variance to derive the cursor control signal
+    # normalize to zero mean and unit variance to derive the cursor control samples
     ringbuffer = manage_ringbuffer()
     ringbuffer.append(hcon)
     values = np.array(ringbuffer)
