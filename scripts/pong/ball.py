@@ -59,6 +59,7 @@ class Ball:
 
     def reset(self):
         self.canvas.delete(self.id)
+        self.speed_factor = 1
         self.init()
 
     def init(self):

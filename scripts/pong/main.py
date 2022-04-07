@@ -49,6 +49,10 @@ class MindPong(tk.Frame):
     def __init__(self, parent, controller):
         tk.Frame.__init__(self, parent)
 
+        # override window dimensions
+        global WINDOW_WIDTH, WINDOW_HEIGHT
+        WINDOW_WIDTH = self.winfo_screenwidth()
+        WINDOW_HEIGHT = self.winfo_screenheight()
         self.width = WINDOW_WIDTH
         self.height = WINDOW_HEIGHT
 
@@ -58,17 +62,21 @@ class MindPong(tk.Frame):
 
         self.curr_restart_time = 0
 
-        self.updateCounter = 0
-        self.lastUpdate = 0
-        self.passedTime = 0
+        self.update_counter = 0
+        self.last_update = 0
+        self.passed_time = 0
 
         self.canvas = Canvas(self, width=self.width, height=self.height, bd=0, highlightthickness=0, relief='ridge')
         self.score_label, self.timer_label = None, None
         self.init_labels()
         self.canvas.pack()
 
-        self.paddle = paddle.Paddle(self, self.canvas, 100, 10, 'blue')
-        self.ball = ball.Ball(self, self.canvas, 'red', 15, paddle=self.paddle)
+        self.paddle = paddle.Paddle(self, self.canvas, 120, 20, 'blue')
+        self.ball = ball.Ball(self, self.canvas, 'red', 20, paddle=self.paddle)
+
+        # bind keys 1-9
+        for i in range(BALL_SPEED_KEYS):
+            self.bind(str(i), self.set_speed_factors)
 
         self.bind("<space>", lambda event: self.change(Playing) if self.state.name is Idle.name else self.change(Idle))
 
@@ -87,7 +95,7 @@ class MindPong(tk.Frame):
             self.clear()
             # Update
             self.paddle.update(delta_time=delta / 4)
-            self.ball.update(delta_time=delta / 4)
+            self.ball.update(delta_time=delta / 6)
             # Draw
             self.paddle.draw()
             self.ball.draw()
@@ -119,21 +127,21 @@ class MindPong(tk.Frame):
 
     def handle_time(self):
         # Time control
-        self.updateCounter = self.updateCounter + 1
+        self.update_counter = self.update_counter + 1
         now = round(time.time() * 1000)
 
-        if self.lastUpdate == 0:
-            self.lastUpdate = now
+        if self.last_update == 0:
+            self.last_update = now
 
-        delta = now - self.lastUpdate
+        delta = now - self.last_update
 
-        self.passedTime = self.passedTime + delta
+        self.passed_time = self.passed_time + delta
 
-        if self.passedTime > 1000:
-            print("FPS: ", self.updateCounter)
-            self.updateCounter = 0
-            self.passedTime = 0
-        self.lastUpdate = now
+        if self.passed_time > 1000:
+            # print("FPS: ", self.updateCounter)
+            self.update_counter = 0
+            self.passed_time = 0
+        self.last_update = now
         return delta
 
 
@@ -143,6 +151,11 @@ class MindPong(tk.Frame):
     def change(self, state):
         """ Change the game state """
         self.state.switch(state)
+
+    def set_speed_factors(self, evt):
+        key_value = int(evt.char) - 1  # shift, so that key 1 equals to speed factor 1.0
+        self.ball.speed_factor = 1.0 + (key_value / BALL_SPEED_KEYS) * 3
+        print(self.ball.speed_factor)
 
     def init_labels(self):
         self.score_label = self.canvas.create_text(self.width / 2, self.height * 0.5,
