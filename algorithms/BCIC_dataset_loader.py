@@ -62,7 +62,7 @@ def get_channel_rawdata(subject: int, n_class: int = 4, ch_names: List[str] = CH
     n_samples = calc_n_samples(TMIN, TMAX, SAMPLERATE)
     fname = get_subject_fname(subject, training)
 
-    print('  - Load data of subject %d from file: %s' % (subject, fname))
+    # print('  - Load data of subject %d from file: %s' % (subject, fname))
     data = np.load(fname)
 
     raw = data['s'].T

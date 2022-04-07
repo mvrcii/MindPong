@@ -1,3 +1,4 @@
+import sys
 import threading, queue
 import time
 import numpy as np
@@ -37,7 +38,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.setCentralWidget(self.graphWidget)
 
         self.x = list(range(100))
-        self.y = list()
+        self.y = [0]*100
 
         self.graphWidget.setBackground('w')
 
@@ -56,9 +57,10 @@ class MainWindow(QtWidgets.QMainWindow):
             global q1
             self.y = self.y[1:]
             self.y.append(q1.get()) # Get and remove the first element of the queue
+            print(q1.get())
             self.data_line.setData(self.x, self.y)  # Update the data.
         except:
-            time.sleep(0.05)
+            time.sleep(0.005)
 
 
 def loadBCICDataset(ch_weight):
@@ -149,10 +151,10 @@ def start_algorithm():
 
 
 if __name__ == '__main__':
-    # threading.Thread(target=start_algorithm).start()
-    start_algorithm()
+    threading.Thread(target=start_algorithm).start()
 
-    # app = QtWidgets.QApplication(sys.argv)
-    # w = MainWindow()
-    # w.show()
-    # sys.exit(app.exec_())
+
+    app = QtWidgets.QApplication(sys.argv)
+    w = MainWindow()
+    w.show()
+    sys.exit(app.exec_())
