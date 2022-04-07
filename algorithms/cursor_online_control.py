@@ -57,7 +57,7 @@ def perform_multitaper(signal, jobs=-1):
     array = np.array(signal)
     _bandwidth = FMAX - FMIN if FMAX - FMIN > 0 else 1
     psds, freqs = mne.time_frequency.psd_array_multitaper(array, sfreq=128, n_jobs=jobs, bandwidth=_bandwidth,
-                                                          fmin=FMIN, fmax=FMAX)
+                                                          fmin=FMIN, fmax=FMAX, verbose=False)
     psds_abs = np.abs(psds)
 
     return psds_abs, freqs
