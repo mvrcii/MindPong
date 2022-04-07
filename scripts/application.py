@@ -1,24 +1,22 @@
 import os
 import platform
-import time
 import tkinter as tk
-# import AppKit
-import winsound
 from tkinter import *
-from tkinter import ttk
-from tkinter.ttk import *
 
 import matplotlib
+# import AppKit
+import winsound
 from matplotlib import style
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg, NavigationToolbar2Tk
 from matplotlib.figure import Figure
 
 from scripts.config import *
-from scripts.pong.main import MindPong, Playing
+from scripts.pong.main import MindPong
 
 matplotlib.use("TkAgg")
 LARGE_FONT = ("Verdana", 16)
 style.use("ggplot")
+
 
 def play_sound():
     current_os = platform.system()
@@ -133,6 +131,7 @@ Punkt in der Mitte des Fenster, bis Sie einen Piepton hören''' % FOCUS_POINT_TI
 
 class CalibrationPageTwo(tk.Frame):
     """ Calibration page with a point in the center to focus on. """
+
     def __init__(self, parent, controller):
         tk.Frame.__init__(self, parent)
 
