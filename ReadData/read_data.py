@@ -74,18 +74,18 @@ def get_trial_data(duration_in_ms: int) -> np.ndarray:
 
     :param duration_in_ms: in ms, time span in which the required EGG data was collected
     :type duration_in_ms: int
-    :return: two dimensional ndarray with the required EGG data
+    :return: two-dimensional ndarray with the required EGG data
     :rtype: np.ndarray
-    :raises  Throws IndexError if not enough data is in the buffer for the given duration
+    :raises IndexError: if not enough data is in the buffer for the given duration
     """
     copied_buffer = copy.deepcopy(buffer)
     duration_in_samples = int(duration_in_ms / (time_for_one_sample * 1000))
     i = len(copied_buffer[0]) - duration_in_samples
-    #The requested trial duration exceeds the buffer size
+    # The requested trial duration exceeds the buffer size
     if i < 0:
         print('not enough data')
         raise IndexError('Duration to long!')
-    trial_data = [[] for x in range(16)]
+    trial_data = [[] for _ in range(16)]
     for x in range(16):
         trial_data[x] = np.array(copied_buffer[x][i:])
     return np.array(trial_data)
@@ -97,7 +97,7 @@ def stop_stream():
     """
     global bool_stream
     bool_stream = False
-    time.sleep(1)
+    # time.sleep(0.3) , needed for multithreading
     board.stop_stream()
     board.release_session()
 
