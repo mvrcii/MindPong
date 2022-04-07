@@ -28,21 +28,21 @@ buffer = [RingBuffer(capacity=10 * 125, dtype=float) for x in range(16)]
 
 def init():
     """
-    - start function
-    - initialize the board
-    - search for the serial port
-    - starts the data acquisition
+    --- starting point ---
+    Initializing steps:
+    (1) initialize the board
+    (2) search for the serial port
+    (3) starts the data acquisition
     """
     params = BrainFlowInputParams()
     params.serial_port = search_port()
 
     if params.serial_port is not None:
         BoardShim.enable_dev_board_logger()
-        global board
+        global board, stream_available
         board = BoardShim(brainflow.board_shim.BoardIds.CYTON_DAISY_BOARD, params)
         board.prepare_session()
         board.start_stream()
-        global stream_available
         stream_available = True
         handle_samples()
     else:
@@ -51,7 +51,7 @@ def init():
 
 def search_port():
     """
-    - search for the name of the used usb port
+    Search for the name of the used usb port
     :return: name of the used serial port
     :rtype: str
     """
@@ -67,9 +67,8 @@ def search_port():
 
 def handle_samples():
     """
-    - reads data from port and writes it in the ringbuffer
+    Reads EEG data from port and writes into in the ringbuffer
     """
-    count = 0
     global first_window
     while stream_available:
         data = board.get_board_data(1)[board.get_eeg_channels(
@@ -81,23 +80,17 @@ def handle_samples():
             """
             for i in range(len(data)):
                 buffer[i].append(data[i][0])
-            count += 1
-            if allow_window_creation:
-                if (first_window and count == sliding_window_samples) or (not first_window and count == offset_samples):
-                    count = 0
-                    first_window = False
-                    send_window()
 
 
 def get_trial_data(duration_in_ms: int) -> np.ndarray:
     """
-    Get the latest EGG data from the ringbuffer which recorded within the time period duration_in_ms
+    Get the latest EGG data from the ringbuffer which was recorded in the last duration_in_ms milliseconds.
 
-    :param duration_in_ms: in ms, time span in which the required egg data was collected
+    :param duration_in_ms: in ms, time span in which the required EGG data was collected
     :type duration_in_ms: int
-    :return: two dimensional ndarray with the required EEG data
+    :return: two-dimensional ndarray with the required EEG data
     :rtype: np.ndarray
-    :raises Throws IndexError if not enough data is in the buffer for the given duration
+    :raises IndexError: if not enough data is in the buffer for the given duration
     """
     # ToDo block buffer instead of copy
     duration_in_samples = int(duration_in_ms / (time_for_one_sample * 1000))
@@ -117,10 +110,11 @@ def get_data(duration_in_samples: int) -> np.ndarray:
     # ToDo block buffer instead of copy
     copied_buffer = copy.deepcopy(buffer)
     i = len(copied_buffer[0]) - duration_in_samples
+    # The requested trial duration exceeds the buffer size
     if i < 0:
         print('not enough data')
         raise IndexError('Duration to long!')
-    trial_data = [[] for x in range(16)]
+    trial_data = [[] for _ in range(16)]
     for x in range(16):
         trial_data[x] = np.array(copied_buffer[x][i:])
     return np.array(trial_data)
@@ -136,11 +130,11 @@ def send_window():
 
 def stop_stream():
     """
-    -stops data stream and releases session
+    Stops the data stream and the releases session
     """
     global stream_available
     stream_available = False
-    time.sleep(1)
+    # time.sleep(0.3) , needed for multithreading
     board.stop_stream()
     board.release_session()
 
