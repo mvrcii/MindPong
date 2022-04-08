@@ -7,68 +7,50 @@ class MetaData:
     Class to store the meta data of one trial in an object
     """
     __subject_ID: int
+    __subject_sex: str
+    __subject_age: int
     __date: datetime.date
     __time: datetime.time
-    __amount_samples: int
     __sampling_rate: int
     __channel_mapping: np.ndarray
+    __recording_type: str
+    __headset: str
     __amount_trials: int
+    __comment: str
+    __amount_different_events: int
 
     # channel configuration of the headset we use
     bci_channels = ['C3', 'Cz', 'C4', 'P3', 'Pz', 'P4', 'O1',
                     'FC5', 'FC1', 'FC2', 'FC6', 'CP5', 'CP1', 'CP2', 'CP6']
 
-    def __init__(self, sid, amount_samples, amount_trials, time=datetime.datetime.now().time(), sampling_rate=125,
-                 channels=bci_channels):
+    def __init__(self, sid, sex, age, amount_trials, comment, amount_events, time=datetime.datetime.now().time(),
+                 sampling_rate=125, channels=bci_channels, type='game', headset='BCI'):
         """
         Date of the session is automatically the current date
         :param sid: ID of the subject
-        :param amount_samples: amount of the EEG data samples in this trial
+        :param sex: sex of the subject
+        :param age: age of the subject
+        :param comment: comment section for the scientist
+        :param amount_events: amount of different events in one session
         :param time: start time of the trial
         :param sampling_rate: sampling rate
         :param channels: used channel occupancy as string array
+        :param type: the way the data was collected (e.g. game, arrows, ...)
+        :param headset: kind of headset which is used for data acquisition
         :param amount_trials: amount of trails in this session
         """
         self.__subject_ID = sid
+        self.__subject_sex = sex
+        self.__subject_age = age
         self.__date = datetime.date.today()
         self.__time = time
-        self.__amount_samples = amount_samples
         self.__sampling_rate = sampling_rate
         self.__channel_mapping = channels
         self.__amount_trials = amount_trials
-
-    @property
-    def subject_ID(self):
-        return self.__subject_ID
-
-    @property
-    def date(self):
-        return self.__date
-
-    def date_to_string(self) -> str:
-        return self.date.strftime("%m/%d/%Y")
-
-    @property
-    def time(self):
-        return self.__time
-
-
-    @property
-    def amount_samples(self):
-        return self.__amount_samples
-
-    @property
-    def sampling_rate(self):
-        return self.__sampling_rate
-
-    @property
-    def channel_mapping(self):
-        return self.__channel_mapping
-
-
-    @property
-    def amount_trials(self):
-        return self.__amount_trials
+        self.__recording_type = type
+        self.__headset = headset
+        self.__amount_different_events = amount_events
+        self.__comment = comment
 
     def turn_into_np_array(self) -> np.ndarray:
         """
@@ -76,10 +58,10 @@ class MetaData:
         Every tuples get the attribute name and the respective attribute
         :return: np.ndarray with meta data
         """
-        meta = [('id', self.subject_ID), ('date', self.date), ('time', self.time),
-                ('amount_samples', self.amount_samples),
+        meta = [('id', self.__subject_ID), ('sex', self.__subject_sex), ('age', self.__subject_age),
+                ('date', self.date), ('time', self.time),
                 ('sampling_rate', self.sampling_rate), ('channels', self.channel_mapping),
-                ('amount_trials', self.amount_trials)]
+                ('recording_type', self.__recording_type), ('headset', self.__headset),
+                ('amount_trials', self.amount_trials), ('different_events', self.__amount_different_events),
+                ('comment', self.__comment)]
         return np.array(meta, dtype=object)
-
-
