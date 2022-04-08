@@ -13,8 +13,8 @@ class MyTestCase(unittest.TestCase):
                           [0, 1, 2, 5, 6], [0, 1, 2, 5, 6], [0, 1, 2, 5, 6], [0, 1, 2, 5, 6], [0, 1, 2, 5, 6],
                           [0, 1, 2, 5, 6]]
 
-        print(trial_handler.buffer)
-        self.assertEqual(expected_array, trial_handler.buffer)
+        print(trial_handler.trial_buffer)
+        self.assertEqual(expected_array, trial_handler.trial_buffer)
 
 
 if __name__ == '__main__':

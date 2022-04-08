@@ -23,7 +23,7 @@ allow_window_creation = True
 first_window = True
 stream_available = False  # indicates if stream is available
 board: BoardShim
-buffer = [RingBuffer(capacity=10 * 125, dtype=float) for x in range(16)]
+trial_buffer = [RingBuffer(capacity=10 * 125, dtype=float) for x in range(16)]
 
 
 def init():
@@ -79,7 +79,7 @@ def handle_samples():
             To avoid iconsistence of data because of a call of get_data()
             """
             for i in range(len(data)):
-                buffer[i].append(data[i][0])
+                trial_buffer[i].append(data[i][0])
 
 
 def get_trial_data(duration_in_ms: int) -> np.ndarray:
@@ -108,7 +108,7 @@ def get_data(duration_in_samples: int) -> np.ndarray:
         :raises Throws IndexError if not enough data is in the buffer for the given duration
         """
     # ToDo block buffer instead of copy
-    copied_buffer = copy.deepcopy(buffer)
+    copied_buffer = copy.deepcopy(trial_buffer)
     i = len(copied_buffer[0]) - duration_in_samples
     # The requested trial duration exceeds the buffer size
     if i < 0:
