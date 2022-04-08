@@ -5,7 +5,7 @@ from enum import *
 
 
 class CollisionType(Enum):
-    """Enumerate various collision types for the ball."""
+    """An enum used to define the collision type of the ball"""
 
     LEFT = auto()
     RIGHT = auto()
@@ -59,6 +59,7 @@ class Ball:
 
     def reset(self):
         self.canvas.delete(self.id)
+        self.speed_factor = 1
         self.init()
 
     def init(self):
@@ -71,13 +72,13 @@ class Ball:
         self.init_angle()
 
     def init_angle(self):
-        """Initializes the balls angle."""
+        """Initializes the balls angle"""
         self.vec_x = random.choice([round(random.uniform(-1, -0.1), 2), round(random.uniform(0.1, 1), 2)])
         self.vec_y = -1
         self.angle = get_angle_for_vector(vec_x=self.vec_x, vec_y=self.vec_y)
 
     def check_collision(self) -> CollisionType:
-        """Checks if the ball will collide with any CollisionType in the next tick."""
+        """Checks if the ball will have a collision in the next tick"""
         # TODO: Task MIN-32: Verbesserte Lösung für das Border Problem.
         #                    Derzeit Collision Check im nächsten Tick mit verdoppelter Geschwindigkeit.
         v_x = self.v_x * 2

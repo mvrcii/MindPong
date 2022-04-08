@@ -1,23 +1,52 @@
 from tkinter import *
+import tkinter as tk
 import time
 
 import scripts.pong.ball as ball
 import scripts.pong.paddle as paddle
-
-
-RESTART_TIME = 3
+from scripts.config import *
 
 
 class GameState(object):
+    """
+    A class used to handle the state management in the Game
+
+    Attribute:
+    ----------
+    name : str
+        the name of the state
+    allowed : [str]
+        a list of the allowed state names to switch to
+
+    Methods
+    -------
+    switch(state)
+        Switches the current state to the passed state if it is listed in the allowed states
+    """
+
     name = "state"
     allowed = []
 
     def switch(self, state):
-        """ Switch to new state
-        Use this method and do not set the state attribute manually! """
+        """Switches to the given state.
+
+        If the argument `state` is not listed in the allowed attribute, the state will not switch.
+        Use this method and do not set the state attribute manually!
+
+        Parameters
+        ----------
+            state : GameState
+                the state to switch to
+
+        Returns
+        -------
+        None
+        """
+
         if state.name in self.allowed:
             print('Current State:', self, ' => switched to new state', state.name)
             self.__class__ = state
+            print(self.__class__)
         else:
             print('Current State:', self, ' => switching to', state.name, 'not possible.')
 
@@ -26,31 +55,80 @@ class GameState(object):
 
 
 class Playing(GameState):
-    """ State of actively playing the game """
+    """A child of GameState defining the state playing"""
     name = "playing"
     allowed = ['idle', 'restart']
 
 
 class Idle(GameState):
-    """ State of being in idle mode to pause the game """
+    """A child of GameState defining the state idle"""
     name = "idle"
     allowed = ['playing']
 
 
 class Restart(GameState):
-    """ State of restarting the game after a loose """
+    """A child of GameState defining the state idle"""
     name = "restart"
     allowed = ['playing']
 
 
-class MindPong(Tk):
-    """ A class representing the game """
+class MindPong(tk.Frame):
+    """
+    A class representing the pong game
 
-    def __init__(self):
-        Tk.__init__(self)
+    Attributes:
+    ----------
+        width : int
+            the width of the pong window
+        height : int
+            the height of the pong window
+        state : GameState
+            the current game state
+        score : int
+            the current game score
+        curr_restart_timer : float
+            the current restart timer, which will be set to a value and then count down until it reaches zero.
+            This variable is also displayed while the game is being restarted.
+        update_counter : int
+            the tick counter
+        last_update : float
+            the timestamp of the last update
+        passed_time : float
+            the time that has passed since last_update
+        canvas : Canvas
+            the canvas to draw on
+        paddle : Paddle
+            the paddle object
+        ball : Ball
+            the ball object
 
-        self.WIDTH = 800
-        self.HEIGHT = 600
+    Methods
+    -------
+    update()
+        Calls the update methods of all objects and is responsible for the game loop and state handling
+    handle_time()
+        Handles the time and returns a delta for correction
+    clear()
+        Clears the canvas background. Very important function to avoid flickering and artifacts
+    change(state)
+        Changes the internal state to state if possible
+    set_speed_factors(evt)
+        Takes one of the key events from 1-9 and adapts the balls and paddles speed according to the pressed key.
+        Whereas key 1 corresponds to the slowest and also standard game speed and key 9 to the highest game speed.
+
+    -------
+    A child of tk.Frame
+    """
+
+    def __init__(self, parent, controller):
+        tk.Frame.__init__(self, parent)
+
+        # override window dimensions
+        global WINDOW_WIDTH, WINDOW_HEIGHT
+        WINDOW_WIDTH = self.winfo_screenwidth()
+        WINDOW_HEIGHT = self.winfo_screenheight()
+        self.width = WINDOW_WIDTH
+        self.height = WINDOW_HEIGHT
 
         # State of the game - default is idle
         self.state = Idle()
@@ -58,28 +136,31 @@ class MindPong(Tk):
 
         self.curr_restart_time = 0
 
-        self.updateCounter = 0
-        self.lastUpdate = 0
-        self.passedTime = 0
+        self.update_counter = 0
+        self.last_update = 0
+        self.passed_time = 0
 
-        self.title("MindPong Game")
-        self.canvas = Canvas(self, width=self.WIDTH, height=self.HEIGHT, bd=0, highlightthickness=0, relief='ridge')
+        self.canvas = Canvas(self, width=self.width, height=self.height, bd=0, highlightthickness=0, relief='ridge')
         self.score_label, self.timer_label = None, None
         self.init_labels()
         self.canvas.pack()
 
-        self.paddle = paddle.Paddle(self, self.canvas, 100, 10, 'blue')
-        self.ball = ball.Ball(self, self.canvas, 'red', 15, paddle=self.paddle)
+        self.paddle = paddle.Paddle(self, self.canvas, 120, 20, 'blue')
+        self.ball = ball.Ball(self, self.canvas, 'red', 20, paddle=self.paddle)
 
-        self.change(Playing)
-        self.bindings()
-        self.update()  # trigger initial update
-        self.mainloop()
+        # bind keys 1-9
+        for i in range(BALL_SPEED_KEYS):
+            self.bind(str(i+1), self.set_speed_factors)
+
+        self.bind("<space>", lambda event: self.change(Playing) if self.state.name is Idle.name else self.change(Idle))
+
+        self.update()
 
     def update(self):
+        curr_state = self.state.name
+
         delta = self.handle_time()
 
-        curr_state = self.state.name
         if curr_state is Idle.name:
             pass
 
@@ -88,7 +169,7 @@ class MindPong(Tk):
             self.clear()
             # Update
             self.paddle.update(delta_time=delta / 4)
-            self.ball.update(delta_time=delta / 4)
+            self.ball.update(delta_time=delta / 6)
             # Draw
             self.paddle.draw()
             self.ball.draw()
@@ -103,7 +184,7 @@ class MindPong(Tk):
                 self.score = 0
 
             curr_time = time.time()
-            if curr_time - self.curr_restart_time > RESTART_TIME:
+            if curr_time - self.curr_restart_time > PONG_RESTART_TIME:
                 self.curr_restart_time = 0
                 self.change(Playing)
                 self.canvas.itemconfig(self.score_label, state=HIDDEN)
@@ -120,48 +201,39 @@ class MindPong(Tk):
 
     def handle_time(self):
         # Time control
-        self.updateCounter = self.updateCounter + 1
+        self.update_counter = self.update_counter + 1
         now = round(time.time() * 1000)
 
-        if self.lastUpdate == 0:
-            self.lastUpdate = now
+        if self.last_update == 0:
+            self.last_update = now
 
-        delta = now - self.lastUpdate
+        delta = now - self.last_update
 
-        self.passedTime = self.passedTime + delta
+        self.passed_time = self.passed_time + delta
 
-        if self.passedTime > 1000:
-            print("FPS: ", self.updateCounter)
-            self.updateCounter = 0
-            self.passedTime = 0
-        self.lastUpdate = now
+        if self.passed_time > 1000:
+            # print("FPS: ", self.updateCounter)
+            self.update_counter = 0
+            self.passed_time = 0
+        self.last_update = now
         return delta
 
     def clear(self):
         self.canvas.configure(bg="white")
 
     def change(self, state):
-        """ Change the game state """
         self.state.switch(state)
 
-    def bindings(self):
-        self.canvas.bind_all("<space>",
-                             lambda event: self.change(Playing) if self.state.name is Idle.name else self.change(Idle))
+    def set_speed_factors(self, evt):
+        key_value = int(evt.char) - 1  # shift, so that key 1 equals to speed factor 1.0
+        self.ball.speed_factor = 1.0 + (key_value / BALL_SPEED_KEYS) * 3
 
     def init_labels(self):
-        self.score_label = self.canvas.create_text(self.WIDTH / 2, self.HEIGHT * 0.5,
+        self.score_label = self.canvas.create_text(self.width / 2, self.height * 0.5,
                                                    anchor=CENTER, text="Score: 0", font=('Helvetica', '20', 'bold'))
         self.canvas.itemconfig(self.score_label, state=HIDDEN)
 
-        self.timer_label = self.canvas.create_text(self.WIDTH / 2, self.HEIGHT * 0.6,
+        self.timer_label = self.canvas.create_text(self.width / 2, self.height * 0.6,
                                                    anchor=CENTER, text="Restarting in 3",
                                                    font=('Helvetica', '20', 'bold'))
         self.canvas.itemconfig(self.timer_label, state=HIDDEN)
-
-
-def main():
-    MindPong()
-
-
-if __name__ == "__main__":
-    main()
