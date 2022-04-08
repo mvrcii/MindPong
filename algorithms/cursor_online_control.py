@@ -178,4 +178,4 @@ def perform_algorithm(sliding_window, window_size_factor=1):
     standard_deviation = np.std(values)
     normalized_hcon = (hcon - mean) / standard_deviation if standard_deviation else 0
 
-    return normalized_hcon
+    return normalized_hcon, area_c3, area_c4
