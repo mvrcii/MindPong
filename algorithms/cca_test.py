@@ -117,10 +117,10 @@ def loadBCICDataset(ch_weight):
 
     chan_data, label_data = bdl.get_channel_rawdata(subject=7, n_class=2, ch_names=used_ch_names)
 
-    return chan_data, label_data
+    return chan_data, label_data, used_ch_names
 
 
-def test_algorithm(chan_data, label_data):
+def test_algorithm(chan_data, label_data, used_ch_names):
     """
     - create overlapping sliding windows
     - Calls the cursor control algorithm
@@ -142,7 +142,7 @@ def test_algorithm(chan_data, label_data):
         stop_idx = int(((toff[i] + TS_SIZE) * SAMPLING_RATE) - 1)
 
         # calls the one and only cursor control algorithm
-        normalized_hcon, area_c3, area_c4 = cursor_online_control.perform_algorithm(chan_data[:, start_idx:stop_idx],
+        normalized_hcon, area_c3, area_c4 = cursor_online_control.perform_algorithm(chan_data[:, start_idx:stop_idx], used_ch_names,
                                                                   SLIDING_WINDOW_SIZE_FACTOR)
         norm_hcon[i] = normalized_hcon
 
@@ -178,8 +178,8 @@ def test_algorithm(chan_data, label_data):
 def start_algorithm():
     #                 Fz  FC3  FC1  FCz  FC2  FC4  C5  C3  C1  Cz  C2  C4  C6  CP3  CP1  CPz  CP2  CP4  P1  Pz  P2  POz
     ch_names_weight = [0,  1,   1,   0,   1,   1,   0,  1,  0,  0,  0,  1,  0,  1,   1,   0,   1,   1,   0,  0,  0,  0]
-    preloaded_data, preloaded_labels = loadBCICDataset(ch_names_weight)
-    test_algorithm(preloaded_data, preloaded_labels)
+    preloaded_data, preloaded_labels, used_ch_names = loadBCICDataset(ch_names_weight)
+    test_algorithm(preloaded_data, preloaded_labels, used_ch_names)
 
 
 if __name__ == '__main__':

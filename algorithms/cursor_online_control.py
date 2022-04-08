@@ -43,8 +43,28 @@ def calculate_laplacian(samples):
 
     return result
 
+def split_normalization_area(samples_list, used_ch_names):
+    channels_around_c3 = list()
+    channels_around_c4 = list()
+    split_channels = list()
 
-def calculate_spatial_filtering(samples_list):
+    for i in range(len(used_ch_names)):
+        c = used_ch_names[i][-1]
+
+        if c.isnumeric():
+            if int(c)%2 == 0:
+                channels_around_c4.append(samples_list[i])
+            else:
+                channels_around_c3.append(samples_list[i])
+        else:
+            channels_around_c3.append(samples_list[i])
+            channels_around_c4.append(samples_list[i])
+
+    print()
+    return channels_around_c3, channels_around_c4
+
+
+def calculate_spatial_filtering(samples_list, used_ch_names):
     """
     Subtract the calculated average samples from C3 and C4 to perform the spatial filtering
     :param samples_list: samples of all channels (with C3 at position 0 and C4 at position 1)
@@ -52,11 +72,15 @@ def calculate_spatial_filtering(samples_list):
     """
     samples_c3a = list()
     samples_c4a = list()
-    samples_average = calculate_laplacian(samples_list[2:])
+    splitted_channels = split_normalization_area(samples_list[2:], used_ch_names[2:])
+    print()
+    samples_average_c3 = calculate_laplacian(splitted_channels[0][:])
+    samples_average_c4 = calculate_laplacian(splitted_channels[1][:])
     for i in range(len(samples_list[0])):
-        samples_c3a.append(samples_list[0][i] - samples_average[i])
-        samples_c4a.append(samples_list[1][i] - samples_average[i])
+        samples_c3a.append(samples_list[0][i] - samples_average_c3[i])
+        samples_c4a.append(samples_list[1][i] - samples_average_c4[i])
 
+    print()
     return samples_c3a, samples_c4a
 
 
@@ -134,7 +158,7 @@ def manage_ringbuffer():
     return R
 
 
-def perform_algorithm(sliding_window, window_size_factor=1):
+def perform_algorithm(sliding_window, used_ch_names, window_size_factor=1):
     """
     Converts a sliding window into the corresponding horizontal movement
     Contains following steps:
@@ -155,7 +179,7 @@ def perform_algorithm(sliding_window, window_size_factor=1):
         sliding_window[i] = mute_outliers(sliding_window[i])
 
     # 1. Spatial filtering
-    samples_c3a, samples_c4a = calculate_spatial_filtering(sliding_window)
+    samples_c3a, samples_c4a = calculate_spatial_filtering(sliding_window, used_ch_names)
 
     # 2. Spectral analysis
     # psds_c3a_f, freq_c3a_f = perform_multitaper(samples_c3a)
