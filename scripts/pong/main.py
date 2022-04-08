@@ -150,7 +150,7 @@ class MindPong(tk.Frame):
 
         # bind keys 1-9
         for i in range(BALL_SPEED_KEYS):
-            self.bind(str(i), self.set_speed_factors)
+            self.bind(str(i+1), self.set_speed_factors)
 
         self.bind("<space>", lambda event: self.change(Playing) if self.state.name is Idle.name else self.change(Idle))
 
@@ -227,7 +227,6 @@ class MindPong(tk.Frame):
     def set_speed_factors(self, evt):
         key_value = int(evt.char) - 1  # shift, so that key 1 equals to speed factor 1.0
         self.ball.speed_factor = 1.0 + (key_value / BALL_SPEED_KEYS) * 3
-        print(self.ball.speed_factor)
 
     def init_labels(self):
         self.score_label = self.canvas.create_text(self.width / 2, self.height * 0.5,
