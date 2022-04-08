@@ -3,7 +3,6 @@ import numpy as np
 from scipy import integrate, signal
 from numpy_ringbuffer import RingBuffer
 
-
 # Global variables
 R = None
 FMIN = 9.0
@@ -43,7 +42,11 @@ def calculate_laplacian(samples):
 
     return result
 
+
 def split_normalization_area(samples_list, used_ch_names):
+    """
+    description...
+    """
     channels_around_c3 = list()
     channels_around_c4 = list()
     split_channels = list()
@@ -52,7 +55,7 @@ def split_normalization_area(samples_list, used_ch_names):
         c = used_ch_names[i][-1]
 
         if c.isnumeric():
-            if int(c)%2 == 0:
+            if int(c) % 2 == 0:
                 channels_around_c4.append(samples_list[i])
             else:
                 channels_around_c3.append(samples_list[i])
@@ -60,7 +63,6 @@ def split_normalization_area(samples_list, used_ch_names):
             channels_around_c3.append(samples_list[i])
             channels_around_c4.append(samples_list[i])
 
-    print()
     return channels_around_c3, channels_around_c4
 
 
@@ -72,15 +74,15 @@ def calculate_spatial_filtering(samples_list, used_ch_names):
     """
     samples_c3a = list()
     samples_c4a = list()
-    splitted_channels = split_normalization_area(samples_list[2:], used_ch_names[2:])
-    print()
-    samples_average_c3 = calculate_laplacian(splitted_channels[0][:])
-    samples_average_c4 = calculate_laplacian(splitted_channels[1][:])
+    # splits the channels into c3 and c4 related channels
+    split_channels = split_normalization_area(samples_list[2:], used_ch_names[2:])
+    # calculate the average for the c3 and c4 related channels
+    samples_average_c3 = calculate_laplacian(split_channels[0][:])
+    samples_average_c4 = calculate_laplacian(split_channels[1][:])
     for i in range(len(samples_list[0])):
         samples_c3a.append(samples_list[0][i] - samples_average_c3[i])
         samples_c4a.append(samples_list[1][i] - samples_average_c4[i])
 
-    print()
     return samples_c3a, samples_c4a
 
 
@@ -139,7 +141,9 @@ def integrate_psd_values(samples, frequency_list, use_frequency_filter=False):
                 psds_in_band_power.append(samples[i])
                 requested_frequency_range.append(frequency_list[i])
 
-    band_power = integrate.simps(psds_in_band_power, requested_frequency_range) if use_frequency_filter else integrate.simps(samples, frequency_list)
+    band_power = integrate.simps(psds_in_band_power,
+                                 requested_frequency_range) if use_frequency_filter else integrate.simps(samples,
+                                                                                                         frequency_list)
 
     return band_power
 
