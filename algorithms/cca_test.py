@@ -8,7 +8,7 @@ import cursor_online_control
 import BCIC_dataset_loader as bdl
 
 # GLOBAL DATA
-TMIN = 700.0  # Minimum time value shown in the following figures
+TMIN = 500.0  # Minimum time value shown in the following figures
 TMAX = 850.0  # Maximum time value shown in the following figures
 TS_SIZE = 1.0  # 1 s time slice
 TS_STEP = 0.2  # 50 ms
@@ -47,10 +47,10 @@ class MainWindow(QtWidgets.QMainWindow):
         self.graphWidget.setBackground('k')
         # self.graphWidget.showGrid(x=True, y=True)
 
-        pen_data_C3 = pg.mkPen(width=5, color=(255, 0, 255))
-        pen_data_C4 = pg.mkPen(width=5, color=(255, 255, 0))
+        pen_data_C3 = pg.mkPen(width=1, color=(255, 0, 255))
+        pen_data_C4 = pg.mkPen(width=1, color=(255, 255, 0))
 
-        pen_label = pg.mkPen(width=5, color=(255, 255, 255))
+        pen_label = pg.mkPen(width=2, color=(255, 255, 255))
 
         self.data_line_data_C3 = self.graphWidget.plot(self.x, self.data_C3, name='calculated_label', pen=pen_data_C3)
         self.data_line_data_C4 = self.graphWidget.plot(self.x, self.data_C4, name='normalized_hcon', pen=pen_data_C4)
