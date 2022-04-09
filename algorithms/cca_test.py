@@ -8,7 +8,7 @@ import cursor_online_control
 import BCIC_dataset_loader as bdl
 
 # GLOBAL DATA
-TMIN = 700.0  # Minimum time value shown in the following figures
+TMIN = 400.0  # Minimum time value shown in the following figures
 TMAX = 850.0  # Maximum time value shown in the following figures
 TS_SIZE = 1.0  # 1 s time slice
 TS_STEP = 0.2  # 50 ms
@@ -20,7 +20,7 @@ QUEUE_DATA_C4 = queue.Queue(300)
 QUEUE_LABEL = queue.Queue(300)
 
 SLIDING_WINDOW_SIZE_FACTOR = 5
-VALID_VALUES_BORDER = 0.3
+VALID_VALUES_BORDER = 0.8
 '''
 Sliding window size: 
     1 -> 200ms
@@ -41,7 +41,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.data_C3 = [0] * 100
         self.data_C4 = [0] * 100
         self.label = [0] * 100
-        self.graphWidget.setYRange(-2, 40)
+        # self.graphWidget.setYRange(-2, 5)
         self.graphWidget.addLegend()
 
         self.graphWidget.setBackground('k')
@@ -52,8 +52,8 @@ class MainWindow(QtWidgets.QMainWindow):
 
         pen_label = pg.mkPen(width=5, color=(255, 255, 255))
 
-        self.data_line_data_C3 = self.graphWidget.plot(self.x, self.data_C3, name='c3', pen=pen_data_C3)
-        self.data_line_data_C4 = self.graphWidget.plot(self.x, self.data_C4, name='c4', pen=pen_data_C4)
+        self.data_line_data_C3 = self.graphWidget.plot(self.x, self.data_C3, name='calculated_label', pen=pen_data_C3)
+        self.data_line_data_C4 = self.graphWidget.plot(self.x, self.data_C4, name='normalized_hcon', pen=pen_data_C4)
         self.data_line_label = self.graphWidget.plot(self.x, self.label, name='label', pen=pen_label)
 
 
@@ -128,6 +128,8 @@ def test_algorithm(chan_data, label_data, used_ch_names):
     :return: None
     """
     accuracy = 0
+    found_label = False
+    num_label_windows = 0
     global VALID_VALUES_BORDER
     threshold = VALID_VALUES_BORDER
     num_valid_sliding_windows = 0
@@ -156,8 +158,8 @@ def test_algorithm(chan_data, label_data, used_ch_names):
 
         try:
             global QUEUE_DATA_C3, QUEUE_LABEL
-            QUEUE_DATA_C3.put(area_c3)
-            QUEUE_DATA_C4.put(area_c4)
+            QUEUE_DATA_C3.put(calculated_label)
+            QUEUE_DATA_C4.put(normalized_hcon)
             QUEUE_LABEL.put(label[i])
         except:
             print('Fehler: kann nicht reingeldaden werden')
@@ -165,10 +167,20 @@ def test_algorithm(chan_data, label_data, used_ch_names):
         # TODO: compare the calculated label with the predefined label, if same -> increase accuracy
 
         if label[i] != -1:
-            num_valid_sliding_windows += 1
+            # num_label_windows += 1
 
             if label[i] == calculated_label:
-                accuracy += 1
+                found_label = True
+
+            if label[i] != label[i-1]:
+
+                if found_label:
+                    accuracy += 1
+
+                found_label = False
+                num_valid_sliding_windows += 1
+                # num_label_windows = 0
+
 
     # calculate und plot accuracy
     accuracy /= num_valid_sliding_windows
