@@ -8,7 +8,7 @@ import cursor_online_control
 import BCIC_dataset_loader as bdl
 
 # GLOBAL DATA
-TMIN = 400.0  # Minimum time value shown in the following figures
+TMIN = 700.0  # Minimum time value shown in the following figures
 TMAX = 850.0  # Maximum time value shown in the following figures
 TS_SIZE = 1.0  # 1 s time slice
 TS_STEP = 0.2  # 50 ms
@@ -20,7 +20,7 @@ QUEUE_DATA_C4 = queue.Queue(300)
 QUEUE_LABEL = queue.Queue(300)
 
 SLIDING_WINDOW_SIZE_FACTOR = 5
-VALID_VALUES_BORDER = 0.8
+VALID_VALUES_BORDER = 2
 '''
 Sliding window size: 
     1 -> 200ms
@@ -129,7 +129,6 @@ def test_algorithm(chan_data, label_data, used_ch_names):
     """
     accuracy = 0
     found_label = False
-    num_label_windows = 0
     global VALID_VALUES_BORDER
     threshold = VALID_VALUES_BORDER
     num_valid_sliding_windows = 0
@@ -164,25 +163,23 @@ def test_algorithm(chan_data, label_data, used_ch_names):
         except:
             print('Fehler: kann nicht reingeldaden werden')
 
-        # TODO: compare the calculated label with the predefined label, if same -> increase accuracy
+        # compare the calculated label with the predefined label, if same -> increase accuracy
 
         if label[i] != -1:
-            # num_label_windows += 1
-
             if label[i] == calculated_label:
                 found_label = True
 
-            if label[i] != label[i-1]:
+        if label[i] != label[i-1]:
+            if found_label:
+                accuracy += 1
 
-                if found_label:
-                    accuracy += 1
-
-                found_label = False
-                num_valid_sliding_windows += 1
-                # num_label_windows = 0
+            found_label = False
+            num_valid_sliding_windows += 0.5
 
 
     # calculate und plot accuracy
+    num_valid_sliding_windows = int(num_valid_sliding_windows)
+    print(f'accuracy: {accuracy}\nnum_sliding_windows: {num_valid_sliding_windows}')
     accuracy /= num_valid_sliding_windows
     print(f'Accuracy = {accuracy}')
 
