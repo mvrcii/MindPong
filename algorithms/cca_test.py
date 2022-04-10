@@ -11,7 +11,7 @@ import BCIC_dataset_loader as bdl
 TMIN = 500.0  # Minimum time value shown in the following figures
 TMAX = 850.0  # Maximum time value shown in the following figures
 TS_SIZE = 1.0  # 1 s time slice
-TS_STEP = 0.2  # 50 ms
+TS_STEP = 0.2  # 50 ms in percentage
 SAMPLING_RATE = 250
 num_used_channels = 0
 mutex = threading.Lock
@@ -20,7 +20,7 @@ QUEUE_DATA_C4 = queue.Queue(300)
 QUEUE_LABEL = queue.Queue(300)
 
 SLIDING_WINDOW_SIZE_FACTOR = 5
-VALID_VALUES_BORDER = 2
+THRESHOLD = 1.5
 '''
 Sliding window size: 
     1 -> 200ms
@@ -129,8 +129,8 @@ def test_algorithm(chan_data, label_data, used_ch_names):
     """
     accuracy = 0
     found_label = False
-    global VALID_VALUES_BORDER
-    threshold = VALID_VALUES_BORDER
+    global THRESHOLD
+    threshold = THRESHOLD
     num_valid_sliding_windows = 0
     n_slices = int((TMAX - TMIN - TS_SIZE) / TS_STEP)
     toff = np.zeros(n_slices, dtype=float)
@@ -143,8 +143,7 @@ def test_algorithm(chan_data, label_data, used_ch_names):
         stop_idx = int(((toff[i] + TS_SIZE) * SAMPLING_RATE) - 1)
 
         # calls the one and only cursor control algorithm
-        normalized_hcon, area_c3, area_c4 = cursor_online_control.perform_algorithm(chan_data[:, start_idx:stop_idx], used_ch_names,
-                                                                  SLIDING_WINDOW_SIZE_FACTOR)
+        normalized_hcon, area_c3, area_c4 = cursor_online_control.perform_algorithm(SAMPLING_RATE, chan_data[:, start_idx:stop_idx], used_ch_names, SLIDING_WINDOW_SIZE_FACTOR, TS_STEP)
         norm_hcon[i] = normalized_hcon
 
         # converts the returned hcon to the corresponding label

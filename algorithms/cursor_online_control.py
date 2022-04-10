@@ -7,7 +7,8 @@ from numpy_ringbuffer import RingBuffer
 R = None
 FMIN = 9.0
 FMAX = 15.0
-WINDOW_SIZE_FACTOR = 1
+WINDOW_OFFSET = 0.05
+WINDOW_SIZE = 1
 
 
 def mute_outliers(samples: np.ndarray):
@@ -107,7 +108,7 @@ def perform_multitaper(samples: np.ndarray, jobs=-1):
              freqs: the corresponding frequencies
     """
     _bandwidth = FMAX - FMIN if FMAX - FMIN > 0 else 1
-    psds, freqs = mne.time_frequency.psd_array_multitaper(samples, sfreq=128, n_jobs=jobs, bandwidth=_bandwidth, fmin=FMIN, fmax=FMAX, verbose=False)
+    psds, freqs = mne.time_frequency.psd_array_multitaper(samples, sfreq=250, n_jobs=jobs, bandwidth=_bandwidth, fmin=FMIN, fmax=FMAX, verbose=False)
     psds_abs = np.abs(psds)
 
     return psds_abs, freqs
@@ -156,7 +157,7 @@ def integrate_psd_values(samples: np.ndarray, frequency_list: np.ndarray, use_fr
     return band_power
 
 
-def manage_ringbuffer():
+def manage_ringbuffer(window_size, offset_in_percentage:float):
     """
     Das ist ein Singleton :)
     amount of samples within 30 seconds = 30s / 1/250Hz
@@ -165,12 +166,12 @@ def manage_ringbuffer():
     """
     global R
     if not R:
-        window_size = WINDOW_SIZE_FACTOR
-        R = RingBuffer(capacity=int(7500 / (window_size * 50)), dtype=np.float)
+        offset = window_size/(offset_in_percentage*100.0)
+        R = RingBuffer(capacity=int(((30-window_size) / offset)+1), dtype=np.float)
     return R
 
 
-def perform_algorithm(sliding_window, used_ch_names, window_size_factor=1):
+def perform_algorithm(sample_rate, sliding_window, used_ch_names, window_size_factor=1, offset_in_percentage=0.2, ):
     """
     Converts a sliding window into the corresponding horizontal movement
     Contains following steps:
@@ -183,8 +184,6 @@ def perform_algorithm(sliding_window, used_ch_names, window_size_factor=1):
     :param window_size_factor: n: n*200ms
     :return: the normalized value representing horizontal movement
     """
-    global WINDOW_SIZE_FACTOR
-    WINDOW_SIZE_FACTOR = window_size_factor
 
     # 0. mute outliers
     # for i in range(len(sliding_window)):
@@ -194,20 +193,20 @@ def perform_algorithm(sliding_window, used_ch_names, window_size_factor=1):
     samples_c3a, samples_c4a = calculate_spatial_filtering(sliding_window, used_ch_names)
 
     # 2. Spectral analysis
-    # psds_c3a_f, freq_c3a_f = perform_multitaper(samples_c3a)
-    # psds_c4a_f, freq_c4a_f = perform_multitaper(samples_c4a)
-    f_c3a, psd_c3a = perform_periodogram(samples_c3a)
-    f_c4a, psd_c4a = perform_periodogram(samples_c4a)
+    psd_c3a, f_c3a = perform_multitaper(samples_c3a)
+    psd_c4a, f_c4a = perform_multitaper(samples_c4a)
+    # f_c3a, psd_c3a = perform_periodogram(samples_c3a)
+    # f_c4a, psd_c4a = perform_periodogram(samples_c4a)
 
     # 3. Band Power calculation
-    area_c3 = integrate_psd_values(psd_c3a, f_c3a, True)
-    area_c4 = integrate_psd_values(psd_c4a, f_c4a, True)
+    area_c3 = integrate_psd_values(psd_c3a, f_c3a)
+    area_c4 = integrate_psd_values(psd_c4a, f_c4a)
 
     # 4. Derive cursor control samples
     hcon = area_c4 - area_c3
 
     # normalize to zero mean and unit variance to derive the cursor control samples
-    ringbuffer = manage_ringbuffer()
+    ringbuffer = manage_ringbuffer((len(sliding_window[0]) + 1)/sample_rate, offset_in_percentage)
     ringbuffer.append(hcon)
     values = np.array(ringbuffer)
     mean = np.mean(values)
