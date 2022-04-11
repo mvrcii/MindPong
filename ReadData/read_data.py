@@ -1,3 +1,5 @@
+import time
+
 import numpy as np
 from numpy_ringbuffer import RingBuffer
 import serial
@@ -21,9 +23,10 @@ number_channels = len(BoardShim.get_eeg_channels(
 
 allow_window_creation = True
 first_window = True
+first_data = True
 stream_available = False  # indicates if stream is available
 board: BoardShim
-window_buffer = [RingBuffer(capacity=sliding_window_samples, dtype=float) for _ in range(16)]
+window_buffer = [RingBuffer(capacity=sliding_window_samples, dtype=float) for _ in range(number_channels)]
 
 
 def init():
@@ -69,13 +72,17 @@ def handle_samples():
     """
     Reads EEG data from port, sends it to trial_handler and writes into in the window_buffer
     """
-    global first_window, window_buffer, allow_window_creation
+    global first_window, window_buffer, allow_window_creation, first_data
     count_samples = 0
     while stream_available:
         data = board.get_board_data(1)[board.get_eeg_channels(
             brainflow.board_shim.BoardIds.CYTON_DAISY_BOARD)]  # get all data and remove it from internal buffer
         if len(data[0]) > 0:
-            # trial_handler.send_raw_data(data)
+            if first_data:
+                trial_handler.send_raw_data(data, start=time.time())
+                first_data = False
+            else:
+                trial_handler.send_raw_data(data)
             if allow_window_creation:
                 for i in range(len(data)):
                     window_buffer[i].extend(data[i])

@@ -1,5 +1,6 @@
 import datetime
 import numpy as np
+from numpy import dtype
 
 
 class MetaData:
@@ -58,10 +59,10 @@ class MetaData:
         Every tuples get the attribute name and the respective attribute
         :return: np.ndarray with meta data
         """
-        meta = [('id', self.__subject_ID), ('sex', self.__subject_sex), ('age', self.__subject_age),
-                ('date', self.__date), ('time', self.__time),
-                ('sampling_rate', self.__sampling_rate), ('channels', self.__channel_mapping),
-                ('recording_type', self.__recording_type), ('headset', self.__headset),
-                ('amount_trials', self.__amount_trials), ('different_events', self.__amount_different_events),
-                ('comment', self.__comment)]
+        meta = [['id', self.__subject_ID], ['sex', self.__subject_sex], ['age', self.__subject_age],
+                ['date', self.__date], ['time', self.__time],
+                ['sampling_rate', self.__sampling_rate], ['channels', self.__channel_mapping],
+                ['recording_type', self.__recording_type], ['headset', self.__headset],
+                ['amount_trials', self.__amount_trials], ['different_events', self.__amount_different_events],
+                ['comment', self.__comment]]
         return np.array(meta, dtype=object)

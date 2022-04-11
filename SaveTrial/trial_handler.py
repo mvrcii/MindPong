@@ -1,17 +1,24 @@
 import time
 
+import brainflow
 import numpy as np
+from brainflow import BoardShim
 
 from SaveTrial.Labels import Labels
 
-raw_data = [[] for _ in range(16)]
+number_channels = len(BoardShim.get_eeg_channels(
+    brainflow.board_shim.BoardIds.CYTON_DAISY_BOARD))
+# time which is needed for one sample in s, T = 1/f = 1/125 = 0.008
+time_for_one_sample = 1 / BoardShim.get_sampling_rate(brainflow.board_shim.BoardIds.CYTON_DAISY_BOARD)
+
+raw_data = [[] for _ in range(number_channels)]
 event_type = []
 event_pos = []
 event_duration = []
 start_time: time.time()
 
 
-def send_raw_data(data, start: time.time()=None):
+def send_raw_data(data, start: time.time() = None):
     """
     Start time of the session is passed only at the first data transfer of the session
     (1) If start is not None the time stamp of the start of session get saved in start_time
@@ -19,14 +26,15 @@ def send_raw_data(data, start: time.time()=None):
     :param data: raw data from the data acquisition
     :param start: time stamp of the start of the session
     """
-    if(start is not None):
+    if start is not None:
+
         global start_time
         start_time = start
     for i in range(len(raw_data)):
         raw_data[i].append(data[i][0])
 
 
-def mark_trial(start: time.time(), end: time.time(), label: Labels.Labels):
+def mark_trial(start: time.time(), end: time.time(), label: Labels):
     """
     (1) Calculation of the trial position in raw_data
     (2) Calculation of the duration of the trial
@@ -37,12 +45,12 @@ def mark_trial(start: time.time(), end: time.time(), label: Labels.Labels):
     :param end: time stamp of the end of the trial
     :param label: event_type of the trial
     """
-    pos = int((start_time - start) / 0.008)
-    duration = int((end - start)/0.008)
+    global start_time
+    pos = round((start - start_time) / time_for_one_sample)
+    duration = round((end - start) / time_for_one_sample)
     event_duration.append(duration)
     event_type.append(label)
     event_pos.append(pos)
-
 
 
 def create_raw_data_array() -> np.ndarray:
@@ -52,10 +60,11 @@ def create_raw_data_array() -> np.ndarray:
     """
     global raw_data
     data = np.array(raw_data)
-    raw_data = [[] for _ in range(16)]
+    raw_data = [[] for _ in range(number_channels)]
     return data
 
-def create_event_type_array()-> np.ndarray:
+
+def create_event_type_array() -> np.ndarray:
     """
     Converts the buffer with the event types to a np.ndarray and clears the buffer
     :return: event types in a np.ndarray
@@ -64,6 +73,7 @@ def create_event_type_array()-> np.ndarray:
     et = np.array(event_type)
     event_type.clear()
     return et
+
 
 def create_position_array() -> np.ndarray:
     """
@@ -75,6 +85,7 @@ def create_position_array() -> np.ndarray:
     event_pos.clear()
     return pos
 
+
 def create_duration_array() -> np.ndarray:
     """
     Converts the buffer with the durations of the events to a np.ndarray and clears the buffer
@@ -84,6 +95,7 @@ def create_duration_array() -> np.ndarray:
     duration = np.array(event_duration)
     event_duration.clear()
     return duration
+
 
 def save_session(metadata: np.ndarray, npz_name: str):
     """
