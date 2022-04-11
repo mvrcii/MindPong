@@ -1,3 +1,5 @@
+import time
+
 import numpy as np
 import Labels
 
@@ -6,25 +8,41 @@ raw_data = [[] for _ in range(16)]
 event_type = []
 event_pos = []
 event_duration = []
+start_time: time.time()
 
 
-def save_trial(trial: np.ndarray, junk: np.ndarray, label: Labels):
+def send_raw_data(data, start: time.time()=None):
     """
-    (1) Saves duration of the trials in event_pos
-    (2) Saves the trial data and junk data in raw_data
-    (3) Saves the event type in event_type
-    (4) Saves the position of the trials in event_pos
-    :param trial: trial data
-    :type trial: np.ndarray (16xn)
-    :param label: label of the trial
+    Start time of the session is passed only at the first data transfer of the session
+    (1) If start is not None the time stamp of the start of session get saved in start_time
+    (2) Sended data get saved in raw_data
+    :param data: raw data from the data acquisition
+    :param start: time stamp of the start of the session
     """
-    pos = len(raw_data[0]) + len(junk[0])
-    event_duration.append(len(trial[0]))
+    if(start is not None):
+        global start_time
+        start_time = start
     for i in range(len(raw_data)):
-        raw_data[i].extend(junk[i])
-        raw_data[i].extend(trial[i])
+        raw_data[i].append(data[i][0])
+
+
+def mark_trial(start: time.time(), end: time.time(), label: Labels.Labels):
+    """
+    (1) Calculation of the trial position in raw_data
+    (2) Calculation of the duration of the trial
+    (3) Saves the duration of the trial in event_duration
+    (4) Saves the label of the trial in event_type
+    (5) Saves the trial position in event_pos
+    :param start: time stamp of the start of the trial
+    :param end: time stamp of the end of the trial
+    :param label: event_type of the trial
+    """
+    pos = int((start_time - start) / 0.008)
+    duration = int((end - start)/0.008)
+    event_duration.append(duration)
     event_type.append(label)
     event_pos.append(pos)
+
 
 def create_raw_data_array()-> np.ndarray:
     """
