@@ -1,6 +1,6 @@
 import numpy as np
-import Labels
 
+from SaveTrial.Labels import Labels
 
 trial_buffer = [[] for _ in range(16)]
 event_type = []
@@ -20,7 +20,8 @@ def save_trial(trial: np.ndarray, label: Labels):
     event_type.append(label)
     position.append(pos)
 
-def create_raw_data_array()-> np.ndarray:
+
+def create_raw_data_array() -> np.ndarray:
     """
     Converts the buffer with the trials to a np.ndarray and clears the buffer
     :return: raw data in a np.ndarray
@@ -30,7 +31,8 @@ def create_raw_data_array()-> np.ndarray:
     trial_buffer = [[] for _ in range(16)]
     return raw_data
 
-def create_event_type_array()-> np.ndarray:
+
+def create_event_type_array() -> np.ndarray:
     """
     Converts the buffer with the event types to a np.ndarray and clears the buffer
     :return: event types in a np.ndarray
@@ -39,6 +41,7 @@ def create_event_type_array()-> np.ndarray:
     et = np.array(event_type)
     event_type.clear()
     return et
+
 
 def create_position_array() -> np.ndarray:
     """
@@ -50,6 +53,7 @@ def create_position_array() -> np.ndarray:
     position.clear()
     return pos
 
+
 def save_session(metadata: np.ndarray, npz_name: str):
     """
     Save the metadata, the raw data, the event types and the position of the events of one session in a npz-file
@@ -60,5 +64,3 @@ def save_session(metadata: np.ndarray, npz_name: str):
     print(name)
     np.savez(name, meta=metadata, raw_data=create_raw_data_array(), event_type=create_event_type_array(),
              position=create_position_array())
-
-
