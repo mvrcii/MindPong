@@ -1,8 +1,8 @@
 import time
 
 import numpy as np
-import Labels
 
+from SaveTrial.Labels import Labels
 
 raw_data = [[] for _ in range(16)]
 event_type = []
@@ -44,7 +44,8 @@ def mark_trial(start: time.time(), end: time.time(), label: Labels.Labels):
     event_pos.append(pos)
 
 
-def create_raw_data_array()-> np.ndarray:
+
+def create_raw_data_array() -> np.ndarray:
     """
     Converts the buffer with the trials to a np.ndarray and clears the buffer
     :return: raw data in a np.ndarray
@@ -94,5 +95,3 @@ def save_session(metadata: np.ndarray, npz_name: str):
     print(name)
     np.savez(name, meta=metadata, raw_data=create_raw_data_array(), event_type=create_event_type_array(),
              event_pos=create_position_array(), event_duration=create_duration_array())
-
-
