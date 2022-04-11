@@ -1,6 +1,6 @@
 from abc import ABC, abstractmethod
-
-from mvc.gui.view import Config
+import tkinter as tk
+from mvc.gui.view import Config, EEG
 from mvc.gui.view import View
 
 
@@ -13,21 +13,24 @@ class Controller(ABC):
 class ConfigController(Controller):
     def __init__(self) -> None:
         self.view = None
-        self.neighbourhoods = [
-            "Entrepôt",
-            "Hôtel-de-Ville",
-            "Opéra",
-            "Ménilmontant",
-            "Louvre"
-        ]
-        self.room_types = [
-            "Entire home/apt" "Private room",
-            "Shared room",
-            "Hotel room",
-        ]
-        self.entries_values = {}
 
     def bind(self, view: Config):
         self.view = view
-        self.view.create_view(self.neighbourhoods, self.room_types)
-        # self.view.buttons["Valider"].configure(command=self.predict)
+        self.view.create_view()
+        self.view.buttons["Start"].configure(command=self.start_eeg_window)
+
+    def start_eeg_window(self):
+        eeg_controller = EEGController()
+        second_window = tk.Toplevel(self.view.master)
+        eeg_view = EEG(second_window)
+        eeg_controller.bind(eeg_view)
+
+
+class EEGController(Controller):
+    def __init__(self) -> None:
+        self.view = None
+
+    def bind(self, view: EEG):
+        self.view = view
+        self.view.create_view()
+

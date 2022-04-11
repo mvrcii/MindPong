@@ -1,21 +1,17 @@
 import tkinter as tk
-from mvc.gui.controllers import Controller, ConfigController
-from mvc.gui.view import Config, Graph
 from tkinter import ttk
 
+from mvc.gui.controllers import Controller, ConfigController
+from mvc.gui.view import Config
 
-class Application(ttk.Notebook):
+
+class Application(tk.Frame):
     def __init__(self, master=None):
         super().__init__(master)
         self.master = master
         self.columnconfigure(0, weight=1)
         self.rowconfigure(0, weight=1)
         self.grid(row=0, column=0, sticky=tk.N + tk.S + tk.E + tk.W)
-
-    def new_tab(self, controller: Controller, view: Config, name: str):
-        view = view(self.master)
-        controller.bind(view)
-        self.add(view, text=name)
 
 
 if __name__ == "__main__":
@@ -26,8 +22,7 @@ if __name__ == "__main__":
     app = Application(master=root)
 
     config_controller = ConfigController()
-
-    app.new_tab(view=Config, controller=config_controller, name="Configuration")
-    app.new_tab(view=Graph, controller=config_controller, name="Graph")
+    config_view = Config(root)
+    config_controller.bind(config_view)
 
     app.mainloop()
