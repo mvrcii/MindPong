@@ -4,7 +4,7 @@ from scripts.config import *
 
 # Define paddle properties and functions
 class Player:
-    def __init__(self, root, canvas, width, height, color):
+    def __init__(self, root, canvas, width, height, color, target):
         self.root = root
 
         self.canvas = canvas
@@ -37,8 +37,6 @@ class Player:
             self.speed_factor -= (delta_time * 4)/TIME_TO_STOP_PLAYER
             if self.speed_factor <= 0:
                 self.speed_factor = 0
-
-
 
     def calculate_velocity(self):
         if self.start_pos:
@@ -87,7 +85,7 @@ class Player:
         """Initializes the paddle object and its position."""
         self.id = self.canvas.create_rectangle(0, 0, self.width, self.height, fill=self.color)
         # Move to initial position
-        self.canvas.move(self.id, (self.canvas_width - self.width) / 2, self.canvas_height * 0.9)
+        self.canvas.move(self.id, (self.canvas_width - self.width) / 2, self.canvas_height * 0.5)
         # Update position
         self.pos = self.canvas.coords(self.id)
 

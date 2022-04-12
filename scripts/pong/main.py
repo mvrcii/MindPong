@@ -2,8 +2,8 @@ from tkinter import *
 import tkinter as tk
 import time
 
-import scripts.pong.ball as ball
-import scripts.pong.player as paddle
+import scripts.pong.player as player
+import scripts.pong.target as target
 from scripts.config import *
 
 
@@ -145,12 +145,8 @@ class MindPong(tk.Frame):
         self.init_labels()
         self.canvas.pack()
 
-        self.paddle = paddle.Player(self, self.canvas, 60, 60, 'blue')
-        self.ball = ball.Ball(self, self.canvas, 'red', 20, paddle=self.paddle)
-
-        # bind keys 1-9
-        for i in range(BALL_SPEED_KEYS):
-            self.bind(str(i+1), self.set_speed_factors)
+        self.target = target.Target(self, self.canvas, 'red', 60)
+        self.player = player.Player(self, self.canvas, 60, 60, 'blue', target=target)
 
         self.bind("<space>", lambda event: self.change(Playing) if self.state.name is Idle.name else self.change(Idle))
 
@@ -168,19 +164,16 @@ class MindPong(tk.Frame):
             # Clear
             self.clear()
             # Update
-            self.paddle.update(delta_time=delta / 4)
-            self.ball.update(delta_time=delta / 6)
+            self.player.update(delta_time=delta / 4)
             # Draw
-            self.paddle.draw()
-            self.ball.draw()
+            self.player.draw()
 
         elif curr_state is Restart.name:
             if self.curr_restart_time == 0:
                 self.curr_restart_time = time.time()
                 self.canvas.itemconfig(self.score_label, text="Score: " + str(self.score), state=NORMAL)
                 self.canvas.itemconfig(self.timer_label, state=NORMAL)
-                self.canvas.itemconfig(self.paddle.id, state=HIDDEN)
-                self.canvas.itemconfig(self.ball.id, state=HIDDEN)
+                self.canvas.itemconfig(self.player.id, state=HIDDEN)
                 self.score = 0
 
             curr_time = time.time()
@@ -189,8 +182,7 @@ class MindPong(tk.Frame):
                 self.change(Playing)
                 self.canvas.itemconfig(self.score_label, state=HIDDEN)
                 self.canvas.itemconfig(self.timer_label, state=HIDDEN)
-                self.canvas.itemconfig(self.paddle.id, state=NORMAL)
-                self.canvas.itemconfig(self.ball.id, state=NORMAL)
+                self.canvas.itemconfig(self.player.id, state=NORMAL)
             else:
                 seconds_until_restart = round(3 - (curr_time - self.curr_restart_time), 1)
                 self.canvas.itemconfig(self.timer_label, text="Restarting in " + str(seconds_until_restart),
@@ -223,10 +215,6 @@ class MindPong(tk.Frame):
 
     def change(self, state):
         self.state.switch(state)
-
-    def set_speed_factors(self, evt):
-        key_value = int(evt.char) - 1  # shift, so that key 1 equals to speed factor 1.0
-        self.ball.speed_factor = 1.0 + (key_value / BALL_SPEED_KEYS) * 3
 
     def init_labels(self):
         self.score_label = self.canvas.create_text(self.width / 2, self.height * 0.5,
