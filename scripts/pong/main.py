@@ -3,7 +3,7 @@ import tkinter as tk
 import time
 
 import scripts.pong.ball as ball
-import scripts.pong.paddle as paddle
+import scripts.pong.player as paddle
 from scripts.config import *
 
 
@@ -145,7 +145,7 @@ class MindPong(tk.Frame):
         self.init_labels()
         self.canvas.pack()
 
-        self.paddle = paddle.Paddle(self, self.canvas, 120, 20, 'blue')
+        self.paddle = paddle.Player(self, self.canvas, 60, 60, 'blue')
         self.ball = ball.Ball(self, self.canvas, 'red', 20, paddle=self.paddle)
 
         # bind keys 1-9

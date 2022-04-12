@@ -2,7 +2,7 @@ import scripts.pong.main as main
 
 
 # Define paddle properties and functions
-class Paddle:
+class Player:
     def __init__(self, root, canvas, width, height, color):
         self.root = root
 
@@ -15,10 +15,11 @@ class Paddle:
         self.pos = None
         self.speed_factor = 1
         self.id = None
-        self.v_x = 0
+        self.velocity_x_axis = 0
         self.direction = 0
         self.wall_hit = False
         self.start_pos = True
+        self.direction_update = False
 
         self.canvas.bind_all('<KeyPress-Left>', self.move_left)
         self.canvas.bind_all('<KeyPress-Right>', self.move_right)
@@ -26,19 +27,19 @@ class Paddle:
         self.init()
 
     def update(self, delta_time):
-        self.v_x = self.calculate_velocity() * delta_time
+        self.velocity_x_axis = self.calculate_velocity() * delta_time
 
     def calculate_velocity(self):
-        if self.start_pos is True:
+        if self.start_pos:
             return 0
 
         if self.direction == 1:
             if self.pos[2] >= self.canvas_width:
-                if self.wall_hit is False:
+                if not self.wall_hit:
                     self.wall_hit = True
                 return 0
             if self.pos[0] <= 0:
-                if self.wall_hit is False:
+                if not self.wall_hit:
                     self.wall_hit = True
                     return 0
                 else:
@@ -48,11 +49,11 @@ class Paddle:
 
         elif self.direction == -1:
             if self.pos[0] <= 0:
-                if self.wall_hit is False:
+                if not self.wall_hit:
                     self.wall_hit = True
                 return 0
             elif self.pos[2] >= self.canvas_width:
-                if self.wall_hit is False:
+                if not self.wall_hit:
                     self.wall_hit = True
                     return 0
                 else:
@@ -61,7 +62,13 @@ class Paddle:
                 return -1
 
     def draw(self):
-        self.canvas.move(self.id, self.v_x * self.speed_factor, 0)
+        # every time the direction is not updated the player gets slower
+        if self.direction_update:
+            self.direction_update = False
+            self.speed_factor = 1
+        else:
+            self.speed_factor *= 0.99
+        self.canvas.move(self.id, self.velocity_x_axis * self.speed_factor, 0)
         self.pos = self.canvas.coords(self.id)
 
     def reset(self):
@@ -86,6 +93,7 @@ class Paddle:
         if self.start_pos:
             self.start_pos = False
         self.direction = -1
+        self.direction_update = True
 
     def move_right(self, evt):
         # Prevent paddle movement while the game state is not playing
@@ -95,4 +103,5 @@ class Paddle:
         if self.start_pos is True:
             self.start_pos = False
         self.direction = 1
+        self.direction_update = True
 
