@@ -1,3 +1,4 @@
+import threading
 import time
 
 import numpy as np
@@ -6,10 +7,15 @@ import serial
 import serial.tools.list_ports
 import brainflow
 from brainflow.board_shim import BoardShim, BrainFlowInputParams
-from scripts.data.extraction import trial_handler
+
+from algorithms import cca_test
+from scripts.data.extraction import trial_handler, MetaData
+from scripts.data.visualisation import liveplot
+
+SAMPLING_RATE = BoardShim.get_sampling_rate(brainflow.board_shim.BoardIds.CYTON_DAISY_BOARD)
 
 # time which is needed for one sample in s, T = 1/f = 1/125 = 0.008
-time_for_one_sample = 1 / BoardShim.get_sampling_rate(brainflow.board_shim.BoardIds.CYTON_DAISY_BOARD)
+time_for_one_sample = 1 / SAMPLING_RATE
 
 sliding_window_duration = 0.2  # size of sliding window in s
 # size of sliding window in amount of samples, *8ms for time
@@ -104,7 +110,9 @@ def send_window():
     window = np.zeros((number_channels, sliding_window_samples), dtype=float)
     for i in range(len(window)):
         window[i] = np.array(window_buffer[i])
-    # ToDo: push window to algorithm
+    # push window to cursor control algorithm
+    # TODO: change offset_duration to percentage? Else change calculation in coc algorithm
+    calculated_label = cca_test.test_algorithm_with_livedata(window, MetaData.bci_channels, SAMPLING_RATE, offset_duration)
 
 
 def stop_stream():
@@ -118,4 +126,6 @@ def stop_stream():
     board.release_session()
 
 
-init()
+if __name__ == '__main__':
+    print('read_data main started ...')
+    threading.Thread(target=init, daemon=True).start()

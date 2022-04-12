@@ -9,6 +9,7 @@ FMIN = 9.0
 FMAX = 15.0
 WINDOW_OFFSET = 0.05
 WINDOW_SIZE = 1
+THRESHOLD = 1.5
 
 
 def mute_outliers(samples: np.ndarray):
@@ -171,7 +172,7 @@ def manage_ringbuffer(window_size, offset_in_percentage:float):
     return R
 
 
-def perform_algorithm(sample_rate, sliding_window, used_ch_names, window_size_factor=1, offset_in_percentage=0.2, ):
+def perform_algorithm(sliding_window, used_ch_names, sample_rate, queue_hcon, offset_in_percentage=0.2):
     """
     Converts a sliding window into the corresponding horizontal movement
     Contains following steps:
@@ -213,4 +214,20 @@ def perform_algorithm(sample_rate, sliding_window, used_ch_names, window_size_fa
     standard_deviation = np.std(values)
     normalized_hcon = (hcon - mean) / standard_deviation if standard_deviation else 0
 
-    return normalized_hcon, area_c3, area_c4
+    global THRESHOLD
+    threshold = THRESHOLD
+
+    # converts the returned hcon to the corresponding label
+    if normalized_hcon > threshold:     # left
+        calculated_label = 0
+    elif normalized_hcon < -threshold:  # right
+        calculated_label = 1
+    else:
+        calculated_label = -1
+
+    try:
+        queue_hcon.put(normalized_hcon)
+    except:
+        print('Fehler: kann nicht reingeldaden werden')
+
+    return calculated_label

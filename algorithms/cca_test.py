@@ -1,11 +1,8 @@
-import sys
 import threading, queue
-import time
 import numpy as np
-from PyQt5 import QtWidgets, QtCore
-import pyqtgraph as pg
 import cursor_online_control
 import BCIC_dataset_loader as bdl
+import scripts.data.visualisation.liveplot
 
 # GLOBAL DATA
 TMIN = 500.0  # Minimum time value shown in the following figures
@@ -15,12 +12,10 @@ TS_STEP = 0.2  # 50 ms in percentage
 SAMPLING_RATE = 250
 num_used_channels = 0
 mutex = threading.Lock
-QUEUE_DATA_C3 = queue.Queue(300)
-QUEUE_DATA_C4 = queue.Queue(300)
-QUEUE_LABEL = queue.Queue(300)
-
 SLIDING_WINDOW_SIZE_FACTOR = 5
-THRESHOLD = 1.5
+QUEUE_LABEL = None
+QUEUE_CLABEL = None
+QUEUE_HCON = None
 '''
 Sliding window size: 
     1 -> 200ms
@@ -28,66 +23,6 @@ Sliding window size:
     ...
     5 -> 1s
 '''
-
-
-class MainWindow(QtWidgets.QMainWindow):
-    def __init__(self, *args, **kwargs):
-        super(MainWindow, self).__init__(*args, **kwargs)
-
-        self.graphWidget = pg.PlotWidget()
-        self.setCentralWidget(self.graphWidget)
-
-        self.x = list(range(100))
-        self.data_C3 = [0] * 100
-        self.data_C4 = [0] * 100
-        self.label = [0] * 100
-        self.graphWidget.setYRange(-5, 5)
-        self.graphWidget.addLegend()
-
-        self.graphWidget.setBackground('k')
-        # self.graphWidget.showGrid(x=True, y=True)
-
-        pen_data_C3 = pg.mkPen(width=1, color=(255, 0, 255))
-        pen_data_C4 = pg.mkPen(width=1, color=(255, 255, 0))
-
-        pen_label = pg.mkPen(width=2, color=(255, 255, 255))
-
-        self.data_line_data_C3 = self.graphWidget.plot(self.x, self.data_C3, name='calculated_label', pen=pen_data_C3)
-        self.data_line_data_C4 = self.graphWidget.plot(self.x, self.data_C4, name='normalized_hcon', pen=pen_data_C4)
-        self.data_line_label = self.graphWidget.plot(self.x, self.label, name='label', pen=pen_label)
-
-
-        self.timer = QtCore.QTimer()
-        self.timer.setInterval(50)
-        self.timer.timeout.connect(self.update_plot_data)
-        self.timer.start()
-
-    def update_plot_data(self):
-        """
-        Periodically called to update the values by extracting the current values from the queues.
-        """
-        try:
-            global QUEUE_DATA_C3, QUEUE_DATA_C4, QUEUE_LABEL
-            # update x value
-            self.x = self.x[1:]  # Remove the first y element.
-            self.x.append(self.x[-1] + 1)  # Add a new value 1 higher than the last.
-
-            # update data C3 value
-            self.data_C3 = self.data_C3[1:]  # Get and remove the first element of the queue
-            self.data_C3.append(QUEUE_DATA_C3.get())
-            self.data_line_data_C3.setData(self.x, self.data_C3)  # Update the data.
-
-            # update data C4 value
-            self.data_C4 = self.data_C4[1:]  # Get and remove the first element of the queue
-            self.data_C4.append(QUEUE_DATA_C4.get())
-            self.data_line_data_C4.setData(self.x, self.data_C4)  # Update the data.
-
-            # update label value
-            self.label = self.label[1:]  # Get and remove the first element of the queue
-            self.label.append(QUEUE_LABEL.get())
-            self.data_line_label.setData(self.x, self.label)  # Update the data.
-        except:
-            time.sleep(0.005)
 
 
 def loadBCICDataset(ch_weight):
@@ -129,13 +64,10 @@ def test_algorithm(chan_data, label_data, used_ch_names):
     """
     accuracy = 0
     found_label = False
-    global THRESHOLD
-    threshold = THRESHOLD
     num_valid_sliding_windows = 0
     n_slices = int((TMAX - TMIN - TS_SIZE) / TS_STEP)
     toff = np.zeros(n_slices, dtype=float)
     label = np.zeros(n_slices, dtype=int)
-    norm_hcon = np.zeros(n_slices, dtype=float)
     for i in range(n_slices):
         toff[i] = TMIN + i * TS_STEP
         label[i] = label_data[int((TMIN + i * TS_STEP) * SAMPLING_RATE)]
@@ -143,27 +75,16 @@ def test_algorithm(chan_data, label_data, used_ch_names):
         stop_idx = int(((toff[i] + TS_SIZE) * SAMPLING_RATE) - 1)
 
         # calls the one and only cursor control algorithm
-        normalized_hcon, area_c3, area_c4 = cursor_online_control.perform_algorithm(SAMPLING_RATE, chan_data[:, start_idx:stop_idx], used_ch_names, SLIDING_WINDOW_SIZE_FACTOR, TS_STEP)
-        norm_hcon[i] = normalized_hcon
-
-        # converts the returned hcon to the corresponding label
-        if normalized_hcon > threshold:             #left
-            calculated_label = 0
-        elif normalized_hcon < -threshold:          #right
-            calculated_label = 1
-        else:
-            calculated_label = -1
+        calculated_label = cursor_online_control.perform_algorithm(chan_data[:, start_idx:stop_idx], used_ch_names, SAMPLING_RATE, QUEUE_HCON, TS_STEP)
 
         try:
-            global QUEUE_DATA_C3, QUEUE_LABEL
-            QUEUE_DATA_C3.put(calculated_label)
-            QUEUE_DATA_C4.put(normalized_hcon)
+            global QUEUE_LABEL, QUEUE_CLABEL
             QUEUE_LABEL.put(label[i])
+            QUEUE_CLABEL.put(calculated_label)
         except:
             print('Fehler: kann nicht reingeldaden werden')
 
         # compare the calculated label with the predefined label, if same -> increase accuracy
-
         if label[i] != -1:
             if label[i] == calculated_label:
                 found_label = True
@@ -175,7 +96,6 @@ def test_algorithm(chan_data, label_data, used_ch_names):
             found_label = False
             num_valid_sliding_windows += 0.5
 
-
     # calculate und plot accuracy
     num_valid_sliding_windows = int(num_valid_sliding_windows)
     print(f'accuracy: {accuracy}\nnum_sliding_windows: {num_valid_sliding_windows}')
@@ -183,18 +103,30 @@ def test_algorithm(chan_data, label_data, used_ch_names):
     print(f'Accuracy = {accuracy}')
 
 
-def start_algorithm():
+def connect_queues():
+    global QUEUE_LABEL, QUEUE_CLABEL, QUEUE_HCON
+    QUEUE_LABEL = queue.Queue(100)
+    QUEUE_CLABEL = queue.Queue(100)
+    QUEUE_HCON = queue.Queue(100)
+    scripts.data.visualisation.liveplot.add_queue(('QUEUE_CLABEL', QUEUE_CLABEL))
+    scripts.data.visualisation.liveplot.add_queue(('QUEUE_LABEL', QUEUE_LABEL))
+    scripts.data.visualisation.liveplot.add_queue(('QUEUE_HCON', QUEUE_HCON))
+
+
+def test_algorithm_with_dataset():
     #                 Fz  FC3  FC1  FCz  FC2  FC4  C5  C3  C1  Cz  C2  C4  C6  CP3  CP1  CPz  CP2  CP4  P1  Pz  P2  POz
     ch_names_weight = [0,  1,   1,   0,   1,   1,   0,  1,  0,  0,  0,  1,  0,  1,   1,   0,   1,   1,   0,  0,  0,  0]
     preloaded_data, preloaded_labels, used_ch_names = loadBCICDataset(ch_names_weight)
+    connect_queues()
     test_algorithm(preloaded_data, preloaded_labels, used_ch_names)
 
 
-if __name__ == '__main__':
-    threading.Thread(target=start_algorithm, daemon=True).start()
+def test_algorithm_with_livedata(sliding_window, used_ch_names, sampling_rate, ts_step):
+    return cursor_online_control.perform_algorithm(sliding_window, used_ch_names, sampling_rate, ts_step)
 
-    app = QtWidgets.QApplication(sys.argv)
-    w = MainWindow()
-    w.show()
-    window = app.exec()
-    sys.exit(window)
+
+if __name__ == '__main__':
+    print('CCA-test main started ...')
+    threading.Thread(target=test_algorithm_with_dataset, daemon=True).start()
+    scripts.data.visualisation.liveplot.start_liveplot()
+
