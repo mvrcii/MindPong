@@ -1,10 +1,11 @@
+import os.path
 import time
 
 import brainflow
 import numpy as np
 from brainflow import BoardShim
 
-from SaveTrial.Labels import Labels
+from scripts.data.extraction.Labels import Labels
 
 number_channels = len(BoardShim.get_eeg_channels(
     brainflow.board_shim.BoardIds.CYTON_DAISY_BOARD))
@@ -103,7 +104,8 @@ def save_session(metadata: np.ndarray, npz_name: str):
     :param metadata: metadata of the session in a np.ndarray
     :param npz_name: name of the npz-file, not the path name!
     """
-    name = '../Session/' + npz_name
-    print(name)
-    np.savez(name, meta=metadata, raw_data=create_raw_data_array(), event_type=create_event_type_array(),
+    from os.path import dirname, abspath, join
+    file_path = join(dirname(dirname(abspath(__file__))), "session", npz_name)
+
+    np.savez(file_path, meta=metadata, raw_data=create_raw_data_array(), event_type=create_event_type_array(),
              event_pos=create_position_array(), event_duration=create_duration_array())

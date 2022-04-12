@@ -6,7 +6,7 @@ import serial
 import serial.tools.list_ports
 import brainflow
 from brainflow.board_shim import BoardShim, BrainFlowInputParams
-from SaveTrial import trial_handler
+from scripts.data.extraction import trial_handler
 
 # time which is needed for one sample in s, T = 1/f = 1/125 = 0.008
 time_for_one_sample = 1 / BoardShim.get_sampling_rate(brainflow.board_shim.BoardIds.CYTON_DAISY_BOARD)

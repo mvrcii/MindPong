@@ -1,18 +1,17 @@
 import datetime
 import numpy as np
-from numpy import dtype
 
 
 class MetaData:
     """
-    Class to store the meta data of one trial in an object
+    Class to store the meta-data of one trial in an object
     """
     __subject_ID: int
     __subject_sex: str
     __subject_age: int
     __date: datetime.date
     __time: datetime.time
-    __sampling_rate: int
+    __sampling_rate: int = 125
     __channel_mapping: np.ndarray
     __recording_type: str
     __headset: str
@@ -21,11 +20,10 @@ class MetaData:
     __amount_different_events: int
 
     # channel configuration of the headset we use
-    bci_channels = ['C3', 'Cz', 'C4', 'P3', 'Pz', 'P4', 'O1',
-                    'FC5', 'FC1', 'FC2', 'FC6', 'CP5', 'CP1', 'CP2', 'CP6']
+    bci_channels = ['C3', 'Cz', 'C4', 'P3', 'Pz', 'P4', 'O1', 'O2', 'FC5', 'FC1', 'FC2', 'FC6', 'CP5', 'CP1', 'CP2', 'CP6']
 
     def __init__(self, sid, sex, age, amount_trials, comment, amount_events, time=datetime.datetime.now().time(),
-                 sampling_rate=125, channels=bci_channels, type='game', headset='BCI'):
+                 sampling_rate=125, channel_mapping=bci_channels, recording_type='game', headset='BCI'):
         """
         Date of the session is automatically the current date
         :param sid: ID of the subject
@@ -35,8 +33,8 @@ class MetaData:
         :param amount_events: amount of different events in one session
         :param time: start time of the trial
         :param sampling_rate: sampling rate
-        :param channels: used channel occupancy as string array
-        :param type: the way the data was collected (e.g. game, arrows, ...)
+        :param channel_mapping: used channel occupancy as string numpy array
+        :param recording_type: the way the data was collected (e.g. game, arrows, ...)
         :param headset: kind of headset which is used for data acquisition
         :param amount_trials: amount of trails in this session
         """
@@ -46,9 +44,9 @@ class MetaData:
         self.__date = datetime.date.today()
         self.__time = time
         self.__sampling_rate = sampling_rate
-        self.__channel_mapping = channels
+        self.__channel_mapping = channel_mapping
         self.__amount_trials = amount_trials
-        self.__recording_type = type
+        self.__recording_type = recording_type
         self.__headset = headset
         self.__amount_different_events = amount_events
         self.__comment = comment
@@ -57,7 +55,7 @@ class MetaData:
         """
         Creates a numpy array filled with tuples
         Every tuples get the attribute name and the respective attribute
-        :return: np.ndarray with meta data
+        :return: np.ndarray with meta-data
         """
         meta = [['id', self.__subject_ID], ['sex', self.__subject_sex], ['age', self.__subject_age],
                 ['date', self.__date], ['time', self.__time],
