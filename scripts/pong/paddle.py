@@ -15,7 +15,6 @@ class Paddle:
         self.pos = None
         self.speed_factor = 1
         self.id = None
-
         self.v_x = 0
         self.direction = 0
         self.wall_hit = False
@@ -62,12 +61,13 @@ class Paddle:
                 return -1
 
     def draw(self):
-        self.canvas.move(self.id, self.v_x, 0)
+        self.canvas.move(self.id, self.v_x * self.speed_factor, 0)
         self.pos = self.canvas.coords(self.id)
 
     def reset(self):
         self.canvas.delete(self.id)
         self.start_pos = True
+        self.speed_factor = 1
         self.init()
 
     def init(self):
