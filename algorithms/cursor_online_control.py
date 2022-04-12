@@ -77,16 +77,16 @@ def calculate_spatial_filtering(samples_list: np.ndarray, used_ch_names: list):
     """
     samples_c3a = list()
     samples_c4a = list()
-    # samples_c3 = mute_outliers(samples_list[0][:])
-    # samples_c4 = mute_outliers(samples_list[1][:])
+    samples_c3 = mute_outliers(samples_list[0][:])
+    samples_c4 = mute_outliers(samples_list[1][:])
     # splits the channels into c3 and c4 related channels
     split_channels = split_normalization_area(samples_list[2:], used_ch_names[2:])
 
     # calculate the average for the c3 and c4 related channels
     samples_average_c3 = calculate_laplacian(split_channels[0][:])
     samples_average_c4 = calculate_laplacian(split_channels[1][:])
-    # samples_average_c3 = mute_outliers(samples_average_c3)
-    # samples_average_c4 = mute_outliers(samples_average_c4)
+    samples_average_c3 = mute_outliers(samples_average_c3)
+    samples_average_c4 = mute_outliers(samples_average_c4)
 
     for i in range(len(samples_list[0])):
         samples_c3a.append(samples_list[0][i] - samples_average_c3[i])

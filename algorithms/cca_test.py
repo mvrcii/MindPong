@@ -41,7 +41,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.data_C3 = [0] * 100
         self.data_C4 = [0] * 100
         self.label = [0] * 100
-        # self.graphWidget.setYRange(-2, 5)
+        self.graphWidget.setYRange(-5, 5)
         self.graphWidget.addLegend()
 
         self.graphWidget.setBackground('k')
@@ -58,7 +58,7 @@ class MainWindow(QtWidgets.QMainWindow):
 
 
         self.timer = QtCore.QTimer()
-        self.timer.setInterval(20)
+        self.timer.setInterval(50)
         self.timer.timeout.connect(self.update_plot_data)
         self.timer.start()
 
