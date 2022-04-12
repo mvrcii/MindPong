@@ -1,4 +1,5 @@
 import scripts.pong.main as main
+from scripts.config import *
 
 
 # Define paddle properties and functions
@@ -28,6 +29,16 @@ class Player:
 
     def update(self, delta_time):
         self.velocity_x_axis = self.calculate_velocity() * delta_time
+        # every time the direction is not updated the player gets slower
+        if self.direction_update:
+            self.direction_update = False
+            self.speed_factor = 1
+        else:
+            self.speed_factor -= (delta_time * 4)/TIME_TO_STOP_PLAYER
+            if self.speed_factor <= 0:
+                self.speed_factor = 0
+
+
 
     def calculate_velocity(self):
         if self.start_pos:
@@ -62,12 +73,7 @@ class Player:
                 return -1
 
     def draw(self):
-        # every time the direction is not updated the player gets slower
-        if self.direction_update:
-            self.direction_update = False
-            self.speed_factor = 1
-        else:
-            self.speed_factor *= 0.99
+
         self.canvas.move(self.id, self.velocity_x_axis * self.speed_factor, 0)
         self.pos = self.canvas.coords(self.id)
 
