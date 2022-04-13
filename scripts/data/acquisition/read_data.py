@@ -1,5 +1,4 @@
 import time
-
 import numpy as np
 from numpy_ringbuffer import RingBuffer
 import serial
@@ -11,15 +10,19 @@ from scripts.data.extraction import trial_handler
 # time which is needed for one sample in s, T = 1/f = 1/125 = 0.008
 time_for_one_sample = 1 / BoardShim.get_sampling_rate(brainflow.board_shim.BoardIds.CYTON_DAISY_BOARD)
 
-sliding_window_duration = 0.2  # size of sliding window in s
+# size of sliding window in s
+sliding_window_duration = 0.2
+
 # size of sliding window in amount of samples, *8ms for time
 sliding_window_samples = int(sliding_window_duration / time_for_one_sample)
 
-offset_duration = 0.1  # size of offset in s between two consecutive sliding windows
-offset_samples = int(offset_duration / time_for_one_sample)  # size of offset in amount of samples, *8ms for time
+# size of offset in s between two consecutive sliding windows
+offset_duration = 0.1
 
-number_channels = len(BoardShim.get_eeg_channels(
-    brainflow.board_shim.BoardIds.CYTON_DAISY_BOARD))
+# size of offset in amount of samples, *8ms for time
+offset_samples = int(offset_duration / time_for_one_sample)
+
+number_channels = len(BoardShim.get_eeg_channels(brainflow.board_shim.BoardIds.CYTON_DAISY_BOARD))
 
 allow_window_creation = True
 first_window = True
@@ -71,12 +74,15 @@ def search_port():
 def handle_samples():
     """
     Reads EEG data from port, sends it to trial_handler and writes into in the window_buffer
+    :return: None
     """
     global first_window, window_buffer, allow_window_creation, first_data
     count_samples = 0
     while stream_available:
-        data = board.get_board_data(1)[board.get_eeg_channels(
-            brainflow.board_shim.BoardIds.CYTON_DAISY_BOARD)]  # get all data and remove it from internal buffer
+
+        # get all data and remove it from internal buffer
+        data = board.get_board_data(1)[board.get_eeg_channels(brainflow.board_shim.BoardIds.CYTON_DAISY_BOARD)]
+
         if len(data[0]) > 0:
             if first_data:
                 trial_handler.send_raw_data(data, start=time.time())
@@ -99,6 +105,7 @@ def handle_samples():
 def send_window():
     """
     Create sliding window and send it to the algorithm
+    :return: None
     """
     global window_buffer, number_channels
     window = np.zeros((number_channels, sliding_window_samples), dtype=float)
@@ -110,6 +117,7 @@ def send_window():
 def stop_stream():
     """
     Stops the data stream and the releases session
+    :return: None
     """
     global stream_available
     stream_available = False

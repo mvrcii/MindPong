@@ -19,6 +19,13 @@ style.use("ggplot")
 
 
 def play_sound():
+    """
+    To play a beep Sound
+    (1) Mac Beep
+    (2) Linux Beep
+    (3) Microsoft Beep
+    :return: None
+    """
     current_os = platform.system()
     if current_os == 'Darwin':  # Mac Beep
         pass
@@ -30,9 +37,18 @@ def play_sound():
 
 
 class App(tk.Tk):
+    """
+       A class for the application
+       - update(self):
+       - show_frame(self, frame_type):
+       - toggle_graph(self):
+       """
+
     # __init__ function for class App
     def __init__(self, *args, **kwargs):
-
+        """
+        Constructor method
+        """
         # __init__ function for class Tk
         tk.Tk.__init__(self, *args, **kwargs)
 
@@ -71,15 +87,27 @@ class App(tk.Tk):
 
     # UPDATE LOOP
     def update(self):
+        """
+
+        """
         self.after(5, self.update)
 
     def show_frame(self, frame_type):
-        """ Display the current frame passed as parameter"""
+        """
+        Display the current frame passed as parameter
+        :return: None
+        """
         frame = self.frames[frame_type]
         frame.tkraise()
         frame.focus_set()
 
     def toggle_graph(self):
+        """
+        Create Graph Window
+        (1) Graph exist
+        (2) Graph not exist
+        :return: None
+        """
         if self.graph_visible:
             self.graph.destroy()
             self.graph_visible = False
@@ -105,73 +133,93 @@ class App(tk.Tk):
 
 
 class StartPage(tk.Frame):
+    """
+    A class for the StartPage
+   """
     def __init__(self, parent, controller):
         tk.Frame.__init__(self, parent)
-
         label = tk.Label(self, text=('''Um verwertbare EEG-Daten zu erhalten, muss die Anwendung 
         zunächst mit Timern in zwei automatisierten aufeinanderfolgenden Schritten
-        kalibriert werden.\n\n\n'Space' to continue\n\n\n'G' to show the graphs'''),
-                         font=LARGE_FONT)
+        kalibriert werden.\n\n\n'Space' to continue\n\n\n'G' to show the graphs'''), font=LARGE_FONT)
         label.pack(fill=BOTH, expand=True)
-
         self.bind("<space>", lambda event: controller.show_frame(CalibrationPageOne))
 
 
 class CalibrationPageOne(tk.Frame):
+    """
+    A class for the first Calibration Page
+    """
     def __init__(self, parent, controller):
+        """
+        Constructor method
+        """
         tk.Frame.__init__(self, parent)
-
         label = tk.Label(self, text=('''Bitte fokussieren Sie nach Ablauf des 
 Timers für %s Sekunden den eingeblendeten
 Punkt in der Mitte des Fenster, bis Sie einen Piepton hören''' % FOCUS_POINT_TIMER), font=LARGE_FONT)
         label.pack(fill=BOTH, expand=True)
-
         self.bind("<space>", lambda event: controller.show_frame(CalibrationPageTwo))
 
 
 class CalibrationPageTwo(tk.Frame):
-    """ Calibration page with a point in the center to focus on. """
-
+    """
+    A class for the second Calibration Page with the point in the center to focus on
+    """
     def __init__(self, parent, controller):
+        """
+        Constructor method
+        """
         tk.Frame.__init__(self, parent)
-
         size = 25
         canvas = Canvas(self, width=self.winfo_screenwidth(), height=self.winfo_screenheight(), bd=0,
                         highlightthickness=0, relief='ridge')
         canvas.pack()
         circle = canvas.create_oval(0, 0, size, size, fill='red')
         canvas.move(circle, (self.winfo_screenwidth() - size) / 2, (self.winfo_screenheight() - size) / 2)
-
         self.bind("<space>", lambda event: controller.show_frame(CalibrationPageThree))
 
 
 class CalibrationPageThree(tk.Frame):
+    """
+    A class for the third Calibration Page
+    """
     def __init__(self, parent, controller):
+        """
+        Constructor method
+        """
         tk.Frame.__init__(self, parent)
-
         label = tk.Label(self, text=('''Bitte schließen Sie nach Ablauf des Timers für %s 
 Sekunden Ihre Augen, bis Sie einen Piep Ton hören.''' % BLACK_WINDOW_TIMER), font=LARGE_FONT)
         label.pack(fill=BOTH, expand=True)
-
         self.bind("<space>", lambda event: controller.show_frame(CalibrationPageFour))
 
 
 class CalibrationPageFour(tk.Frame):
+    """
+    A class for the fourth Calibration Page with the black screen
+    """
     def __init__(self, parent, controller):
+        """
+        Constructor method
+        """
         tk.Frame.__init__(self, parent)
         self.configure(bg='black')
-
         self.bind("<space>", lambda event: controller.show_frame(CalibrationPageFive))
 
 
 class CalibrationPageFive(tk.Frame):
+    """
+    A class for the fifth Calibration Page
+    """
     def __init__(self, parent, controller):
+        """
+        Constructor method
+        """
         tk.Frame.__init__(self, parent)
         label = tk.Label(self, text=('''Kalibrierung abgeschlossen!\n
 Sobald der Ball den Boden berührt \n startet das Spiel nach ein paar 
 Sekunden automatisch neu.\n\n Das Spiel beginnt in Kürze!'''), font=LARGE_FONT)
         label.pack(fill=BOTH, expand=True)
-
         self.bind("<space>", lambda event: controller.show_frame(MindPong))
 
 

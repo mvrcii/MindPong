@@ -3,9 +3,26 @@ import scripts.pong.main as main
 
 # Define paddle properties and functions
 class Paddle:
+    """
+    A Class to create the paddle
+    - update(self, delta_time): Update velocity according to the time
+    - calculate_velocity(self): Calculate velocity
+    - draw(self): Draw the paddle
+    - reset(self): Reset the paddle
+    - init(self): Initializes the paddle object and its position
+    - move_left(self, evt): Move paddle left
+    - move_right(self, evt): Move paddle right
+    """
     def __init__(self, root, canvas, width, height, color):
+        """
+        Constructor method
+        :param Any root: the state to switch to
+        :param Any canvas: the state to switch to
+        :param Any width: the state to switch to
+        :param Any height: the state to switch to
+        :param Any color: the state to switch to
+        """
         self.root = root
-
         self.canvas = canvas
         self.canvas_width = canvas.winfo_reqwidth()
         self.canvas_height = canvas.winfo_reqheight()
@@ -19,16 +36,23 @@ class Paddle:
         self.direction = 0
         self.wall_hit = False
         self.start_pos = True
-
         self.canvas.bind_all('<KeyPress-Left>', self.move_left)
         self.canvas.bind_all('<KeyPress-Right>', self.move_right)
-
         self.init()
 
     def update(self, delta_time):
+        """
+        Update the delta time
+        :param delta_time: velocity x-axis
+        """
         self.v_x = self.calculate_velocity() * delta_time
 
     def calculate_velocity(self):
+        """
+        Calculate the velocity
+        :return: velocity
+        :rtype: int
+        """
         if self.start_pos is True:
             return 0
 
@@ -61,17 +85,28 @@ class Paddle:
                 return -1
 
     def draw(self):
+        """
+        Draw the paddle
+        :return: None
+        """
         self.canvas.move(self.id, self.v_x * self.speed_factor, 0)
         self.pos = self.canvas.coords(self.id)
 
     def reset(self):
+        """
+        Reset the paddle
+        :return: None
+        """
         self.canvas.delete(self.id)
         self.start_pos = True
         self.speed_factor = 1
         self.init()
 
     def init(self):
-        """Initializes the paddle object and its position."""
+        """
+        Initializes the paddle object and its position
+        :return: None
+        """
         self.id = self.canvas.create_rectangle(0, 0, self.width, self.height, fill=self.color)
         # Move to initial position
         self.canvas.move(self.id, (self.canvas_width - self.width) / 2, self.canvas_height * 0.9)
@@ -79,6 +114,10 @@ class Paddle:
         self.pos = self.canvas.coords(self.id)
 
     def move_left(self, evt):
+        """
+        Move paddle left
+        :return: None
+        """
         # Prevent paddle movement while the game state is not playing
         if self.root.state.name is not main.Playing.name:
             return
@@ -88,6 +127,10 @@ class Paddle:
         self.direction = -1
 
     def move_right(self, evt):
+        """
+        Move paddle right
+        :return: None
+        """
         # Prevent paddle movement while the game state is not playing
         if self.root.state.name is not main.Playing.name:
             return

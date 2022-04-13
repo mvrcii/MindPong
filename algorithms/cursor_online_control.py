@@ -6,10 +6,10 @@ from numpy_ringbuffer import RingBuffer
 
 
 # Global variables
-R = None
-FMIN = 9.0
-FMAX = 15.0
-WINDOW_SIZE_FACTOR = 1
+r = None
+f_min = 9.0
+f_max = 15.0
+window_size_factor_global = 1
 
 
 def calculate_laplacian(signal):
@@ -19,6 +19,7 @@ def calculate_laplacian(signal):
     j = num channels without C3/C4
     :param signal: signals of each channel
     :return: calculated average
+    :rtype: list[int]
     """
     result = list()
     for i in range(len(signal[0])):
@@ -36,6 +37,7 @@ def calculate_spatial_filtering(signal_list):
     Subtract the calculated average signal from C3 and C4 to perform the spatial filtering
     :param signal_list: signals of all channels (with C3 at position 0 and C4 at position 1)
     :return: filtered C3, C4 signals
+    :rtype: list[int], list[int]
     """
     signal_c3a = list()
     signal_c4a = list()
@@ -53,12 +55,13 @@ def perform_multitaper(signal, jobs=-1):
     :param signal: all signals from a channel (should be filtered)
     :param jobs: number of jobs to run in parallel (-1 = num of available CPU cores)
     :return: psd_abs: power spectral density (PSD) of the signal
+    :rtype: np.abs(), time()
              freqs: the corresponding frequencies
     """
     array = np.array(signal)
-    _bandwidth = FMAX - FMIN if FMAX - FMIN > 0 else 1
+    _bandwidth = f_max - f_min if f_max - f_min > 0 else 1
     psds, freqs = mne.time_frequency.psd_array_multitaper(array, sfreq=128, n_jobs=jobs, bandwidth=_bandwidth,
-                                                          fmin=FMIN, fmax=FMAX)
+                                                          fmin=f_min, fmax=f_max)
     psds_abs = np.abs(psds)
 
     return psds_abs, freqs
@@ -70,6 +73,7 @@ def perform_rfft(signal):
     Performs fft function to convert all signals from time into frequency domain
     :param signal: all signals from a channel (should be filtered)
     :return: fft_spectrum_abs: power spectral density (PSD) of the signal
+    :rtype: np.abs(), time()
              freqs: the corresponding frequencies
     """
     fft_spectrum = np.fft.rfft(signal)
@@ -87,14 +91,15 @@ def integrate_psd_values(signal, frequency_list, use_frequency_filter=False):
     :param use_frequency_filter: FALSE: if frequencies are already filtered (e.g. with multitaper algorithm),
                                  TRUE: use intern filter
     :return: sum of all PSDs in the given frequency range
+    :rtype: float
     """
 
     psds_in_band_power = list()
     requested_frequency_range = list()
 
-    if (use_frequency_filter):
+    if use_frequency_filter:
         for i in range(len(frequency_list)):
-            if FMAX >= frequency_list[i] >= FMIN:
+            if f_max >= frequency_list[i] >= f_min:
                 psds_in_band_power.append(signal[i])
                 requested_frequency_range.append(frequency_list[i])
 
@@ -109,12 +114,13 @@ def manage_ringbuffer():
     amount of samples within 30 seconds = 30s / 1/250Hz
     size of Ringbuffer = samples within 30s / (sliding_window_factor * 50)
     :return: Ringbuffer instance
+    :rtype: RingBuffer
     """
-    global R
-    if not R:
-        window_size = WINDOW_SIZE_FACTOR
-        R = RingBuffer(capacity=int(7500 / (window_size * 50)), dtype=np.float)
-    return R
+    global r
+    if not r:
+        window_size = window_size_factor_global
+        r = RingBuffer(capacity=int(7500 / (window_size * 50)), dtype=np.float)
+    return r
 
 
 def perform_algorithm(sliding_window, window_size_factor=1):
@@ -129,9 +135,10 @@ def perform_algorithm(sliding_window, window_size_factor=1):
            (SW(t) should be overlapping with SW(t+1))
     :param window_size_factor: n: n*200ms
     :return: the normalized value representing horizontal movement
+    :rtype: float
     """
-    global WINDOW_SIZE_FACTOR
-    WINDOW_SIZE_FACTOR = window_size_factor
+    global window_size_factor_global
+    window_size_factor_global = window_size_factor
 
     # 1. Spatial filtering
     signal_c3a, signal_c4a = calculate_spatial_filtering(sliding_window)
