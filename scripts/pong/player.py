@@ -95,7 +95,7 @@ class Player:
         """Initializes the paddle object and its position."""
         self.id = self.canvas.create_rectangle(0, 0, self.width, self.height, fill=self.color)
         # Move to initial position
-        self.canvas.move(self.id, (self.canvas_width - self.width) / 2, self.canvas_height * 0.5)
+        self.canvas.move(self.id, (self.canvas_width - self.width) / 2, self.canvas_height * 0.5-self.height)
         # Update position
         self.pos = self.canvas.coords(self.id)
         self.target.spawn_new_target(self.pos)

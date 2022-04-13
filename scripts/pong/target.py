@@ -6,7 +6,7 @@ from scripts.config import *
 
 class Target:
     def __init__(self, root, canvas, color, size):
-
+        self.root = root
         self.canvas = canvas
         self.canvas_width = canvas.winfo_reqwidth()
         self.canvas_height = canvas.winfo_reqheight()
@@ -28,6 +28,7 @@ class Target:
                 self.spawn_target = True
                 self.counter = 0
                 self.timestamp_last_hit = None
+                self.root.score += 1
             else:
                 self.counter += delta_time
         elif (time.time() - self.timestamp_last_hit) >= TIME_TO_CATCH:
@@ -45,5 +46,5 @@ class Target:
                 condition = False
         self.canvas.itemconfig(self.id, fill='red')
         self.timestamp_last_hit = time.time()
-        self.canvas.moveto(self.id, random_x, self.canvas_height * 0.5)
+        self.canvas.moveto(self.id, random_x, self.canvas_height * 0.5 - self.size)
         self.pos = self.canvas.coords(self.id)
