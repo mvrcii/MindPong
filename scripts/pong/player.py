@@ -1,5 +1,6 @@
 import scripts.pong.main as main
 from scripts.config import *
+import scripts.pong.target as target
 
 
 # Define paddle properties and functions
@@ -20,7 +21,9 @@ class Player:
         self.direction = 0
         self.wall_hit = False
         self.start_pos = True
+        self.target_hit = False
         self.direction_update = False
+        self.target = target
 
         self.canvas.bind_all('<KeyPress-Left>', self.move_left)
         self.canvas.bind_all('<KeyPress-Right>', self.move_right)
@@ -28,18 +31,25 @@ class Player:
         self.init()
 
     def update(self, delta_time):
+        self.collision_with_target()
         self.velocity_x_axis = self.calculate_velocity() * delta_time
         # every time the direction is not updated the player gets slower
         if self.direction_update:
             self.direction_update = False
             self.speed_factor = 1
         else:
-            self.speed_factor -= (delta_time * 4)/TIME_TO_STOP_PLAYER
+            self.speed_factor -= (delta_time * 4) / TIME_TO_STOP_PLAYER
             if self.speed_factor <= 0:
                 self.speed_factor = 0
 
     def calculate_velocity(self):
         if self.start_pos:
+            return 0
+
+        if self.target_hit:
+            self.target_hit = False
+            self.target.spawn_new_target(self.pos)
+            print('spawn targed')
             return 0
 
         if self.direction == 1:
@@ -88,6 +98,7 @@ class Player:
         self.canvas.move(self.id, (self.canvas_width - self.width) / 2, self.canvas_height * 0.5)
         # Update position
         self.pos = self.canvas.coords(self.id)
+        self.target.spawn_new_target(self.pos)
 
     def move_left(self, evt):
         # Prevent paddle movement while the game state is not playing
@@ -108,4 +119,15 @@ class Player:
             self.start_pos = False
         self.direction = 1
         self.direction_update = True
+
+    def collision_with_target(self):
+        # pos[0] links pos[2] rechts
+        hit_from_right = self.pos[2] >= self.target.pos[0] and self.pos[2] <= self.target.pos[2]
+        hit_from_left = self.pos[0] <= self.target.pos[2] and self.pos[0] >= self.target.pos[0]
+        if hit_from_left or hit_from_right:
+            print('hit')
+            self.target_hit = True
+            self.direction *= -1
+
+
 

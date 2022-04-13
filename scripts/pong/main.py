@@ -146,7 +146,7 @@ class MindPong(tk.Frame):
         self.canvas.pack()
 
         self.target = target.Target(self, self.canvas, 'red', 60)
-        self.player = player.Player(self, self.canvas, 60, 60, 'blue', target=target)
+        self.player = player.Player(self, self.canvas, 60, 60, 'blue', target=self.target)
 
         self.bind("<space>", lambda event: self.change(Playing) if self.state.name is Idle.name else self.change(Idle))
 

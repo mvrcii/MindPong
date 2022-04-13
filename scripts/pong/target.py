@@ -24,5 +24,6 @@ class Target:
             if (random_x + (self.size / 2) + MIN_DISTANCE_TARGET) <= player_pos[0] or (
                     random_x - (self.size / 2) - MIN_DISTANCE_TARGET) >= player_pos[2]:
                 condition = False
+        print('out of while')
         self.canvas.move(self.id, random_x, self.canvas_height * 0.5)
         self.pos = self.canvas.coords(self.id)
