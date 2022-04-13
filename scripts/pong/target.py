@@ -18,7 +18,7 @@ class Target:
         self.hit_player_target = False
         self.spawn_target = False
         self.counter = 0
-        self.timestamp_last_hit = time.time()
+        self.timestamp_last_hit = 0
 
     def update(self, delta_time):
         if self.hit_player_target:
@@ -27,12 +27,13 @@ class Target:
                 self.hit_player_target = False
                 self.spawn_target = True
                 self.counter = 0
-                self.timestamp_last_hit = None
                 self.root.score += 1
             else:
                 self.counter += delta_time
-        elif (time.time() - self.timestamp_last_hit) >= TIME_TO_CATCH:
-            self.spawn_target = True
+        else:
+            self.timestamp_last_hit += delta_time
+            if self.timestamp_last_hit >= TIME_TO_CATCH:
+                self.spawn_target = True
 
     def spawn_new_target(self, player_pos):
         min_x = 0
@@ -40,11 +41,10 @@ class Target:
         condition = True
         while condition:
             random_x = random.uniform(min_x, max_x)
-            print(random_x)
             if (random_x + (self.size / 2) + MIN_DISTANCE_TARGET) <= player_pos[0] or (
                     random_x - (self.size / 2) - MIN_DISTANCE_TARGET) >= player_pos[2]:
                 condition = False
         self.canvas.itemconfig(self.id, fill='red')
-        self.timestamp_last_hit = time.time()
+        self.timestamp_last_hit = 0
         self.canvas.moveto(self.id, random_x, self.canvas_height * 0.5 - self.size)
         self.pos = self.canvas.coords(self.id)
