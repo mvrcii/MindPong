@@ -21,7 +21,6 @@ class Player:
         self.direction = 0
         self.wall_hit = False
         self.start_pos = True
-        self.target_hit = False
         self.direction_update = False
         self.target = target
 
@@ -42,14 +41,15 @@ class Player:
             if self.speed_factor <= 0:
                 self.speed_factor = 0
 
+        if self.target.spawn_target:
+            self.target.spawn_new_target(self.pos)
+            self.target.spawn_target = False
+
     def calculate_velocity(self):
         if self.start_pos:
             return 0
 
-        if self.target_hit:
-            self.target_hit = False
-            self.target.spawn_new_target(self.pos)
-            print('spawn targed')
+        if self.target.hit_player_target:
             return 0
 
         if self.direction == 1:
@@ -122,12 +122,13 @@ class Player:
 
     def collision_with_target(self):
         # pos[0] links pos[2] rechts
-        hit_from_right = self.pos[2] >= self.target.pos[0] and self.pos[2] <= self.target.pos[2]
-        hit_from_left = self.pos[0] <= self.target.pos[2] and self.pos[0] >= self.target.pos[0]
+        hit_from_right = self.target.pos[0] <= self.pos[2] <= self.target.pos[2]
+        hit_from_left = self.target.pos[2] >= self.pos[0] >= self.target.pos[0]
         if hit_from_left or hit_from_right:
-            print('hit')
-            self.target_hit = True
-            self.direction *= -1
+            self.target.hit_player_target = True
+
+
+
 
 
 

@@ -165,6 +165,7 @@ class MindPong(tk.Frame):
             self.clear()
             # Update
             self.player.update(delta_time=delta / 4)
+            self.target.update()
             # Draw
             self.player.draw()
 
