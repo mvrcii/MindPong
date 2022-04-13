@@ -57,7 +57,7 @@ class GameState(object):
 class Playing(GameState):
     """A child of GameState defining the state playing"""
     name = "playing"
-    allowed = ['idle', 'restart']
+    allowed = ['idle', 'respawn']
 
 
 class Idle(GameState):
@@ -66,13 +66,13 @@ class Idle(GameState):
     allowed = ['playing']
 
 
-class Restart(GameState):
+class Respawn(GameState):
     """A child of GameState defining the state idle"""
-    name = "restart"
-    allowed = ['playing']
+    name = "respawn"
+    allowed = ['idle', 'playing']
 
 
-class MindPong(tk.Frame):
+class Game(tk.Frame):
     """
     A class representing the pong game
 
@@ -165,29 +165,20 @@ class MindPong(tk.Frame):
             self.clear()
             # Update
             self.player.update(delta_time=delta / 4)
-            self.target.update()
+            self.target.update(delta_time=delta)
             # Draw
             self.player.draw()
+        elif curr_state is Respawn.name:
+            self.canvas.delete(self.target.id)
 
-        elif curr_state is Restart.name:
-            if self.curr_restart_time == 0:
-                self.curr_restart_time = time.time()
-                self.canvas.itemconfig(self.score_label, text="Score: " + str(self.score), state=NORMAL)
-                self.canvas.itemconfig(self.timer_label, state=NORMAL)
-                self.canvas.itemconfig(self.player.id, state=HIDDEN)
-                self.score = 0
+            self.player.speed_factor = 0
+            del self.target
+            self.target = target.Target(self, self.canvas, 'red', 60)
+            # self.player.__setattr__(self.player, target, self.target)
+            self.player.target = self.target
+            self.target.spawn_new_target(self.player.pos)
 
-            curr_time = time.time()
-            if curr_time - self.curr_restart_time > PONG_RESTART_TIME:
-                self.curr_restart_time = 0
-                self.change(Playing)
-                self.canvas.itemconfig(self.score_label, state=HIDDEN)
-                self.canvas.itemconfig(self.timer_label, state=HIDDEN)
-                self.canvas.itemconfig(self.player.id, state=NORMAL)
-            else:
-                seconds_until_restart = round(3 - (curr_time - self.curr_restart_time), 1)
-                self.canvas.itemconfig(self.timer_label, text="Restarting in " + str(seconds_until_restart),
-                                       state=NORMAL)
+            self.change(Playing)
 
         # Repeat
         self.after(5, self.update)

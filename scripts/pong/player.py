@@ -1,4 +1,4 @@
-import scripts.pong.main as main
+import scripts.pong.game as main
 from scripts.config import *
 import scripts.pong.target as target
 
@@ -42,7 +42,7 @@ class Player:
                 self.speed_factor = 0
 
         if self.target.spawn_target:
-            self.target.spawn_new_target(self.pos)
+            self.root.change(main.Respawn)
             self.target.spawn_target = False
 
     def calculate_velocity(self):
