@@ -5,11 +5,21 @@ from numpy_ringbuffer import RingBuffer
 
 # Global variables
 R = None
-FMIN = 9.0
-FMAX = 15.0
-WINDOW_OFFSET = 0.05
-WINDOW_SIZE = 1
-THRESHOLD = 1.5
+FMIN = 8.0
+FMAX = 12.0
+# WINDOW_OFFSET = 0.05
+# WINDOW_SIZE = 1
+THRESHOLD = 1
+SAMPLING_FREQ = 125
+WEIGHT = 1.4
+
+
+def norm_data(in_data):
+    mean = np.mean(in_data)
+    std = np.std(in_data)
+    out_data = in_data - mean
+    out_data = out_data / std
+    return out_data
 
 
 def mute_outliers(samples: np.ndarray):
@@ -90,10 +100,10 @@ def calculate_spatial_filtering(samples_list: np.ndarray, used_ch_names: list):
     samples_average_c4 = mute_outliers(samples_average_c4)
 
     for i in range(len(samples_list[0])):
-        samples_c3a.append(samples_list[0][i] - samples_average_c3[i])
-        samples_c4a.append(samples_list[1][i] - samples_average_c4[i])
-        # samples_c3a.append(samples_c3[i] - samples_average_c3[i])
-        # samples_c4a.append(samples_c4[i] - samples_average_c4[i])
+        # samples_c3a.append(samples_list[0][i] - samples_average_c3[i])
+        # samples_c4a.append(samples_list[1][i] - samples_average_c4[i])
+        samples_c3a.append(samples_c3[i] - samples_average_c3[i])
+        samples_c4a.append(samples_c4[i] - samples_average_c4[i])
 
     samples_c3a = np.asarray(samples_c3a)
     samples_c4a = np.asarray(samples_c4a)
@@ -109,7 +119,7 @@ def perform_multitaper(samples: np.ndarray, jobs=-1):
              freqs: the corresponding frequencies
     """
     _bandwidth = FMAX - FMIN if FMAX - FMIN > 0 else 1
-    psds, freqs = mne.time_frequency.psd_array_multitaper(samples, sfreq=250, n_jobs=jobs, bandwidth=_bandwidth, fmin=FMIN, fmax=FMAX, verbose=False)
+    psds, freqs = mne.time_frequency.psd_array_multitaper(samples, sfreq=SAMPLING_FREQ, n_jobs=jobs, bandwidth=_bandwidth, fmin=FMIN, fmax=FMAX, verbose=False)
     psds_abs = np.abs(psds)
 
     return psds_abs, freqs
@@ -168,11 +178,11 @@ def manage_ringbuffer(window_size, offset_in_percentage:float):
     global R
     if not R:
         offset = window_size/(offset_in_percentage*100.0)
-        R = RingBuffer(capacity=int(((30-window_size) / offset)+1), dtype=np.float)
+        R = RingBuffer(capacity=int(((15-window_size) / offset)+1), dtype=np.float)
     return R
 
 
-def perform_algorithm(sliding_window, used_ch_names, sample_rate, queue_hcon, offset_in_percentage=0.2):
+def perform_algorithm(sliding_window, used_ch_names, sample_rate, queue_hcon=None, queue_c3=None, queue_c4=None, offset_in_percentage=0.2):
     """
     Converts a sliding window into the corresponding horizontal movement
     Contains following steps:
@@ -187,24 +197,27 @@ def perform_algorithm(sliding_window, used_ch_names, sample_rate, queue_hcon, of
     """
 
     # 0. mute outliers
-    # for i in range(len(sliding_window)):
-    #     sliding_window[i] = mute_outliers(sliding_window[i])
+    for i in range(len(sliding_window)):
+        sliding_window[i] = norm_data(sliding_window[i])
+
+    global SAMPLING_FREQ
+    SAMPLING_FREQ = sample_rate
 
     # 1. Spatial filtering
     samples_c3a, samples_c4a = calculate_spatial_filtering(sliding_window, used_ch_names)
 
     # 2. Spectral analysis
-    psd_c3a, f_c3a = perform_multitaper(samples_c3a)
-    psd_c4a, f_c4a = perform_multitaper(samples_c4a)
-    # f_c3a, psd_c3a = perform_periodogram(samples_c3a)
-    # f_c4a, psd_c4a = perform_periodogram(samples_c4a)
+    # psd_c3a, f_c3a = perform_multitaper(samples_c3a)
+    # psd_c4a, f_c4a = perform_multitaper(samples_c4a)
+    f_c3a, psd_c3a = perform_periodogram(samples_c3a)
+    f_c4a, psd_c4a = perform_periodogram(samples_c4a)
 
     # 3. Band Power calculation
-    area_c3 = integrate_psd_values(psd_c3a, f_c3a)
-    area_c4 = integrate_psd_values(psd_c4a, f_c4a)
+    area_c3 = integrate_psd_values(psd_c3a, f_c3a, True)
+    area_c4 = integrate_psd_values(psd_c4a, f_c4a, True)
 
     # 4. Derive cursor control samples
-    hcon = area_c4 - area_c3
+    hcon = (area_c4*WEIGHT) - area_c3
 
     # normalize to zero mean and unit variance to derive the cursor control samples
     ringbuffer = manage_ringbuffer((len(sliding_window[0]) + 1)/sample_rate, offset_in_percentage)
@@ -226,7 +239,12 @@ def perform_algorithm(sliding_window, used_ch_names, sample_rate, queue_hcon, of
         calculated_label = -1
 
     try:
-        queue_hcon.put(normalized_hcon)
+        if queue_hcon:
+            queue_hcon.put(normalized_hcon)
+        if queue_c3:
+            queue_c3.put(area_c3)
+        if queue_c4:
+            queue_c4.put(area_c4)
     except:
         print('Fehler: kann nicht reingeldaden werden')
 

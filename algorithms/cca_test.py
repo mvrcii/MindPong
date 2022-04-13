@@ -1,7 +1,7 @@
 import threading, queue
 import numpy as np
-import cursor_online_control
-import BCIC_dataset_loader as bdl
+import algorithms.cursor_online_control as cursor_online_control
+import algorithms.BCIC_dataset_loader as bdl
 import scripts.data.visualisation.liveplot
 
 # GLOBAL DATA
@@ -113,6 +113,28 @@ def connect_queues():
     scripts.data.visualisation.liveplot.add_queue(('QUEUE_HCON', QUEUE_HCON))
 
 
+def sort_incoming_channels(sliding_window, used_ch_names):
+
+    #                 'C3', 'Cz', 'C4', 'P3', 'Pz', 'P4', 'O1', 'O2', 'FC5', 'FC1', 'FC2', 'FC6', 'CP5', 'CP1', 'CP2', 'CP6'
+    ch_names_weight = [1,    0,    1,    0,    0,    0,    0,    0,     1,     1,     1,     1,     1,     1,     1,     1]
+    filtered_sliding_window = list()
+    filtered_channel_names = list()
+    for i in range(len(used_ch_names)):
+        if ch_names_weight[i] != 0:
+            if used_ch_names[i] == 'C3':
+                filtered_channel_names.insert(0, used_ch_names[i])
+                filtered_sliding_window.insert(0, sliding_window[i])
+            elif used_ch_names[i] == 'C4':
+                filtered_channel_names.insert(1, used_ch_names[i])
+                filtered_sliding_window.insert(1, sliding_window[i])
+            else:
+                filtered_channel_names.append(used_ch_names[i])
+                filtered_sliding_window.append(sliding_window[i])
+
+    filtered_sliding_window = np.asarray(filtered_sliding_window)
+    return filtered_sliding_window, filtered_channel_names
+
+
 def test_algorithm_with_dataset():
     #                 Fz  FC3  FC1  FCz  FC2  FC4  C5  C3  C1  Cz  C2  C4  C6  CP3  CP1  CPz  CP2  CP4  P1  Pz  P2  POz
     ch_names_weight = [0,  1,   1,   0,   1,   1,   0,  1,  0,  0,  0,  1,  0,  1,   1,   0,   1,   1,   0,  0,  0,  0]
@@ -121,8 +143,9 @@ def test_algorithm_with_dataset():
     test_algorithm(preloaded_data, preloaded_labels, used_ch_names)
 
 
-def test_algorithm_with_livedata(sliding_window, used_ch_names, sampling_rate, ts_step):
-    return cursor_online_control.perform_algorithm(sliding_window, used_ch_names, sampling_rate, ts_step)
+def test_algorithm_with_livedata(sliding_window, used_ch_names, sampling_rate, queue_hcon, queue_c3, queue_c4, ts_step):
+    sliding_window, used_ch_names = sort_incoming_channels(sliding_window, used_ch_names)
+    return cursor_online_control.perform_algorithm(sliding_window, used_ch_names, sampling_rate, queue_hcon, queue_c3, queue_c4, offset_in_percentage=ts_step)
 
 
 if __name__ == '__main__':

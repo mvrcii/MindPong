@@ -1,6 +1,6 @@
+import queue
 import threading
 import time
-
 import numpy as np
 from numpy_ringbuffer import RingBuffer
 import serial
@@ -8,20 +8,24 @@ import serial.tools.list_ports
 import brainflow
 from brainflow.board_shim import BoardShim, BrainFlowInputParams
 
+import scripts.data.visualisation.liveplot
 from algorithms import cca_test
 from scripts.data.extraction import trial_handler, MetaData
-from scripts.data.visualisation import liveplot
 
 SAMPLING_RATE = BoardShim.get_sampling_rate(brainflow.board_shim.BoardIds.CYTON_DAISY_BOARD)
+QUEUE_CLABEL = queue.Queue(100)
+QUEUE_HCON = queue.Queue(100)
+QUEUE_C3 = queue.Queue(100)
+QUEUE_C4 = queue.Queue(100)
 
 # time which is needed for one sample in s, T = 1/f = 1/125 = 0.008
 time_for_one_sample = 1 / SAMPLING_RATE
 
-sliding_window_duration = 0.2  # size of sliding window in s
+sliding_window_duration = 1  # size of sliding window in s
 # size of sliding window in amount of samples, *8ms for time
 sliding_window_samples = int(sliding_window_duration / time_for_one_sample)
 
-offset_duration = 0.1  # size of offset in s between two consecutive sliding windows
+offset_duration = 0.2  # size of offset in s between two consecutive sliding windows
 offset_samples = int(offset_duration / time_for_one_sample)  # size of offset in amount of samples, *8ms for time
 
 number_channels = len(BoardShim.get_eeg_channels(
@@ -46,8 +50,13 @@ def init():
     params = BrainFlowInputParams()
     params.serial_port = search_port()
 
+    while not scripts.data.visualisation.liveplot.WINDOW_READY:
+        # wait until plot window is initialized
+        time.sleep(0.05)
+    connect_queues()
+
     if params.serial_port is not None:
-        BoardShim.enable_dev_board_logger()
+        # BoardShim.enable_dev_board_logger()
         global board, stream_available
         board = BoardShim(brainflow.board_shim.BoardIds.CYTON_DAISY_BOARD, params)
         board.prepare_session()
@@ -112,7 +121,12 @@ def send_window():
         window[i] = np.array(window_buffer[i])
     # push window to cursor control algorithm
     # TODO: change offset_duration to percentage? Else change calculation in coc algorithm
-    calculated_label = cca_test.test_algorithm_with_livedata(window, MetaData.bci_channels, SAMPLING_RATE, offset_duration)
+    calculated_label = cca_test.test_algorithm_with_livedata(window, MetaData.bci_channels, SAMPLING_RATE, QUEUE_HCON, QUEUE_C3, QUEUE_C4, offset_duration/sliding_window_duration)
+    try:
+        global QUEUE_CLABEL
+        QUEUE_CLABEL.put(calculated_label)
+    except:
+        print('Fehler: kann nicht reingeldaden werden')
 
 
 def stop_stream():
@@ -126,6 +140,15 @@ def stop_stream():
     board.release_session()
 
 
+def connect_queues():
+    global QUEUE_CLABEL, QUEUE_HCON, QUEUE_C3, QUEUE_C4
+    scripts.data.visualisation.liveplot.add_queue(('QUEUE_CLABEL', '#76FF03', QUEUE_CLABEL))
+    scripts.data.visualisation.liveplot.add_queue(('QUEUE_HCON', '#D500F9', QUEUE_HCON))
+    scripts.data.visualisation.liveplot.add_queue(('QUEUE_C3', '#EF9A9A', QUEUE_C3))
+    scripts.data.visualisation.liveplot.add_queue(('QUEUE_C4', '#B3E5FC', QUEUE_C4))
+
+
 if __name__ == '__main__':
     print('read_data main started ...')
     threading.Thread(target=init, daemon=True).start()
+    scripts.data.visualisation.liveplot.start_liveplot()

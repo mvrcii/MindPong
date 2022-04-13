@@ -7,6 +7,7 @@ import time
 
 MAIN_WINDOW = None
 QUEUES = list()
+WINDOW_READY = False
 
 
 class MainWindow(QtWidgets.QMainWindow):
@@ -18,21 +19,21 @@ class MainWindow(QtWidgets.QMainWindow):
 
         self.x = list(range(100))
 
-        self.graphWidget.setYRange(-5, 5)
+        self.graphWidget.setYRange(-10, 10)
         self.graphWidget.addLegend()
 
         self.graphWidget.setBackground('k')
         # self.graphWidget.showGrid(x=True, y=True)
 
         self.timer = QtCore.QTimer()
-        self.timer.setInterval(50)
+        self.timer.setInterval(25)
         self.timer.timeout.connect(self.update_plot_data)
         self.timer.start()
 
     def add_plot(self, queues):
         global QUEUES
-        plot = self.graphWidget.plot(self.x, list(queues[1].queue), name=queues[0], pen=pg.mkPen(width=1, color=list(np.random.choice(range(256), size=3))))
-        QUEUES.append((queues[1], plot, list(range(100))))
+        plot = self.graphWidget.plot(self.x, list(queues[2].queue), name=queues[0], pen=pg.mkPen(width=2, color=queues[1]))
+        QUEUES.append((queues[2], plot, list(range(100))))
 
     def update_plot_data(self):
         """
@@ -58,7 +59,7 @@ class MainWindow(QtWidgets.QMainWindow):
             time.sleep(0.005)
 
 
-def add_queue(q: (str, queue.Queue)):
+def add_queue(q: (str, str, queue.Queue)):
     """
     Adds a queue to the live plot
     :param q: consists of the name of the label and the corresponding queue
@@ -76,5 +77,7 @@ def start_liveplot():
     app = QtWidgets.QApplication(sys.argv)
     MAIN_WINDOW = MainWindow()
     MAIN_WINDOW.show()
+    global WINDOW_READY
+    WINDOW_READY = True
     window = app.exec_()
     sys.exit(window)
