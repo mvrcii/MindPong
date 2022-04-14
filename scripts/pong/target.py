@@ -6,6 +6,7 @@ from scripts.config import *
 
 class Target:
     def __init__(self, root, canvas, color, size):
+        self.start_distance = 0
         self.root = root
         self.canvas = canvas
         self.canvas_width = canvas.winfo_reqwidth()
@@ -32,7 +33,7 @@ class Target:
                 self.counter += delta_time
         else:
             self.timestamp_last_hit += delta_time
-            if self.timestamp_last_hit >= TIME_TO_CATCH:
+            if self.timestamp_last_hit >= TIME_TO_CATCH_PER_PIXEL*self.start_distance:
                 self.spawn_target = True
 
     def respawn(self):
@@ -41,12 +42,17 @@ class Target:
     def spawn_new_target(self, player_pos):
         min_x = 0
         max_x = self.canvas_width - self.size
+
         condition = True
         while condition:
             random_x = random.uniform(min_x, max_x)
-            if (random_x + (self.size / 2) + MIN_DISTANCE_TARGET) <= player_pos[0] or (
-                    random_x - (self.size / 2) - MIN_DISTANCE_TARGET) >= player_pos[2]:
+            if (random_x + (self.size / 2) + MIN_DISTANCE_TARGET) <= player_pos[0]:
                 condition = False
+                self.start_distance = player_pos[0] - random_x
+            elif (random_x - (self.size / 2) - MIN_DISTANCE_TARGET) >= player_pos[2]:
+                condition = False
+                self.start_distance = random_x - player_pos[2]
+
         self.canvas.itemconfig(self.id, fill='red')
         self.timestamp_last_hit = 0
         self.canvas.moveto(self.id, random_x, self.canvas_height * 0.5 - self.size)
