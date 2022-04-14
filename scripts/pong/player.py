@@ -1,13 +1,34 @@
-import scripts.pong.game as main
-from scripts.config import *
-import scripts.pong.target as target
+import scripts.pong.main as main
 
 
 # Define paddle properties and functions
 class Player:
-    def __init__(self, root, canvas, width, height, color, target):
-        self.root = root
+    """
+    A Class to create the player
 
+    Methods:
+    ----------
+    :method update(self, delta_time): Update velocity according to the time
+    :method calculate_velocity(self): Calculate velocity
+    :method draw(self): Draw the paddle
+    :method reset(self): Reset the paddle
+    :method init(self): Initializes the paddle object and its position
+    :method move_left(self, evt): Move paddle left
+    :method move_right(self, evt): Move paddle right
+    :method collision_with_target(self): checks collision with target
+    """
+
+    def __init__(self, root, canvas, width, height, color):
+        """
+        Constructor method
+        :param Any root: root
+        :param Any canvas: Canvas for drawing
+        :param Any width: width of player
+        :param Any height: height of player
+        :param Any color: color of player
+        """
+
+        self.root = root
         self.canvas = canvas
         self.canvas_width = canvas.winfo_reqwidth()
         self.canvas_height = canvas.winfo_reqheight()
@@ -31,6 +52,12 @@ class Player:
         self.init()
 
     def update(self, delta_time):
+        """
+        Update the delta time
+        :param delta_time: delta time for velocity x-axis
+        :return: None
+        """
+
         self.collision_with_target()
         self.velocity_x_axis = self.calculate_velocity() * delta_time
         # every time the direction is not updated the player gets slower
@@ -52,6 +79,7 @@ class Player:
         """
         Calculates velocity of the player depending on his direction and whether he should be stopped
         :return: Calculated velocity
+        :rtype: int
         """
         if self.start_pos:
             return 0
@@ -75,7 +103,7 @@ class Player:
 
         elif self.direction == -1:
             if self.pos[0] <= 0:
-                if not self.wall_hit:
+                if self.wall_hit is False:
                     self.wall_hit = True
                 return 0
             elif self.pos[2] >= self.canvas_width:
@@ -88,17 +116,31 @@ class Player:
                 return -1
 
     def draw(self):
+        """
+        Draw the paddle
+        :return: None
+        """
+
         self.canvas.move(self.id, self.velocity_x_axis * self.speed_factor, 0)
         self.pos = self.canvas.coords(self.id)
 
     def reset(self):
+        """
+        Reset the paddle
+        :return: None
+        """
+
         self.canvas.delete(self.id)
         self.start_pos = True
         self.speed_factor = 1
         self.init()
 
     def init(self):
-        """Initializes the paddle object and its position."""
+        """
+        Initializes the paddle object and its position
+        :return: None
+        """
+
         self.id = self.canvas.create_rectangle(0, 0, self.width, self.height, fill=self.color)
         # Move to initial position
         self.canvas.move(self.id, (self.canvas_width - self.width) / 2, self.canvas_height * 0.5-self.height)
@@ -107,6 +149,11 @@ class Player:
         self.target.spawn_new_target(self.pos)
 
     def move_left(self, evt):
+        """
+        Move paddle left
+        :return: None
+        """
+
         # Prevent player movement while the game state is not playing
         if self.root.state.name is not main.Playing.name:
             return
@@ -117,6 +164,11 @@ class Player:
         self.direction_update = True
 
     def move_right(self, evt):
+        """
+        Move paddle right
+        :return: None
+        """
+
         # Prevent player movement while the game state is not playing
         if self.root.state.name is not main.Playing.name:
             return
