@@ -1,4 +1,6 @@
-import scripts.pong.main as main
+import scripts.pong.game as game
+import scripts.pong.target as target
+from scripts.config import *
 
 
 # Define paddle properties and functions
@@ -18,7 +20,7 @@ class Player:
     :method collision_with_target(self): checks collision with target
     """
 
-    def __init__(self, root, canvas, width, height, color):
+    def __init__(self, root, canvas, width, height, color, target):
         """
         Constructor method
         :param Any root: root
@@ -71,7 +73,7 @@ class Player:
                 self.speed_factor = 0
 
         if self.target.spawn_target:
-            self.root.change(main.Respawn)
+            self.root.change(game.Respawn)
             self.target.spawn_target = False
             self.hit_occurred = False
 
@@ -143,7 +145,7 @@ class Player:
 
         self.id = self.canvas.create_rectangle(0, 0, self.width, self.height, fill=self.color)
         # Move to initial position
-        self.canvas.move(self.id, (self.canvas_width - self.width) / 2, self.canvas_height * 0.5-self.height)
+        self.canvas.move(self.id, (self.canvas_width - self.width) / 2, self.canvas_height * 0.5 - self.height)
         # Update position
         self.pos = self.canvas.coords(self.id)
         self.target.spawn_new_target(self.pos)
@@ -155,7 +157,7 @@ class Player:
         """
 
         # Prevent player movement while the game state is not playing
-        if self.root.state.name is not main.Playing.name:
+        if self.root.state.name is not game.Playing.name:
             return
 
         if self.start_pos:
@@ -170,7 +172,7 @@ class Player:
         """
 
         # Prevent player movement while the game state is not playing
-        if self.root.state.name is not main.Playing.name:
+        if self.root.state.name is not game.Playing.name:
             return
 
         if self.start_pos is True:
@@ -189,9 +191,3 @@ class Player:
         if hit_from_left or hit_from_right:
             self.hit_occurred = True
             self.target.respawn()
-
-
-
-
-
-
