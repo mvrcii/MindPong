@@ -23,6 +23,7 @@ class Player:
         self.start_pos = True
         self.direction_update = False
         self.target = target
+        self.hit_occurred = False
 
         self.canvas.bind_all('<KeyPress-Left>', self.move_left)
         self.canvas.bind_all('<KeyPress-Right>', self.move_right)
@@ -44,12 +45,13 @@ class Player:
         if self.target.spawn_target:
             self.root.change(main.Respawn)
             self.target.spawn_target = False
+            self.hit_occurred = False
 
     def calculate_velocity(self):
         if self.start_pos:
             return 0
 
-        if self.target.hit_player_target:
+        if self.hit_occurred:
             return 0
 
         if self.direction == 1:
@@ -125,7 +127,8 @@ class Player:
         hit_from_right = self.target.pos[0] <= self.pos[2] <= self.target.pos[2]
         hit_from_left = self.target.pos[2] >= self.pos[0] >= self.target.pos[0]
         if hit_from_left or hit_from_right:
-            self.target.hit_player_target = True
+            self.hit_occurred = True
+            self.target.respawn()
 
 
 

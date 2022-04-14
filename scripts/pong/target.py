@@ -35,6 +35,9 @@ class Target:
             if self.timestamp_last_hit >= TIME_TO_CATCH:
                 self.spawn_target = True
 
+    def respawn(self):
+        self.hit_player_target = True
+
     def spawn_new_target(self, player_pos):
         min_x = 0
         max_x = self.canvas_width - self.size
