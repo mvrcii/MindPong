@@ -2,9 +2,9 @@ import scripts.pong.main as main
 
 
 # Define paddle properties and functions
-class Paddle:
+class Player:
     """
-    A Class to create the paddle
+    A Class to create the player
 
     Methods:
     ----------
@@ -15,6 +15,7 @@ class Paddle:
     :method init(self): Initializes the paddle object and its position
     :method move_left(self, evt): Move paddle left
     :method move_right(self, evt): Move paddle right
+    :method collision_with_target(self): checks collision with target
     """
 
     def __init__(self, root, canvas, width, height, color):
@@ -22,9 +23,9 @@ class Paddle:
         Constructor method
         :param Any root: root
         :param Any canvas: Canvas for drawing
-        :param Any width: width of paddle
-        :param Any height: height of paddle
-        :param Any color: color of paddle
+        :param Any width: width of player
+        :param Any height: height of player
+        :param Any color: color of player
         """
 
         self.root = root
@@ -37,12 +38,17 @@ class Paddle:
         self.pos = None
         self.speed_factor = 1
         self.id = None
-        self.v_x = 0
+        self.velocity_x_axis = 0
         self.direction = 0
         self.wall_hit = False
         self.start_pos = True
+        self.direction_update = False
+        self.target = target
+        self.hit_occurred = False
+
         self.canvas.bind_all('<KeyPress-Left>', self.move_left)
         self.canvas.bind_all('<KeyPress-Right>', self.move_right)
+
         self.init()
 
     def update(self, delta_time):
@@ -52,25 +58,42 @@ class Paddle:
         :return: None
         """
 
-        self.v_x = self.calculate_velocity() * delta_time
+        self.collision_with_target()
+        self.velocity_x_axis = self.calculate_velocity() * delta_time
+        # every time the direction is not updated the player gets slower
+        if self.direction_update:
+            self.direction_update = False
+            self.speed_factor = 1
+        else:
+            self.speed_factor -= (delta_time * 4) / TIME_TO_STOP_PLAYER
+            # prevents the speed_factor from becoming negative
+            if self.speed_factor <= 0:
+                self.speed_factor = 0
+
+        if self.target.spawn_target:
+            self.root.change(main.Respawn)
+            self.target.spawn_target = False
+            self.hit_occurred = False
 
     def calculate_velocity(self):
         """
-        Calculate the velocity
-        :return: velocity
+        Calculates velocity of the player depending on his direction and whether he should be stopped
+        :return: Calculated velocity
         :rtype: int
         """
+        if self.start_pos:
+            return 0
 
-        if self.start_pos is True:
+        if self.hit_occurred:
             return 0
 
         if self.direction == 1:
             if self.pos[2] >= self.canvas_width:
-                if self.wall_hit is False:
+                if not self.wall_hit:
                     self.wall_hit = True
                 return 0
             if self.pos[0] <= 0:
-                if self.wall_hit is False:
+                if not self.wall_hit:
                     self.wall_hit = True
                     return 0
                 else:
@@ -84,7 +107,7 @@ class Paddle:
                     self.wall_hit = True
                 return 0
             elif self.pos[2] >= self.canvas_width:
-                if self.wall_hit is False:
+                if not self.wall_hit:
                     self.wall_hit = True
                     return 0
                 else:
@@ -98,7 +121,7 @@ class Paddle:
         :return: None
         """
 
-        self.canvas.move(self.id, self.v_x * self.speed_factor, 0)
+        self.canvas.move(self.id, self.velocity_x_axis * self.speed_factor, 0)
         self.pos = self.canvas.coords(self.id)
 
     def reset(self):
@@ -120,9 +143,10 @@ class Paddle:
 
         self.id = self.canvas.create_rectangle(0, 0, self.width, self.height, fill=self.color)
         # Move to initial position
-        self.canvas.move(self.id, (self.canvas_width - self.width) / 2, self.canvas_height * 0.9)
+        self.canvas.move(self.id, (self.canvas_width - self.width) / 2, self.canvas_height * 0.5-self.height)
         # Update position
         self.pos = self.canvas.coords(self.id)
+        self.target.spawn_new_target(self.pos)
 
     def move_left(self, evt):
         """
@@ -130,12 +154,14 @@ class Paddle:
         :return: None
         """
 
-        # Prevent paddle movement while the game state is not playing
+        # Prevent player movement while the game state is not playing
         if self.root.state.name is not main.Playing.name:
             return
+
         if self.start_pos:
             self.start_pos = False
         self.direction = -1
+        self.direction_update = True
 
     def move_right(self, evt):
         """
@@ -143,10 +169,29 @@ class Paddle:
         :return: None
         """
 
-        # Prevent paddle movement while the game state is not playing
+        # Prevent player movement while the game state is not playing
         if self.root.state.name is not main.Playing.name:
             return
+
         if self.start_pos is True:
             self.start_pos = False
         self.direction = 1
+        self.direction_update = True
+
+    def collision_with_target(self):
+        """
+        (1) Detects if target is hit
+        (2) Initiates the handling of the hit
+        :return: None
+        """
+        hit_from_right = self.target.pos[0] <= self.pos[2] <= self.target.pos[2]
+        hit_from_left = self.target.pos[2] >= self.pos[0] >= self.target.pos[0]
+        if hit_from_left or hit_from_right:
+            self.hit_occurred = True
+            self.target.respawn()
+
+
+
+
+
 

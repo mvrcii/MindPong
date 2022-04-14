@@ -2,8 +2,8 @@ from tkinter import *
 import tkinter as tk
 import time
 
-import scripts.pong.ball as ball
-import scripts.pong.paddle as paddle
+import scripts.pong.player as player
+import scripts.pong.target as target
 from scripts.config import *
 
 
@@ -53,7 +53,7 @@ class Playing(GameState):
     :return: None
     """
     name = "playing"
-    allowed = ['idle', 'restart']
+    allowed = ['idle', 'respawn']
 
 
 class Idle(GameState):
@@ -66,19 +66,15 @@ class Idle(GameState):
     allowed = ['playing']
 
 
-class Restart(GameState):
+class Respawn(GameState):
+    """A child of GameState defining the state idle"""
+    name = "respawn"
+    allowed = ['idle', 'playing']
+
+
+class Game(tk.Frame):
     """
-    A child of GameState to Restart
-    :return: None
-    """
-
-    name = "restart"
-    allowed = ['playing']
-
-
-class MindPong(tk.Frame):
-    """A child of tk.Frame
-    A class representing the pong game
+    A class representing the game
 
     Attributes:
     ----------
@@ -92,8 +88,8 @@ class MindPong(tk.Frame):
     :attribute float last_update: the timestamp of the last update
     :attribute float passed_time: the time that has passed since last_update
     :attribute Canvas canvas: the canvas to draw on
-    :attribute Paddle paddle: the paddle object
-    :attribute Ball ball: the ball object
+    :attribute Player player: the paddle object
+    :attribute Target target: the target object
 
     Methods:
     ----------
@@ -101,9 +97,6 @@ class MindPong(tk.Frame):
     :method handle_time(): Handles the time and returns a delta for correction
     :method clear(): Clears the canvas background. Very important function to avoid flickering and artifacts
     :method change(state): Changes the internal state to state if possible
-    :method set_speed_factors(evt): Takes one of the key events from 1-9 and adapts the balls and paddles speed according
-                                to the pressed key. Whereas key 1 corresponds to the slowest and also standard game
-                                speed and key 9 to the highest game speed
     """
 
     def __init__(self, parent, controller):
@@ -114,31 +107,36 @@ class MindPong(tk.Frame):
         """
 
         tk.Frame.__init__(self, parent)
+
         # override window dimensions
         global WINDOW_WIDTH, WINDOW_HEIGHT
         WINDOW_WIDTH = self.winfo_screenwidth()
         WINDOW_HEIGHT = self.winfo_screenheight()
         self.width = WINDOW_WIDTH
         self.height = WINDOW_HEIGHT
+
         # State of the game - default is idle
         self.state = Idle()
         self.score = 0
+
         self.curr_restart_time = 0
+
         self.update_counter = 0
         self.last_update = 0
         self.passed_time = 0
+
         self.canvas = Canvas(self, width=self.width, height=self.height, bd=0, highlightthickness=0, relief='ridge')
         self.score_label, self.timer_label = None, None
         self.init_labels()
         self.canvas.pack()
-        self.paddle = paddle.Paddle(self, self.canvas, 120, 20, 'blue')
-        self.ball = ball.Ball(self, self.canvas, 'red', 20, paddle=self.paddle)
 
-        # bind keys 1-9
-        for i in range(BALL_SPEED_KEYS):
-            self.bind(str(i+1), self.set_speed_factors)
+        self.target = target.Target(self, self.canvas, 'red', 60)
+        self.player = player.Player(self, self.canvas, 60, 60, 'blue', target=self.target)
+        self.ground = self.canvas.create_rectangle(0, 0, WINDOW_WIDTH, 10, fill='Black')
+        self.canvas.move(self.ground, 0, WINDOW_HEIGHT*0.5)
 
         self.bind("<space>", lambda event: self.change(Playing) if self.state.name is Idle.name else self.change(Idle))
+
         self.update()
 
     def update(self):
@@ -158,33 +156,22 @@ class MindPong(tk.Frame):
             # Clear
             self.clear()
             # Update
-            self.paddle.update(delta_time=delta / 4)
-            self.ball.update(delta_time=delta / 6)
+            self.player.update(delta_time=delta / 4)
+            self.target.update(delta_time=delta)
             # Draw
-            self.paddle.draw()
-            self.ball.draw()
+            self.player.draw()
+        elif curr_state is Respawn.name:
+            self.canvas.delete(self.target.id)
 
-        elif curr_state is Restart.name:
-            if self.curr_restart_time == 0:
-                self.curr_restart_time = time.time()
-                self.canvas.itemconfig(self.score_label, text="Score: " + str(self.score), state=NORMAL)
-                self.canvas.itemconfig(self.timer_label, state=NORMAL)
-                self.canvas.itemconfig(self.paddle.id, state=HIDDEN)
-                self.canvas.itemconfig(self.ball.id, state=HIDDEN)
-                self.score = 0
+            self.player.speed_factor = 0
+            del self.target
+            self.target = target.Target(self, self.canvas, 'red', 60)
+            # self.player.__setattr__(self.player, target, self.target)
+            self.player.target = self.target
+            self.target.spawn_new_target(self.player.pos)
 
-            curr_time = time.time()
-            if curr_time - self.curr_restart_time > PONG_RESTART_TIME:
-                self.curr_restart_time = 0
-                self.change(Playing)
-                self.canvas.itemconfig(self.score_label, state=HIDDEN)
-                self.canvas.itemconfig(self.timer_label, state=HIDDEN)
-                self.canvas.itemconfig(self.paddle.id, state=NORMAL)
-                self.canvas.itemconfig(self.ball.id, state=NORMAL)
-            else:
-                seconds_until_restart = round(3 - (curr_time - self.curr_restart_time), 1)
-                self.canvas.itemconfig(self.timer_label, text="Restarting in " + str(seconds_until_restart),
-                                       state=NORMAL)
+            self.change(Playing)
+
         # Repeat
         self.after(5, self.update)
 
