@@ -74,14 +74,14 @@ class Respawn(GameState):
 
 class Game(tk.Frame):
     """
-    A class representing the pong game
+    A class representing the game
 
     Attributes:
     ----------
         width : int
-            the width of the pong window
+            the width of the game window
         height : int
-            the height of the pong window
+            the height of the game window
         state : GameState
             the current game state
         score : int
@@ -97,10 +97,10 @@ class Game(tk.Frame):
             the time that has passed since last_update
         canvas : Canvas
             the canvas to draw on
-        paddle : Paddle
-            the paddle object
-        ball : Ball
-            the ball object
+        player : Player
+            the player object
+        target : Target
+            the target object
 
     Methods
     -------
@@ -112,9 +112,7 @@ class Game(tk.Frame):
         Clears the canvas background. Very important function to avoid flickering and artifacts
     change(state)
         Changes the internal state to state if possible
-    set_speed_factors(evt)
-        Takes one of the key events from 1-9 and adapts the balls and paddles speed according to the pressed key.
-        Whereas key 1 corresponds to the slowest and also standard game speed and key 9 to the highest game speed.
+
 
     -------
     A child of tk.Frame
