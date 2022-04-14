@@ -39,6 +39,7 @@ class Player:
             self.speed_factor = 1
         else:
             self.speed_factor -= (delta_time * 4) / TIME_TO_STOP_PLAYER
+            # prevents the speed_factor from becoming negative
             if self.speed_factor <= 0:
                 self.speed_factor = 0
 
@@ -48,6 +49,10 @@ class Player:
             self.hit_occurred = False
 
     def calculate_velocity(self):
+        """
+        Calculates velocity of the player depending on his direction and whether he should be stopped
+        :return: Calculated velocity
+        """
         if self.start_pos:
             return 0
 
@@ -83,7 +88,6 @@ class Player:
                 return -1
 
     def draw(self):
-
         self.canvas.move(self.id, self.velocity_x_axis * self.speed_factor, 0)
         self.pos = self.canvas.coords(self.id)
 
@@ -103,7 +107,7 @@ class Player:
         self.target.spawn_new_target(self.pos)
 
     def move_left(self, evt):
-        # Prevent paddle movement while the game state is not playing
+        # Prevent player movement while the game state is not playing
         if self.root.state.name is not main.Playing.name:
             return
 
@@ -113,7 +117,7 @@ class Player:
         self.direction_update = True
 
     def move_right(self, evt):
-        # Prevent paddle movement while the game state is not playing
+        # Prevent player movement while the game state is not playing
         if self.root.state.name is not main.Playing.name:
             return
 
@@ -123,7 +127,11 @@ class Player:
         self.direction_update = True
 
     def collision_with_target(self):
-        # pos[0] links pos[2] rechts
+        """
+        (1) Detects if target is hit
+        (2) Initiates the handling of the hit
+        :return: None
+        """
         hit_from_right = self.target.pos[0] <= self.pos[2] <= self.target.pos[2]
         hit_from_left = self.target.pos[2] >= self.pos[0] >= self.target.pos[0]
         if hit_from_left or hit_from_right:
