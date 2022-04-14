@@ -19,14 +19,14 @@ class MainWindow(QtWidgets.QMainWindow):
 
         self.x = list(range(100))
 
-        self.graphWidget.setYRange(-10, 10)
+        # self.graphWidget.setYRange(-10, 10)
         self.graphWidget.addLegend()
 
         self.graphWidget.setBackground('k')
         # self.graphWidget.showGrid(x=True, y=True)
 
         self.timer = QtCore.QTimer()
-        self.timer.setInterval(25)
+        self.timer.setInterval(10)
         self.timer.timeout.connect(self.update_plot_data)
         self.timer.start()
 

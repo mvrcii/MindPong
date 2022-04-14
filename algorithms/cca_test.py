@@ -108,15 +108,21 @@ def connect_queues():
     QUEUE_LABEL = queue.Queue(100)
     QUEUE_CLABEL = queue.Queue(100)
     QUEUE_HCON = queue.Queue(100)
-    scripts.data.visualisation.liveplot.add_queue(('QUEUE_CLABEL', QUEUE_CLABEL))
-    scripts.data.visualisation.liveplot.add_queue(('QUEUE_LABEL', QUEUE_LABEL))
-    scripts.data.visualisation.liveplot.add_queue(('QUEUE_HCON', QUEUE_HCON))
+    scripts.data.visualisation.liveplot.add_queue(('QUEUE_CLABEL', '#76FF03', QUEUE_CLABEL))
+    scripts.data.visualisation.liveplot.add_queue(('QUEUE_LABEL', '#76FF03', QUEUE_LABEL))
+    scripts.data.visualisation.liveplot.add_queue(('QUEUE_HCON', '#76FF03', QUEUE_HCON))
 
 
 def sort_incoming_channels(sliding_window, used_ch_names):
 
     #                 'C3', 'Cz', 'C4', 'P3', 'Pz', 'P4', 'O1', 'O2', 'FC5', 'FC1', 'FC2', 'FC6', 'CP5', 'CP1', 'CP2', 'CP6'
     ch_names_weight = [1,    0,    1,    0,    0,    0,    0,    0,     1,     1,     1,     1,     1,     1,     1,     1]
+
+    #                 'C3', 'Cz', 'C4', 'P3', '?', 'P4', 'T3', '?', '?', 'F3', 'F4', '?', '?', '?', '?', 'T4'
+    ch_names_weight = [1,    1,    1,    1,    0,    1,    1,   0,   0,   1,    1,    0,   0,   0,   0,    1]
+
+
+
     filtered_sliding_window = list()
     filtered_channel_names = list()
     for i in range(len(used_ch_names)):
