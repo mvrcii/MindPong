@@ -10,18 +10,20 @@ from scripts.config import *
 class GameState(object):
     """
     A class used to handle the state management in the Game
-    - switch(state): Switches the current state to the passed state if it is listed in the allowed states
 
-    Attribute:
+    Attributes:
     ----------
-    name : str
-        the name of the state
-    allowed : [str]
-        a list of the allowed state names to switch to
+    :attribute str name: the name of the state
+    :attribute [str] allowed: a list of the allowed state names to switch to
 
+    Methods:
+    ----------
+    :method switch(state): Switches the current state to the passed state if it is listed in the allowed states
+
+    Return:
+    ----------
     :return: None
     """
-
     name = "state"
     allowed = []
 
@@ -59,6 +61,7 @@ class Idle(GameState):
     A child of GameState defining the state idle
     :return: None
     """
+
     name = "idle"
     allowed = ['playing']
 
@@ -68,6 +71,7 @@ class Restart(GameState):
     A child of GameState to Restart
     :return: None
     """
+
     name = "restart"
     allowed = ['playing']
 
@@ -75,70 +79,58 @@ class Restart(GameState):
 class MindPong(tk.Frame):
     """A child of tk.Frame
     A class representing the pong game
-    - update(): Calls the update methods of all objects and is responsible for the game loop and state handling
-    - handle_time(): Handles the time and returns a delta for correction
-    - clear(): Clears the canvas background. Very important function to avoid flickering and artifacts
-    - change(state): Changes the internal state to state if possible
-    - set_speed_factors(evt): Takes one of the key events from 1-9 and adapts the balls and paddles speed according
-                                to the pressed key. Whereas key 1 corresponds to the slowest and also standard game
-                                speed and key 9 to the highest game speed
 
     Attributes:
     ----------
-        width : int
-            the width of the pong window
-        height : int
-            the height of the pong window
-        state : GameState
-            the current game state
-        score : int
-            the current game score
-        curr_restart_timer : float
-            the current restart timer, which will be set to a value and then count down until it reaches zero.
-            This variable is also displayed while the game is being restarted.
-        update_counter : int
-            the tick counter
-        last_update : float
-            the timestamp of the last update
-        passed_time : float
-            the time that has passed since last_update
-        canvas : Canvas
-            the canvas to draw on
-        paddle : Paddle
-            the paddle object
-        ball : Ball
-            the ball object
+    :attribute int width: the width of the pong window
+    :attribute int height: the height of the pong window
+    :attribute GameState state: the current game state
+    :attribute int score: the current game score
+    :attribute float curr_restart_timer: the current restart timer, which will be set to a value and then count down
+            until it reaches zero. This variable is also displayed while the game is being restarted
+    :attribute int update_counter: the tick counter
+    :attribute float last_update: the timestamp of the last update
+    :attribute float passed_time: the time that has passed since last_update
+    :attribute Canvas canvas: the canvas to draw on
+    :attribute Paddle paddle: the paddle object
+    :attribute Ball ball: the ball object
+
+    Methods:
+    ----------
+    :method update(): Calls the update methods of all objects and is responsible for the game loop and state handling
+    :method handle_time(): Handles the time and returns a delta for correction
+    :method clear(): Clears the canvas background. Very important function to avoid flickering and artifacts
+    :method change(state): Changes the internal state to state if possible
+    :method set_speed_factors(evt): Takes one of the key events from 1-9 and adapts the balls and paddles speed according
+                                to the pressed key. Whereas key 1 corresponds to the slowest and also standard game
+                                speed and key 9 to the highest game speed
     """
 
     def __init__(self, parent, controller):
         """
         Constructor method
         :param Any parent: parent
+        :param Any controller: controller
         """
-        tk.Frame.__init__(self, parent)
 
+        tk.Frame.__init__(self, parent)
         # override window dimensions
         global WINDOW_WIDTH, WINDOW_HEIGHT
         WINDOW_WIDTH = self.winfo_screenwidth()
         WINDOW_HEIGHT = self.winfo_screenheight()
         self.width = WINDOW_WIDTH
         self.height = WINDOW_HEIGHT
-
         # State of the game - default is idle
         self.state = Idle()
         self.score = 0
-
         self.curr_restart_time = 0
-
         self.update_counter = 0
         self.last_update = 0
         self.passed_time = 0
-
         self.canvas = Canvas(self, width=self.width, height=self.height, bd=0, highlightthickness=0, relief='ridge')
         self.score_label, self.timer_label = None, None
         self.init_labels()
         self.canvas.pack()
-
         self.paddle = paddle.Paddle(self, self.canvas, 120, 20, 'blue')
         self.ball = ball.Ball(self, self.canvas, 'red', 20, paddle=self.paddle)
 
@@ -147,7 +139,6 @@ class MindPong(tk.Frame):
             self.bind(str(i+1), self.set_speed_factors)
 
         self.bind("<space>", lambda event: self.change(Playing) if self.state.name is Idle.name else self.change(Idle))
-
         self.update()
 
     def update(self):
@@ -155,6 +146,7 @@ class MindPong(tk.Frame):
         Calls the update methods of all objects and is responsible for the game loop and state handling
         :return: None
         """
+
         curr_state = self.state.name
 
         delta = self.handle_time()
@@ -193,16 +185,16 @@ class MindPong(tk.Frame):
                 seconds_until_restart = round(3 - (curr_time - self.curr_restart_time), 1)
                 self.canvas.itemconfig(self.timer_label, text="Restarting in " + str(seconds_until_restart),
                                        state=NORMAL)
-
         # Repeat
         self.after(5, self.update)
 
     def handle_time(self):
         """
         Handles the time and returns a delta for correction
-        :return: delta for correction
+        :return: delta: delta for correction
         :rtype: int
         """
+
         # Time control
         self.update_counter = self.update_counter + 1
         now = round(time.time() * 1000)
@@ -211,7 +203,6 @@ class MindPong(tk.Frame):
             self.last_update = now
 
         delta = now - self.last_update
-
         self.passed_time = self.passed_time + delta
 
         if self.passed_time > 1000:
@@ -226,6 +217,7 @@ class MindPong(tk.Frame):
         Clears the canvas background. Very important function to avoid flickering and artifacts
         :return: None
         """
+
         self.canvas.configure(bg="white")
 
     def change(self, state):
@@ -233,6 +225,7 @@ class MindPong(tk.Frame):
         Changes the internal state to state if possible
         :return: None
         """
+
         self.state.switch(state)
 
     def set_speed_factors(self, evt):
@@ -241,13 +234,16 @@ class MindPong(tk.Frame):
         Whereas key 1 corresponds to the slowest and also standard game speed and key 9 to the highest game speed
         :return: None
         """
+
         key_value = int(evt.char) - 1  # shift, so that key 1 equals to speed factor 1.0
         self.ball.speed_factor = 1.0 + (key_value / BALL_SPEED_KEYS) * 3
 
     def init_labels(self):
         """
-
+        Init Labels
+        :return: None
         """
+
         self.score_label = self.canvas.create_text(self.width / 2, self.height * 0.5,
                                                    anchor=CENTER, text="Score: 0", font=('Helvetica', '20', 'bold'))
         self.canvas.itemconfig(self.score_label, state=HIDDEN)

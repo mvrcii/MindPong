@@ -26,6 +26,7 @@ def send_raw_data(data, start: time.time() = None):
     :param time.time() start: time stamp of the start of the session
     :return: None
     """
+
     if start is not None:
         global start_time
         start_time = start
@@ -45,6 +46,7 @@ def mark_trial(start: time.time(), end: time.time(), label: Labels):
     :param Labels label: event_type of the trial
     :return: None
     """
+
     global start_time
     pos = round((start - start_time) / time_for_one_sample)
     duration = round((end - start) / time_for_one_sample)
@@ -56,9 +58,10 @@ def mark_trial(start: time.time(), end: time.time(), label: Labels):
 def create_raw_data_array() -> np.ndarray:
     """
     Converts the buffer with the trials to a np.ndarray and clears the buffer
-    :return: row data
+    :return: data: row data
     :rtype: np.ndarray
     """
+
     global raw_data
     data = np.array(raw_data)
     raw_data = [[] for _ in range(number_channels)]
@@ -68,9 +71,10 @@ def create_raw_data_array() -> np.ndarray:
 def create_event_type_array() -> np.ndarray:
     """
     Converts the buffer with the event types to a np.ndarray and clears the buffer
-    :return: event types
+    :return: et: event types
     :rtype: np.ndarray
     """
+
     global event_type
     et = np.array(event_type)
     event_type.clear()
@@ -80,9 +84,10 @@ def create_event_type_array() -> np.ndarray:
 def create_position_array() -> np.ndarray:
     """
     Converts the buffer with the positions of the events to a np.ndarray and clears the buffer
-    :return: position of the events
+    :return: pos: position of the events
     :rtype: np.ndarray
     """
+
     global event_pos
     pos = np.array(event_pos)
     event_pos.clear()
@@ -92,9 +97,10 @@ def create_position_array() -> np.ndarray:
 def create_duration_array() -> np.ndarray:
     """
     Converts the buffer with the durations of the events to a np.ndarray and clears the buffer
-    :return: duration of the events
+    :return: duration: duration of the events
     :rtype: np.ndarray
     """
+
     global event_duration
     duration = np.array(event_duration)
     event_duration.clear()
@@ -108,6 +114,7 @@ def save_session(metadata: np.ndarray, npz_name: str):
     :param str npz_name: name of the npz-file, not the path name!
     :return: None
     """
+
     from os.path import dirname, abspath, join
     file_path = join(dirname(dirname(abspath(__file__))), "session", npz_name)
 

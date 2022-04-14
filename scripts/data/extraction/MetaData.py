@@ -8,31 +8,25 @@ class MetaData:
 
     Attribute:
     ----------
-    __subject_ID: int
-    __subject_sex: str
-    __subject_age: int
-    __date: datetime.date
-    __time: datetime.time()
-    __sampling_rate: int = 125
-    __channel_mapping: np.ndarray
-    __recording_type: str
-    __headset: str
-    __amount_trials: int
-    __comment: str
-    __amount_different_events: int
-
-    :param time.time() start: time stamp of the start of the trial
-
-    __s : str
-        the name of the state
-    allowed : [str]
-        a list of the allowed state names to switch to
+    :attribute int __subject_ID: Subject ID
+    :attribute str __subject_sex: Subject Sex
+    :attribute int__subject_age: Subject Age
+    :attribute datetime.date __date: Date
+    :attribute datetime.time() __time: Time
+    :attribute int __sampling_rate: Sampling rate
+    :attribute int np.ndarray __channel_mapping: Channel mapping
+    :attribute str __recording_type: Recording type
+    :attribute str __headset: Headset
+    :attribute int __amount_trials: Amount trials
+    :attribute str __comment: Comment
+    :attribute int __amount_different_events: Different events
 
     Methods
     -------
-    switch(state)
+    :method switch(state):
         Switches the current state to the passed state if it is listed in the allowed states
     """
+
     __subject_ID: int
     __subject_sex: str
     __subject_age: int
@@ -59,14 +53,15 @@ class MetaData:
         :param str sex: sex of the subject
         :param int age: age of the subject
         :param str comment: comment section for the scientist
-        :param amount_events: amount of different events in one session
-        :param time: start time of the trial
-        :param sampling_rate: sampling rate
-        :param channel_mapping: used channel occupancy as string numpy array
-        :param recording_type: the way the data was collected (e.g. game, arrows, ...)
-        :param headset: kind of headset which is used for data acquisition
-        :param amount_trials: amount of trails in this session
+        :param Any amount_events: amount of different events in one session
+        :param datetime.time() time: start time of the trial
+        :param int sampling_rate: sampling rate
+        :param list[str] channel_mapping: used channel occupancy as string numpy array
+        :param str recording_type: the way the data was collected (e.g. game, arrows, ...)
+        :param str headset: kind of headset which is used for data acquisition
+        :param Any amount_trials: amount of trails in this session
         """
+
         self.__subject_ID = sid
         self.__subject_sex = sex
         self.__subject_age = age
@@ -84,9 +79,10 @@ class MetaData:
         """
         Creates a numpy array filled with tuples
         Every tuples get the attribute name and the respective attribute
-        :return: meta-data
+        :return: np.array: meta-data
         :rtype: np.ndarray
         """
+
         meta = [['id', self.__subject_ID], ['sex', self.__subject_sex], ['age', self.__subject_age],
                 ['date', self.__date], ['time', self.__time],
                 ['sampling_rate', self.__sampling_rate], ['channels', self.__channel_mapping],

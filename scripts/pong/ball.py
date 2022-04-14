@@ -7,6 +7,7 @@ class CollisionType(Enum):
     """
     An enum used to define the collision type of the ball
     """
+
     LEFT = auto()
     RIGHT = auto()
     BOTTOM = auto()
@@ -18,25 +19,29 @@ class CollisionType(Enum):
 class Ball:
     """
     A Class to create the ball
-    - Update velocity according to the time
-    - Draw ball
-    - Reset ball
-    - Initializes the ball object and its position
-    - Initializes the balls angle
-    - Checks if the ball will have a collision in the next tick
-    - Updates the angle depending on the given CollisionType
-    - Checks if the ball collides with the paddle
+
+    Methods
+    -------
+    :method update(self, delta_time): Update velocity according to the time
+    :method draw(self): Draw ball
+    :method reset(self): Reset ball
+    :method init(self): Initializes the ball object and its position
+    :method init_angle(self): Initializes the balls angle
+    :method check_collision(self): Checks if the ball will have a collision in the next tick
+    :method update_angle(self, collision_type: CollisionType): Updates the angle depending on the given CollisionType
+    :method check_collision_with_paddle(self, pos, v_x, v_y): Checks if the ball collides with the paddle
     """
 
     def __init__(self, root, canvas, color, size, paddle):
         """
         Constructor method
-        :param root: root
+        :param Any root: root
         :param canvas: canvas
-        :param color: color of ball
-        :param size: size of ball
-        :param paddle: paddle
+        :param Any color: color of ball
+        :param Any size: size of ball
+        :param Any paddle: paddle
         """
+
         from scripts.pong.main import MindPong
         self.root: MindPong = root
         self.canvas = canvas
@@ -60,6 +65,7 @@ class Ball:
         :param Any delta_time: value of delta time
         :return: None
         """
+
         self.v_x = self.speed_factor * math.cos(math.radians(self.angle)) * delta_time
         self.v_y = self.speed_factor * math.sin(math.radians(self.angle)) * delta_time
 
@@ -79,6 +85,7 @@ class Ball:
         Draw ball
         :return: None
         """
+
         self.canvas.move(self.id, self.v_x, self.v_y)
         self.pos = self.canvas.coords(self.id)
 
@@ -87,6 +94,7 @@ class Ball:
         Reset ball
         :return: None
         """
+
         self.canvas.delete(self.id)
         self.speed_factor = 1
         self.init()
@@ -96,6 +104,7 @@ class Ball:
         Initializes the ball object and its position
         :return: None
         """
+
         self.id = self.canvas.create_oval(0, 0, self.size, self.size, fill=self.color)
         # Move to initial position
         self.canvas.move(self.id, (self.canvas_width - self.size) / 2, self.canvas_height/2)
@@ -109,6 +118,7 @@ class Ball:
         Initializes the balls angle
         :return: None
         """
+
         self.vec_x = random.choice([round(random.uniform(-1, -0.1), 2), round(random.uniform(0.1, 1), 2)])
         self.vec_y = -1
         self.angle = get_angle_for_vector(vec_x=self.vec_x, vec_y=self.vec_y)
@@ -116,9 +126,10 @@ class Ball:
     def check_collision(self) -> CollisionType:
         """
         Checks if the ball will have a collision in the next tick
-        :return: where the ball collides
+        :return: CollisionType: where the ball collides
         :rtype: CollisionType
         """
+
         # TODO: Task MIN-32: Verbesserte Lösung für das Border Problem.
         #                    Derzeit Collision Check im nächsten Tick mit verdoppelter Geschwindigkeit.
         v_x = self.v_x * 2
@@ -144,6 +155,7 @@ class Ball:
         :param CollisionType collision_type: where the ball collides
         :return: None
         """
+
         if collision_type == CollisionType.TOP or collision_type == CollisionType.PADDLE:
             self.angle = 360 - self.angle
         elif collision_type == CollisionType.LEFT or collision_type == CollisionType.RIGHT:
@@ -163,6 +175,7 @@ class Ball:
         :return: collision happened with the paddle
         :rtype: bool
         """
+
         paddle_pos = self.canvas.coords(self.paddle.id)
         if (pos[2] + v_x) >= paddle_pos[0] and (pos[0] + v_x) <= paddle_pos[2]:
             if paddle_pos[1] <= (pos[3] + v_y) <= paddle_pos[3]:
@@ -175,9 +188,10 @@ def get_angle_for_vector(vec_x, vec_y):
     Get the size of the Angel
     :param int vec_x: value x-position of vector
     :param int vec_y: value y-postion of vector
-    :return: Size of the angle
+    :return: angle: Size of the angle
     :rtype: int
     """
+
     angle = math.degrees(math.atan2(vec_y, vec_x))
     if angle < 0:
         angle += 360

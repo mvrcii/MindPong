@@ -4,8 +4,6 @@ import tkinter as tk
 from tkinter import *
 
 import matplotlib
-# import AppKit
-import winsound
 from matplotlib import style
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg, NavigationToolbar2Tk
 from matplotlib.figure import Figure
@@ -28,20 +26,21 @@ def play_sound():
     """
     current_os = platform.system()
     if current_os == 'Darwin':  # Mac Beep
-        pass
-        # AppKit.NSBeep()  # BeepTon Mac
+        import AppKit
+        AppKit.NSBeep()  # BeepTon Mac
     elif current_os == 'Linux':  # Linux Beep
         os.system('play -nq -t alsa synth {} sine {}'.format(1500, 1500))
     elif current_os == 'Windows':  # Microsoft Beep
+        import winsound
         winsound.Beep(1500, 1500)
 
 
 class App(tk.Tk):
     """
        A class for the application
-       - update(self):
-       - show_frame(self, frame_type):
-       - toggle_graph(self):
+       :method update(self): Update Loop
+       :method show_frame(self, frame_type): Display the current frame passed as parameter
+       :method toggle_graph(self): Create Graph Window
        """
 
     # __init__ function for class App
@@ -88,8 +87,10 @@ class App(tk.Tk):
     # UPDATE LOOP
     def update(self):
         """
-
+        Update Loop
+        :return: None
         """
+
         self.after(5, self.update)
 
     def show_frame(self, frame_type):
@@ -97,6 +98,7 @@ class App(tk.Tk):
         Display the current frame passed as parameter
         :return: None
         """
+
         frame = self.frames[frame_type]
         frame.tkraise()
         frame.focus_set()
@@ -108,6 +110,7 @@ class App(tk.Tk):
         (2) Graph not exist
         :return: None
         """
+
         if self.graph_visible:
             self.graph.destroy()
             self.graph_visible = False
@@ -136,7 +139,15 @@ class StartPage(tk.Frame):
     """
     A class for the StartPage
    """
+
     def __init__(self, parent, controller):
+        """
+        Constructor method
+        :param Any self: Self
+        :param Any parent: Parent
+        :param Any controller: Controller
+        """
+
         tk.Frame.__init__(self, parent)
         label = tk.Label(self, text=('''Um verwertbare EEG-Daten zu erhalten, muss die Anwendung 
         zunächst mit Timern in zwei automatisierten aufeinanderfolgenden Schritten
@@ -149,10 +160,15 @@ class CalibrationPageOne(tk.Frame):
     """
     A class for the first Calibration Page
     """
+
     def __init__(self, parent, controller):
         """
         Constructor method
+        :param Any self: Self
+        :param Any parent: Parent
+        :param Any controller: Controller
         """
+
         tk.Frame.__init__(self, parent)
         label = tk.Label(self, text=('''Bitte fokussieren Sie nach Ablauf des 
 Timers für %s Sekunden den eingeblendeten
@@ -165,10 +181,15 @@ class CalibrationPageTwo(tk.Frame):
     """
     A class for the second Calibration Page with the point in the center to focus on
     """
+
     def __init__(self, parent, controller):
         """
         Constructor method
+        :param Any self: Self
+        :param Any parent: Parent
+        :param Any controller: Controller
         """
+
         tk.Frame.__init__(self, parent)
         size = 25
         canvas = Canvas(self, width=self.winfo_screenwidth(), height=self.winfo_screenheight(), bd=0,
@@ -183,10 +204,15 @@ class CalibrationPageThree(tk.Frame):
     """
     A class for the third Calibration Page
     """
+
     def __init__(self, parent, controller):
         """
         Constructor method
+        :param Any self: Self
+        :param Any parent: Parent
+        :param Any controller: Controller
         """
+
         tk.Frame.__init__(self, parent)
         label = tk.Label(self, text=('''Bitte schließen Sie nach Ablauf des Timers für %s 
 Sekunden Ihre Augen, bis Sie einen Piep Ton hören.''' % BLACK_WINDOW_TIMER), font=LARGE_FONT)
@@ -198,10 +224,15 @@ class CalibrationPageFour(tk.Frame):
     """
     A class for the fourth Calibration Page with the black screen
     """
+
     def __init__(self, parent, controller):
         """
         Constructor method
+        :param Any self: Self
+        :param Any parent: Parent
+        :param Any controller: Controller
         """
+
         tk.Frame.__init__(self, parent)
         self.configure(bg='black')
         self.bind("<space>", lambda event: controller.show_frame(CalibrationPageFive))
@@ -211,10 +242,15 @@ class CalibrationPageFive(tk.Frame):
     """
     A class for the fifth Calibration Page
     """
+
     def __init__(self, parent, controller):
         """
         Constructor method
+        :param Any self: Self
+        :param Any parent: Parent
+        :param Any controller: Controller
         """
+
         tk.Frame.__init__(self, parent)
         label = tk.Label(self, text=('''Kalibrierung abgeschlossen!\n
 Sobald der Ball den Boden berührt \n startet das Spiel nach ein paar 

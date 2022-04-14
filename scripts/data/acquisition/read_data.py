@@ -40,6 +40,7 @@ def init():
     (2) search for the serial port
     (3) starts the data acquisition
     """
+
     params = BrainFlowInputParams()
     params.serial_port = search_port()
 
@@ -58,9 +59,10 @@ def init():
 def search_port():
     """
     Search for the name of the used usb port
-    :return: name of the used serial port
-    :rtype: str
+    :return: port_name: name of the used serial port None: None
+    :rtype: str, None
     """
+
     print('Search...')
     ports = serial.tools.list_ports.comports(include_links=False)
     for port in ports:
@@ -76,6 +78,7 @@ def handle_samples():
     Reads EEG data from port, sends it to trial_handler and writes into in the window_buffer
     :return: None
     """
+
     global first_window, window_buffer, allow_window_creation, first_data
     count_samples = 0
     while stream_available:
@@ -107,6 +110,7 @@ def send_window():
     Create sliding window and send it to the algorithm
     :return: None
     """
+
     global window_buffer, number_channels
     window = np.zeros((number_channels, sliding_window_samples), dtype=float)
     for i in range(len(window)):
@@ -119,6 +123,7 @@ def stop_stream():
     Stops the data stream and the releases session
     :return: None
     """
+
     global stream_available
     stream_available = False
     # time.sleep(0.3) , needed for multithreading
