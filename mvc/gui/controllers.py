@@ -1,6 +1,7 @@
 from abc import ABC, abstractmethod
-from mvc.gui.view import View, ConfigView, EEGView
+
 from mvc.gui.models import ConfigData
+from mvc.gui.view import View, ConfigView, GameView
 
 
 class Controller(ABC):
@@ -13,39 +14,39 @@ class ConfigController(Controller):
     def __init__(self, master=None) -> None:
         self.master = master
         self.view = None
-        self.config_data = ConfigData()  # initialize the data model
+        self.data = None
         self.valid_form = True
 
     def bind(self, view: ConfigView):
         self.view = view
         self.view.create_view()
+        self.data = self.master.data_model
         self.init_config_view_values()
-        self.view.buttons["Start"].configure(command=self.start)
+        self.view.buttons["Start"].configure(command=self.start_button)
 
     def init_config_view_values(self):
-        self.set_entry_text(self.view.entries["ID"], self.config_data.subject_id)
-        self.set_entry_text(self.view.entries["Age"], self.config_data.subject_age)
-        self.view.combo_boxes["Sex"]['values'] = self.config_data.valid_subject_sex_values
-        self.view.combo_boxes["Sex"].set(self.config_data.subject_sex)
-        self.set_entry_text(self.view.entries["Threshold"], self.config_data.threshold)
-        self.set_entry_text(self.view.entries["f_min"], self.config_data.f_min)
-        self.set_entry_text(self.view.entries["f_max"], self.config_data.f_max)
-        self.view.spin_boxes["window_size"].set(self.config_data.window_size)
-        self.view.spin_boxes["window_offset"].set(self.config_data.window_offset)
-        self.view.spin_boxes["trial_min_duration"].set(self.config_data.trial_min_duration)
+        self.set_entry_text(self.view.entries["ID"], self.data.subject_id)
+        self.set_entry_text(self.view.entries["Age"], self.data.subject_age)
+        self.view.combo_boxes["Sex"]['values'] = self.data.valid_subject_sex_values
+        self.view.combo_boxes["Sex"].set(self.data.subject_sex)
+        self.set_entry_text(self.view.entries["Threshold"], self.data.threshold)
+        self.set_entry_text(self.view.entries["f_min"], self.data.f_min)
+        self.set_entry_text(self.view.entries["f_max"], self.data.f_max)
+        self.view.spin_boxes["window_size"].set(self.data.window_size)
+        self.view.spin_boxes["window_offset"].set(self.data.window_offset)
+        self.view.spin_boxes["trial_min_duration"].set(self.data.trial_min_duration)
 
     @staticmethod
     def set_entry_text(entry, value):
         entry.delete(0, "end")
         entry.insert(0, value)
 
-    def start(self):
+    def start_button(self):
         self.validate_form()
 
         # Create second top level window
         if self.valid_form:
-            self.master.create_second_window()
-            print(self.config_data.__dict__)
+            self.master.create_game_window()
 
     def validate_form(self):
         """
@@ -75,7 +76,7 @@ class ConfigController(Controller):
         """
         label = "ID"
         try:
-            self.config_data.subject_id = self.view.entries[label].get()
+            self.data.subject_id = self.view.entries[label].get()
         except ValueError:
             self.on_invalid(label)
         else:
@@ -88,7 +89,7 @@ class ConfigController(Controller):
         """
         label = "Age"
         try:
-            self.config_data.subject_age = self.view.entries[label].get()
+            self.data.subject_age = self.view.entries[label].get()
         except ValueError:
             self.on_invalid(label)
         else:
@@ -101,7 +102,7 @@ class ConfigController(Controller):
         """
         label = "Sex"
         try:
-            self.config_data.subject_sex = self.view.combo_boxes[label].get()
+            self.data.subject_sex = self.view.combo_boxes[label].get()
         except ValueError:
             self.on_invalid(label)
         else:
@@ -114,7 +115,7 @@ class ConfigController(Controller):
         """
         label = "Threshold"
         try:
-            self.config_data.threshold = self.view.entries[label].get()
+            self.data.threshold = self.view.entries[label].get()
         except ValueError:
             self.on_invalid(label)
         else:
@@ -127,7 +128,7 @@ class ConfigController(Controller):
         """
         label = "f_min"
         try:
-            self.config_data.f_min = self.view.entries[label].get()
+            self.data.f_min = self.view.entries[label].get()
         except ValueError:
             self.on_invalid(label)
         else:
@@ -140,7 +141,7 @@ class ConfigController(Controller):
         """
         label = "f_max"
         try:
-            self.config_data.f_max = self.view.entries[label].get()
+            self.data.f_max = self.view.entries[label].get()
         except ValueError:
             self.on_invalid(label)
         else:
@@ -172,7 +173,7 @@ class ConfigController(Controller):
         """
         label = "window_size"
         try:
-            self.config_data.window_size = self.view.spin_boxes[label].get()
+            self.data.window_size = self.view.spin_boxes[label].get()
         except ValueError:
             self.on_invalid(label)
         else:
@@ -185,7 +186,7 @@ class ConfigController(Controller):
         """
         label = "window_offset"
         try:
-            self.config_data.window_offset = self.view.spin_boxes[label].get()
+            self.data.window_offset = self.view.spin_boxes[label].get()
         except ValueError:
             self.on_invalid(label)
         else:
@@ -198,7 +199,7 @@ class ConfigController(Controller):
         """
         label = "trial_min_duration"
         try:
-            self.config_data.trial_min_duration = self.view.spin_boxes[label].get()
+            self.data.trial_min_duration = self.view.spin_boxes[label].get()
         except ValueError:
             self.on_invalid(label)
         else:
@@ -212,11 +213,12 @@ class ConfigController(Controller):
         self.view.labels[label].config(foreground='black')
 
 
-class EEGController(Controller):
-    def __init__(self) -> None:
+class GameController(Controller):
+    def __init__(self, master=None) -> None:
+        self.master = master
         self.view = None
+        self.data = None
 
-    def bind(self, view: EEGView):
+    def bind(self, view: GameView):
         self.view = view
         self.view.create_view()
-

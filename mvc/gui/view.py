@@ -1,4 +1,3 @@
-import tkinter
 import tkinter as tk
 import tkinter.ttk as ttk
 from abc import abstractmethod
@@ -11,9 +10,8 @@ class View(tk.Frame):
 
 
 class ConfigView(View):
-    def __init__(self, master: tkinter.Tk = None):
+    def __init__(self, master):
         super().__init__(master)
-        self.master: tkinter.Tk = master
         self.spin_boxes = {}
         self.sliders = {}
         self.entries = {}
@@ -106,13 +104,17 @@ class ConfigView(View):
             self.master.call("set_theme", "light")
 
 
-class EEGView(View):
-    def __init__(self, master=None):
+class GameView(View):
+    def __init__(self, master):
         super().__init__(master)
-        self.master = master
-        self.rowconfigure(0, weight=1)
-        self.columnconfigure(0, weight=1)
-        # self.grid(row=0, column=0, sticky='nsew')
+        self.grid(row=0, column=0, sticky='nsew')
 
     def create_view(self):
         control_frame = tk.Frame(master=self)
+        control_frame.columnconfigure(0, weight=1)
+        control_frame.columnconfigure(1, weight=1)
+        control_frame.grid(row=0, column=0, sticky='nsew')
+
+        tk.Label(control_frame, text="FRAME 1").grid(row=0, column=0, sticky='nsew')
+        tk.Label(control_frame, text="FRAME 2").grid(row=0, column=1, sticky='nsew')
+
