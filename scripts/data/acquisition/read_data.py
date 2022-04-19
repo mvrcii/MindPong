@@ -16,10 +16,10 @@ from algorithms import cca_test
 from scripts.data.extraction import trial_handler, MetaData
 
 SAMPLING_RATE = BoardShim.get_sampling_rate(brainflow.board_shim.BoardIds.CYTON_DAISY_BOARD)
-QUEUE_CLABEL = queue.Queue(100)
-QUEUE_HCON = queue.Queue(100)
-QUEUE_C3 = queue.Queue(100)
-QUEUE_C4 = queue.Queue(100)
+queue_clabel = queue.Queue(100)
+queue_hcon = queue.Queue(100)
+queue_c3 = queue.Queue(100)
+queue_c4 = queue.Queue(100)
 
 # time which is needed for one sample in s, T = 1/f = 1/125 = 0.008
 time_for_one_sample = 1 / SAMPLING_RATE
@@ -53,7 +53,7 @@ def init():
     params = BrainFlowInputParams()
     params.serial_port = search_port()
 
-    while not scripts.data.visualisation.liveplot.WINDOW_READY:
+    while not scripts.data.visualisation.liveplot.is_window_ready:
         # wait until plot window is initialized
         time.sleep(0.05)
     connect_queues()
@@ -97,9 +97,8 @@ def handle_samples():
         data = board.get_board_data(1)[board.get_eeg_channels(
             brainflow.board_shim.BoardIds.CYTON_DAISY_BOARD)]  # get all data and remove it from internal buffer
         if len(data[0]) > 0:
-            #filter data
-            # data = brainflow.DataFilter.perform_bandstop(data, sampling_rate=SAMPLING_RATE, band_width=50.0, order=10, filter_type=brainflow.FilterTypes.BUTTERWORTH, ripple=None)
-            for channel in range(16):
+            # filter data
+            for channel in range(number_channels):
                 brainflow.DataFilter.perform_bandstop(data[channel], SAMPLING_RATE, 0.0, 50.0, 5, brainflow.FilterTypes.BUTTERWORTH.value, 0)
 
             if first_data:
@@ -132,12 +131,12 @@ def send_window():
         window[i] = np.array(window_buffer[i])
     # push window to cursor control algorithm
     # TODO: change offset_duration to percentage? Else change calculation in coc algorithm
-    calculated_label = cca_test.test_algorithm_with_livedata(window, MetaData.bci_channels, SAMPLING_RATE, QUEUE_HCON, QUEUE_C3, QUEUE_C4, offset_duration/sliding_window_duration)
+    calculated_label = cca_test.test_algorithm_with_livedata(window, MetaData.bci_channels, SAMPLING_RATE, queue_hcon, queue_c3, queue_c4, offset_duration / sliding_window_duration)
     try:
-        global QUEUE_CLABEL
-        QUEUE_CLABEL.put(calculated_label)
+        global queue_clabel
+        queue_clabel.put(calculated_label)
     except:
-        print('Fehler: kann nicht reingeldaden werden')
+        print('Error: Value could not be loaded into the ringbuffer!!!')
 
 
 def stop_stream():
@@ -154,11 +153,11 @@ def stop_stream():
 
 
 def connect_queues():
-    global QUEUE_CLABEL, QUEUE_HCON, QUEUE_C3, QUEUE_C4
-    scripts.data.visualisation.liveplot.add_queue(('QUEUE_CLABEL', '#76FF03', QUEUE_CLABEL))
-    scripts.data.visualisation.liveplot.add_queue(('QUEUE_HCON', '#D500F9', QUEUE_HCON))
-    scripts.data.visualisation.liveplot.add_queue(('QUEUE_C3', '#F39C12', QUEUE_C3))
-    scripts.data.visualisation.liveplot.add_queue(('QUEUE_C4', '#E74C3C', QUEUE_C4))
+    global queue_clabel, queue_hcon, queue_c3, queue_c4
+    scripts.data.visualisation.liveplot.add_queue(('QUEUE_CLABEL', '#76FF03', queue_clabel))
+    scripts.data.visualisation.liveplot.add_queue(('QUEUE_HCON', '#D500F9', queue_hcon))
+    scripts.data.visualisation.liveplot.add_queue(('QUEUE_C3', '#F39C12', queue_c3))
+    scripts.data.visualisation.liveplot.add_queue(('QUEUE_C4', '#E74C3C', queue_c4))
 
 
 if __name__ == '__main__':

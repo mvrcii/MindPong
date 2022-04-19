@@ -7,15 +7,15 @@ import scripts.data.visualisation.liveplot
 # GLOBAL DATA
 TMIN = 500.0  # Minimum time value shown in the following figures
 TMAX = 850.0  # Maximum time value shown in the following figures
-TS_SIZE = 0.2  # 1 s time slice
+TS_SIZE = 1.0  # 1 s time slice
 TS_STEP = 0.2  # 50 ms in percentage
 SAMPLING_RATE = 250
 num_used_channels = 0
 mutex = threading.Lock
 SLIDING_WINDOW_SIZE_FACTOR = 5
-QUEUE_LABEL = None
-QUEUE_CLABEL = None
-QUEUE_HCON = None
+queue_label = None
+queue_clabel = None
+queue_hcon = None
 '''
 Sliding window size: 
     1 -> 200ms
@@ -25,7 +25,7 @@ Sliding window size:
 '''
 
 
-def loadBCICDataset(ch_weight):
+def load_bcic_dataset(ch_weight):
     """
     - converts ch_weight into the corresponding channels and inserts C3 and C4 to the first two places in the list
     - provides the BCIC dataset for further processing
@@ -75,14 +75,7 @@ def test_algorithm(chan_data, label_data, used_ch_names):
         stop_idx = int(((toff[i] + TS_SIZE) * SAMPLING_RATE) - 1)
 
         # calls the one and only cursor control algorithm
-        calculated_label = cursor_online_control.perform_algorithm(chan_data[:, start_idx:stop_idx], used_ch_names, SAMPLING_RATE, QUEUE_HCON, QUEUE_LABEL, QUEUE_CLABEL,  TS_STEP)
-
-        # try:
-        #     global QUEUE_LABEL, QUEUE_CLABEL
-        #     QUEUE_LABEL.put(label[i])
-        #     QUEUE_CLABEL.put(calculated_label)
-        # except:
-        #     print('Fehler: kann nicht reingeldaden werden')
+        calculated_label = cursor_online_control.perform_algorithm(chan_data[:, start_idx:stop_idx], used_ch_names, SAMPLING_RATE, queue_hcon, queue_label, queue_clabel, TS_STEP)
 
         # compare the calculated label with the predefined label, if same -> increase accuracy
         if label[i] != -1:
@@ -104,13 +97,13 @@ def test_algorithm(chan_data, label_data, used_ch_names):
 
 
 def connect_queues():
-    global QUEUE_LABEL, QUEUE_CLABEL, QUEUE_HCON
-    QUEUE_LABEL = queue.Queue(100)
-    QUEUE_CLABEL = queue.Queue(100)
-    QUEUE_HCON = queue.Queue(100)
-    scripts.data.visualisation.liveplot.add_queue(('QUEUE_CLABEL', '#F1C40F', QUEUE_CLABEL))
-    scripts.data.visualisation.liveplot.add_queue(('QUEUE_LABEL', '#16A085', QUEUE_LABEL))
-    scripts.data.visualisation.liveplot.add_queue(('QUEUE_HCON', '#9B59B6', QUEUE_HCON))
+    global queue_label, queue_clabel, queue_hcon
+    queue_label = queue.Queue(100)
+    queue_clabel = queue.Queue(100)
+    queue_hcon = queue.Queue(100)
+    scripts.data.visualisation.liveplot.add_queue(('QUEUE_CLABEL', '#F1C40F', queue_clabel))
+    scripts.data.visualisation.liveplot.add_queue(('QUEUE_LABEL', '#16A085', queue_label))
+    scripts.data.visualisation.liveplot.add_queue(('QUEUE_HCON', '#9B59B6', queue_hcon))
 
 
 def sort_incoming_channels(sliding_window, used_ch_names):
@@ -144,7 +137,7 @@ def sort_incoming_channels(sliding_window, used_ch_names):
 def test_algorithm_with_dataset():
     #                 Fz  FC3  FC1  FCz  FC2  FC4  C5  C3  C1  Cz  C2  C4  C6  CP3  CP1  CPz  CP2  CP4  P1  Pz  P2  POz
     ch_names_weight = [0,  1,   1,   0,   1,   1,   0,  1,  0,  0,  0,  1,  0,  1,   1,   0,   1,   1,   0,  0,  0,  0]
-    preloaded_data, preloaded_labels, used_ch_names = loadBCICDataset(ch_names_weight)
+    preloaded_data, preloaded_labels, used_ch_names = load_bcic_dataset(ch_names_weight)
     connect_queues()
     test_algorithm(preloaded_data, preloaded_labels, used_ch_names)
 
@@ -158,4 +151,3 @@ if __name__ == '__main__':
     print('CCA-test main started ...')
     threading.Thread(target=test_algorithm_with_dataset, daemon=True).start()
     scripts.data.visualisation.liveplot.start_liveplot()
-    # test_algorithm_with_dataset()

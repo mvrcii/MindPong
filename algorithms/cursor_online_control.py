@@ -7,22 +7,22 @@ from scipy import signal
 from numpy_ringbuffer import RingBuffer
 from spectrum import arburg, arma2psd
 
-# Global variables
-R = None
-FMIN = 8.0
-FMAX = 12.0
-# WINDOW_OFFSET = 0.05
-# WINDOW_SIZE = 1
-THRESHOLD = 1
-SAMPLING_FREQ = 125
-WEIGHT = 2
-
 
 class PSD_METHOD(enum.Enum):
     fft = 1
     multitaper = 2
     burg = 3
     periodogram = 4
+
+
+# Global variables
+ringbuffer_hcon = None
+FMIN = 8.0
+FMAX = 12.0
+THRESHOLD = 1
+SAMPLING_FREQ = 250
+WEIGHT = 2
+USED_METHOD = PSD_METHOD.multitaper
 
 
 def norm_data(in_data):
@@ -69,9 +69,6 @@ def calculate_laplacian(samples: np.ndarray):
 
 
 def split_normalization_area(samples_list: np.ndarray, used_ch_names: list):
-    """
-    description...
-    """
     channels_around_c3 = list()
     channels_around_c4 = list()
 
@@ -201,11 +198,11 @@ def manage_ringbuffer(window_size, offset_in_percentage:float):
     size of Ringbuffer = samples within 30s / (sliding_window_factor * 50)
     :return: Ringbuffer instance
     """
-    global R
-    if not R:
+    global ringbuffer_hcon
+    if not ringbuffer_hcon:
         offset = window_size/(offset_in_percentage*100.0)
-        R = RingBuffer(capacity=int(((30-window_size) / offset)+1), dtype=np.float)
-    return R
+        ringbuffer_hcon = RingBuffer(capacity=int(((30 - window_size) / offset) + 1), dtype=np.float)
+    return ringbuffer_hcon
 
 
 def perform_algorithm(sliding_window, used_ch_names, sample_rate, queue_hcon=None, queue_c3=None, queue_c4=None, offset_in_percentage=0.2):
@@ -222,8 +219,6 @@ def perform_algorithm(sliding_window, used_ch_names, sample_rate, queue_hcon=Non
     :return: the normalized value representing horizontal movement
     """
 
-    used_method = PSD_METHOD.multitaper
-
     # 0. mute outliers
     for i in range(len(sliding_window)):
         sliding_window[i] = norm_data(sliding_window[i])
@@ -235,24 +230,24 @@ def perform_algorithm(sliding_window, used_ch_names, sample_rate, queue_hcon=Non
     samples_c3a, samples_c4a = calculate_spatial_filtering(sliding_window, used_ch_names)
 
     # 2. Spectral analysis
-    if used_method == PSD_METHOD.fft:
+    if USED_METHOD == PSD_METHOD.fft:
         psd_c3a, f_c3a = perform_rfft(samples_c3a)
         psd_c4a, f_c4a = perform_rfft(samples_c4a)
-    elif used_method == PSD_METHOD.periodogram:
+    elif USED_METHOD == PSD_METHOD.periodogram:
         f_c3a, psd_c3a = perform_periodogram(samples_c3a)
         f_c4a, psd_c4a = perform_periodogram(samples_c4a)
-    elif  used_method == PSD_METHOD.burg:
+    elif  USED_METHOD == PSD_METHOD.burg:
         f_c3a, psd_c3a = perform_burg(samples_c3a)
         f_c4a, psd_c4a = perform_burg(samples_c4a)
-    elif used_method == PSD_METHOD.multitaper:
+    elif USED_METHOD == PSD_METHOD.multitaper:
         psd_c3a, f_c3a = perform_multitaper(samples_c3a)
         psd_c4a, f_c4a = perform_multitaper(samples_c4a)
     else:
-        raise NotImplementedError(f'The specified method {used_method} is NOT supported!')
+        raise NotImplementedError(f'The specified method {USED_METHOD} is NOT supported!')
 
     # 3. Band Power calculation
-    area_c3 = integrate_psd_values(psd_c3a, f_c3a, used_method)
-    area_c4 = integrate_psd_values(psd_c4a, f_c4a, used_method)
+    area_c3 = integrate_psd_values(psd_c3a, f_c3a, USED_METHOD)
+    area_c4 = integrate_psd_values(psd_c4a, f_c4a, USED_METHOD)
 
     # 4. Derive cursor control samples
     hcon = (area_c4*WEIGHT) - area_c3
