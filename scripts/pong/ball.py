@@ -22,14 +22,22 @@ class Ball:
 
     Methods
     -------
-    :method update(self, delta_time): Update velocity according to the time
-    :method draw(self): Draw ball
-    :method reset(self): Reset ball
-    :method init(self): Initializes the ball object and its position
-    :method init_angle(self): Initializes the balls angle
-    :method check_collision(self): Checks if the ball will have a collision in the next tick
-    :method update_angle(self, collision_type: CollisionType): Updates the angle depending on the given CollisionType
-    :method check_collision_with_paddle(self, pos, v_x, v_y): Checks if the ball collides with the paddle
+    update(self, delta_time):
+        Update velocity according to the time
+    draw(self):
+        Draw ball
+    reset(self):
+        Reset ball
+    init(self):
+        Initializes the ball object and its position
+    init_angle(self):
+        Initializes the balls angle
+    check_collision(self):
+        Checks if the ball will have a collision in the next tick
+    update_angle(self, collision_type: CollisionType):
+        Updates the angle depending on the given CollisionType
+    check_collision_with_paddle(self, pos, v_x, v_y):
+        Checks if the ball collides with the paddle
     """
 
     def __init__(self, root, canvas, color, size, paddle):

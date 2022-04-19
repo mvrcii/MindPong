@@ -37,10 +37,16 @@ def play_sound():
 
 class App(tk.Tk):
     """
-       A class for the application
-       :method update(self): Update Loop
-       :method show_frame(self, frame_type): Display the current frame passed as parameter
-       :method toggle_graph(self): Create Graph Window
+        A class for the application
+
+        Methods:
+        ----------
+        update(self):
+            Update Loop
+        show_frame(self, frame_type):
+            Display the current frame passed as parameter
+        toggle_graph(self):
+            Create Graph Window
        """
 
     # __init__ function for class App
