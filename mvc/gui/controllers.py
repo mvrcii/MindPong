@@ -1,6 +1,5 @@
 from abc import ABC, abstractmethod
 
-from mvc.gui.models import ConfigData
 from mvc.gui.view import View, ConfigView, GameView
 
 
@@ -218,6 +217,7 @@ class GameController(Controller):
         self.master = master
         self.view = None
         self.data = None
+        self.frames = {}
 
     def bind(self, view: GameView):
         self.view = view

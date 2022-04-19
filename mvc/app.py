@@ -23,9 +23,9 @@ class App(tk.Tk):
         # Initialize the windows
         self.game_window = None
         self.config_window = ConfigWindow(self)
+        self.update()
 
     def create_game_window(self):
-        # tk.Toplevel()
         self.game_window = GameWindow(self)
 
     @property
@@ -52,8 +52,8 @@ class GameWindow(tk.Toplevel):
 
         # Window settings
         self.title("MindPong")
-        self.geometry("500x500")
-        # self.attributes("-fullscreen", True)
+        self.resizable(False, False)
+        self.attributes("-fullscreen", True)
 
         game_controller = GameController(self.master)  # Create Controller
         game_view = GameView(self)
@@ -62,5 +62,6 @@ class GameWindow(tk.Toplevel):
 
 if __name__ == "__main__":
     app = App()
+
     app.bind("<Escape>", quit)
     app.mainloop()

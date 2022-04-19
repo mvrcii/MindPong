@@ -2,6 +2,8 @@ import tkinter as tk
 import tkinter.ttk as ttk
 from abc import abstractmethod
 
+from scripts.pong.main import MindPong
+
 
 class View(tk.Frame):
     @abstractmethod
@@ -59,9 +61,12 @@ class ConfigView(View):
 
     def build_window_section(self, frame, label, row, column):
         spinbox_frame = ttk.LabelFrame(frame, text=label)
-        self.create_spinbox(spinbox_frame, "window_size", "Window Size", row=0, column=0, from_=200, to=2000, interval=200)
-        self.create_spinbox(spinbox_frame, "window_offset", "Window Offset", row=0, column=1, from_=40, to=400, interval=40)
-        self.create_spinbox(spinbox_frame, "trial_min_duration", "Trial Min-Duration", row=0, column=2, from_=800, to=1500, interval=100)
+        self.create_spinbox(spinbox_frame, "window_size", "Window Size", row=0, column=0, from_=200, to=2000,
+                            interval=200)
+        self.create_spinbox(spinbox_frame, "window_offset", "Window Offset", row=0, column=1, from_=40, to=400,
+                            interval=40)
+        self.create_spinbox(spinbox_frame, "trial_min_duration", "Trial Min-Duration", row=0, column=2, from_=800,
+                            to=1500, interval=100)
         spinbox_frame.grid(padx=10, pady=5, row=row, column=column, sticky='nsew')
 
     # Helper functions
@@ -109,12 +114,15 @@ class GameView(View):
         super().__init__(master)
         self.grid(row=0, column=0, sticky='nsew')
 
+        self.frames = {}
+        self.mind_pong = None
+
     def create_view(self):
         control_frame = tk.Frame(master=self)
         control_frame.columnconfigure(0, weight=1)
-        control_frame.columnconfigure(1, weight=1)
-        control_frame.grid(row=0, column=0, sticky='nsew')
+        control_frame.grid(row=1, column=1, sticky='nsew')
 
-        tk.Label(control_frame, text="FRAME 1").grid(row=0, column=0, sticky='nsew')
-        tk.Label(control_frame, text="FRAME 2").grid(row=0, column=1, sticky='nsew')
-
+        frame = MindPong(control_frame, self)
+        frame.grid(row=0, column=0, sticky='nsew')
+        frame.focus_set()
+        frame.tkraise()
