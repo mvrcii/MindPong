@@ -4,6 +4,7 @@ import time
 
 import scripts.pong.player as player
 import scripts.pong.target as target
+import scripts.pong.strategy as strategy
 from scripts.config import *
 
 
@@ -139,9 +140,10 @@ class Game(tk.Frame):
         self.canvas.pack()
 
         self.target = target.Target(self, self.canvas, 'red', 60)
-        self.player = player.Player(self, self.canvas, 60, 60, 'blue', target=self.target)
+        self.player = player.Player(self, self.canvas, 60, 60, 'blue', target=self.target,
+                                    strategy=strategy.KeyStrategy)
         self.ground = self.canvas.create_rectangle(0, 0, WINDOW_WIDTH, 10, fill='Black')
-        self.canvas.move(self.ground, 0, WINDOW_HEIGHT*0.5)
+        self.canvas.move(self.ground, 0, WINDOW_HEIGHT * 0.5)
 
         self.bind("<space>", lambda event: self.change(Playing) if self.state.name is Idle.name else self.change(Idle))
 

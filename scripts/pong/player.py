@@ -20,7 +20,7 @@ class Player:
     :method collision_with_target(self): checks collision with target
     """
 
-    def __init__(self, root, canvas, width, height, color, target):
+    def __init__(self, root, canvas, width, height, color, target, strategy):
         """
         Constructor method
         :param Any root: root
@@ -63,10 +63,18 @@ class Player:
         self.target = target
         self.hit_occurred = False
 
-        self.canvas.bind_all('<KeyPress-Left>', self.move_left)
-        self.canvas.bind_all('<KeyPress-Right>', self.move_right)
+        self.request(strategy).__str__(self)
 
         self.init()
+
+    @staticmethod
+    def request(strategy):
+        """
+        Returns the control strategy that is used for the player movement
+        :param strategy: Strategy class to
+        :return: Strategy class that is used
+        """
+        return strategy()
 
     def update(self, delta_time):
         """
@@ -165,7 +173,7 @@ class Player:
         self.pos = self.canvas.coords(self.id)
         self.target.spawn_new_target(self.pos)
 
-    def move_left(self, evt):
+    def move_left(self, event):
         """
         Move paddle left
         :return: None
@@ -180,7 +188,7 @@ class Player:
         self.direction = -1
         self.direction_update = True
 
-    def move_right(self, evt):
+    def move_right(self, event):
         """
         Move paddle right
         :return: None
