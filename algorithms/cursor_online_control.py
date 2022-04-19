@@ -6,6 +6,7 @@ from numpy import linspace
 from scipy import signal
 from numpy_ringbuffer import RingBuffer
 from spectrum import arburg, arma2psd
+from scripts.event_listener import post_event
 
 
 class PSD_METHOD(enum.Enum):
@@ -268,8 +269,10 @@ def perform_algorithm(sliding_window, used_ch_names, sample_rate, queue_hcon=Non
     # converts the returned hcon to the corresponding label
     if normalized_hcon > threshold-0.2:     # left
         calculated_label = 0
+        post_event("move_left_direction")
     elif normalized_hcon < -threshold:  # right
         calculated_label = 1
+        post_event("move_right_direction")
     else:
         calculated_label = -1
 
