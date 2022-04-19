@@ -54,7 +54,7 @@ class Playing(GameState):
     :return: None
     """
     name = "playing"
-    allowed = ['idle', 'respawn']
+    allowed = ['idle', 'respawn', 'end']
 
 
 class Idle(GameState):
@@ -64,13 +64,19 @@ class Idle(GameState):
     """
 
     name = "idle"
-    allowed = ['playing']
+    allowed = ['playing', 'end']
 
 
 class Respawn(GameState):
-    """A child of GameState defining the state idle"""
+    """A child of GameState defining the state respawn"""
     name = "respawn"
-    allowed = ['idle', 'playing']
+    allowed = ['idle', 'playing', 'end']
+
+
+class End(GameState):
+    """A child of GameState defining the state end"""
+    name = "end"
+    allowed = []
 
 
 class Game(tk.Frame):
@@ -118,7 +124,9 @@ class Game(tk.Frame):
 
         # State of the game - default is idle
         self.state = Idle()
+
         self.score = 0
+        self.miss = 0
 
         self.curr_restart_time = 0
 
@@ -127,7 +135,7 @@ class Game(tk.Frame):
         self.passed_time = 0
 
         self.canvas = Canvas(self, width=self.width, height=self.height, bd=0, highlightthickness=0, relief='ridge')
-        self.score_label, self.timer_label = None, None
+        self.score_label = None
         self.init_labels()
         self.canvas.pack()
 
@@ -138,6 +146,7 @@ class Game(tk.Frame):
         self.canvas.move(self.ground, 0, WINDOW_HEIGHT * 0.5)
 
         self.bind("<space>", lambda event: self.change(Playing) if self.state.name is Idle.name else self.change(Idle))
+        self.bind('e', lambda event: self.change(End))
 
         self.update()
 
@@ -168,11 +177,16 @@ class Game(tk.Frame):
             self.player.speed_factor = 0
             del self.target
             self.target = target.Target(self, self.canvas, 'red', 60)
-            # self.player.__setattr__(self.player, target, self.target)
             self.player.target = self.target
             self.target.spawn_new_target(self.player.pos)
 
             self.change(Playing)
+        elif curr_state is End.name:
+            self.canvas.itemconfig(self.player.id, state=HIDDEN)
+            self.canvas.itemconfig(self.target.id, state=HIDDEN)
+            self.canvas.itemconfig(self.ground, state=HIDDEN)
+            tries = self.score + self.miss
+            self.canvas.itemconfig(self.score_label, text="Score: " + str(self.score) + "/" + str(tries), state=NORMAL)
 
         # Repeat
         self.after(5, self.update)
@@ -217,16 +231,6 @@ class Game(tk.Frame):
 
         self.state.switch(state)
 
-    def set_speed_factors(self, evt):
-        """
-        Takes one of the key events from 1-9 and adapts the balls and paddles speed according to the pressed key.
-        Whereas key 1 corresponds to the slowest and also standard game speed and key 9 to the highest game speed
-        :return: None
-        """
-
-        key_value = int(evt.char) - 1  # shift, so that key 1 equals to speed factor 1.0
-        self.ball.speed_factor = 1.0 + (key_value / BALL_SPEED_KEYS) * 3
-
     def init_labels(self):
         """
         Init Labels
@@ -236,8 +240,3 @@ class Game(tk.Frame):
         self.score_label = self.canvas.create_text(self.width / 2, self.height * 0.5,
                                                    anchor=CENTER, text="Score: 0", font=('Helvetica', '20', 'bold'))
         self.canvas.itemconfig(self.score_label, state=HIDDEN)
-
-        self.timer_label = self.canvas.create_text(self.width / 2, self.height * 0.6,
-                                                   anchor=CENTER, text="Restarting in 3",
-                                                   font=('Helvetica', '20', 'bold'))
-        self.canvas.itemconfig(self.timer_label, state=HIDDEN)

@@ -41,6 +41,7 @@ class Target:
         else:
             self.time_last_hit += delta_time
             if self.time_last_hit >= TIME_TO_CATCH_PER_PIXEL*self.start_distance:
+                self.root.miss += 1
                 self.spawn_target = True
 
     def respawn(self):
@@ -58,7 +59,6 @@ class Target:
         """
         min_x = 0
         max_x = self.canvas_width - self.size
-        print(type(player_pos))
         condition = True
         while condition:
             random_x = random.uniform(min_x, max_x)
