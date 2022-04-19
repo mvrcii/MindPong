@@ -21,6 +21,7 @@ def calculate_laplacian(signal):
     :return: result: calculated average
     :rtype: list[int]
     """
+
     result = list()
     for i in range(len(signal[0])):
         average = 0
@@ -39,6 +40,7 @@ def calculate_spatial_filtering(signal_list):
     :return: signal_c3a: filtered C3, signal_c4a: C4 signals
     :rtype: list[int], list[int]
     """
+
     signal_c3a = list()
     signal_c4a = list()
     signal_average = calculate_laplacian(signal_list[2:])
@@ -58,6 +60,7 @@ def perform_multitaper(signal, jobs=-1):
     :rtype: np.abs(), time()
              freqs: the corresponding frequencies
     """
+
     array = np.array(signal)
     _bandwidth = f_max - f_min if f_max - f_min > 0 else 1
     psds, freqs = mne.time_frequency.psd_array_multitaper(array, sfreq=128, n_jobs=jobs, bandwidth=_bandwidth,
