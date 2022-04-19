@@ -1,5 +1,6 @@
 from abc import ABCMeta, abstractmethod
 import scripts.pong.player as player
+from scripts.event_listener import subscribe
 
 
 class IStrategy(metaclass=ABCMeta):
@@ -31,3 +32,11 @@ class KeyStrategy(IStrategy):
         """
         player.canvas.bind_all('<KeyPress-Left>', player.move_left)
         player.canvas.bind_all('<KeyPress-Right>', player.move_right)
+
+
+class AlgorithmsStrategy(IStrategy):
+
+    @staticmethod
+    def __str__(player: player.Player):
+        subscribe("move_left_direction", player.move_left)
+        subscribe("move_right_direction", player.move_right)

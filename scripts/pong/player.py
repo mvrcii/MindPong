@@ -158,7 +158,7 @@ class Player:
         self.pos = self.canvas.coords(self.id)
         self.target.spawn_new_target(self.pos)
 
-    def move_left(self, evt):
+    def move_left(self):
         """
         Move paddle left
         :return: None
@@ -173,7 +173,7 @@ class Player:
         self.direction = -1
         self.direction_update = True
 
-    def move_right(self, evt):
+    def move_right(self):
         """
         Move paddle right
         :return: None
