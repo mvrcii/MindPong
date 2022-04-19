@@ -28,6 +28,21 @@ class Player:
         :param Any width: width of player
         :param Any height: height of player
         :param Any color: color of player
+        :attribute Any self.root: Root
+        :attribute Any self.canvas: Canvas
+        :attribute Any self.canvas:width: Canvas width
+        :attribute Any self.height: Canvas height
+        :attribute Any self.color: Color
+        :attribute Any self.width: Width
+        :attribute Any self.height: Height
+        :attribute None self.pos: Position
+        :attribute int self.speed_factor: Speed factor
+        :attribute None self.id: Id
+        :attribute int self.root: Root
+        :attribute int self.v_x: v_x
+        :attribute int self.direction: Direction
+        :attribute bool self.wall_hit: Wall hit
+        :attribute bool self.start_pos: Start position
         """
 
         self.root = root

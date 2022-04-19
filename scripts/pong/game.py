@@ -14,16 +14,16 @@ class GameState(object):
 
     Attributes:
     ----------
-    :attribute str name: the name of the state
-    :attribute [str] allowed: a list of the allowed state names to switch to
+    name: str
+        the name of the state
+    allowed: [str]
+        a list of the allowed state names to switch to
 
     Methods:
     ----------
-    :method switch(state): Switches the current state to the passed state if it is listed in the allowed states
+    switch(state):
+        Switches the current state to the passed state if it is listed in the allowed states
 
-    Return:
-    ----------
-    :return: None
     """
     name = "state"
     allowed = []
@@ -45,6 +45,10 @@ class GameState(object):
             print('Current State:', self, ' => switching to', state.name, 'not possible.')
 
     def __str__(self):
+        """
+        :return: self.name: attribute name
+        :rtype: str
+         """
         return self.name
 
 
@@ -77,27 +81,19 @@ class Game(tk.Frame):
     """
     A class representing the game
 
-    Attributes:
-    ----------
-    :attribute int width: the width of the pong window
-    :attribute int height: the height of the pong window
-    :attribute GameState state: the current game state
-    :attribute int score: the current game score
-    :attribute float curr_restart_timer: the current restart timer, which will be set to a value and then count down
-            until it reaches zero. This variable is also displayed while the game is being restarted
-    :attribute int update_counter: the tick counter
-    :attribute float last_update: the timestamp of the last update
-    :attribute float passed_time: the time that has passed since last_update
-    :attribute Canvas canvas: the canvas to draw on
-    :attribute Player player: the paddle object
-    :attribute Target target: the target object
-
     Methods:
     ----------
-    :method update(): Calls the update methods of all objects and is responsible for the game loop and state handling
-    :method handle_time(): Handles the time and returns a delta for correction
-    :method clear(): Clears the canvas background. Very important function to avoid flickering and artifacts
-    :method change(state): Changes the internal state to state if possible
+    update():
+        Calls the update methods of all objects and is responsible for the game loop and state handling
+    handle_time():
+        Handles the time and returns a delta for correction
+    clear():
+        Clears the canvas background. Very important function to avoid flickering and artifacts
+    change(state):
+        Changes the internal state to state if possible
+    set_speed_factors(evt):
+        Takes one of the key events from 1-9 and adapts the balls and paddles speed according to the pressed key.
+        Whereas key 1 corresponds to the slowest and also standard game speed and key 9 to the highest game speed
     """
 
     def __init__(self, parent, controller):
@@ -105,6 +101,18 @@ class Game(tk.Frame):
         Constructor method
         :param Any parent: parent
         :param Any controller: controller
+        :attribute int self.width: the width of the pong window
+        :attribute int self.height: the height of the pong window
+        :attribute GameState self.state: the current game state
+        :attribute int self.score: the current game score
+        :attribute float self.curr_restart_timer: the current restart timer, which will be set to a value and then count down
+            until it reaches zero. This variable is also displayed while the game is being restarted
+        :attribute int self.update_counter: the tick counter
+        :attribute float self.last_update: the timestamp of the last update
+        :attribute float self.passed_time: the time that has passed since last_update
+        :attribute Canvas self.canvas: the canvas to draw on
+        :attribute Player self.player: the player object
+        :attribute Target self.target: the target object
         """
 
         tk.Frame.__init__(self, parent)
