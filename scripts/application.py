@@ -9,7 +9,7 @@ from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg, NavigationToolb
 from matplotlib.figure import Figure
 
 from scripts.config import *
-from scripts.pong.main import MindPong
+from scripts.pong.game import Game
 
 matplotlib.use("TkAgg")
 LARGE_FONT = ("Verdana", 16)
@@ -75,12 +75,12 @@ class App(tk.Tk):
 
         # initializing frames to an empty array
         self.frames = {}
-        self.mind_pong = MindPong(container, self)
+        self.mind_pong = Game(container, self)
 
         # iterating through a tuple consisting
         # of the different page layouts
         for F in (StartPage, CalibrationPageOne, CalibrationPageThree, CalibrationPageFive,
-                  CalibrationPageTwo, CalibrationPageFour, MindPong):
+                  CalibrationPageTwo, CalibrationPageFour, Game):
             frame = F(container, self)
 
             # initializing frame of the objects given
@@ -262,7 +262,7 @@ class CalibrationPageFive(tk.Frame):
 Sobald der Ball den Boden berührt \n startet das Spiel nach ein paar 
 Sekunden automatisch neu.\n\n Das Spiel beginnt in Kürze!'''), font=LARGE_FONT)
         label.pack(fill=BOTH, expand=True)
-        self.bind("<space>", lambda event: controller.show_frame(MindPong))
+        self.bind("<space>", lambda event: controller.show_frame(Game))
 
 
 app = App()
