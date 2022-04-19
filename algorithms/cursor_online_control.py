@@ -20,7 +20,7 @@ ringbuffer_hcon = None
 FMIN = 8.0
 FMAX = 12.0
 THRESHOLD = 1
-SAMPLING_FREQ = 250
+SAMPLING_FREQ = 125
 WEIGHT = 2
 USED_METHOD = PSD_METHOD.multitaper
 
