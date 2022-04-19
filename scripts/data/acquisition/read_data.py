@@ -1,6 +1,8 @@
 import queue
 import threading
 import time
+
+import mne
 import numpy as np
 from numpy_ringbuffer import RingBuffer
 import serial
@@ -93,6 +95,11 @@ def handle_samples():
         data = board.get_board_data(1)[board.get_eeg_channels(
             brainflow.board_shim.BoardIds.CYTON_DAISY_BOARD)]  # get all data and remove it from internal buffer
         if len(data[0]) > 0:
+            #filter data
+            # data = brainflow.DataFilter.perform_bandstop(data, sampling_rate=SAMPLING_RATE, band_width=50.0, order=10, filter_type=brainflow.FilterTypes.BUTTERWORTH, ripple=None)
+            for channel in range(16):
+                brainflow.DataFilter.perform_bandstop(data[channel], SAMPLING_RATE, 0.0, 50.0, 5, brainflow.FilterTypes.BUTTERWORTH.value, 0)
+
             if first_data:
                 trial_handler.send_raw_data(data, start=time.time())
                 first_data = False
@@ -144,8 +151,8 @@ def connect_queues():
     global QUEUE_CLABEL, QUEUE_HCON, QUEUE_C3, QUEUE_C4
     scripts.data.visualisation.liveplot.add_queue(('QUEUE_CLABEL', '#76FF03', QUEUE_CLABEL))
     scripts.data.visualisation.liveplot.add_queue(('QUEUE_HCON', '#D500F9', QUEUE_HCON))
-    scripts.data.visualisation.liveplot.add_queue(('QUEUE_C3', '#EF9A9A', QUEUE_C3))
-    scripts.data.visualisation.liveplot.add_queue(('QUEUE_C4', '#B3E5FC', QUEUE_C4))
+    scripts.data.visualisation.liveplot.add_queue(('QUEUE_C3', '#F39C12', QUEUE_C3))
+    scripts.data.visualisation.liveplot.add_queue(('QUEUE_C4', '#E74C3C', QUEUE_C4))
 
 
 if __name__ == '__main__':

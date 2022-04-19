@@ -1,7 +1,11 @@
+import enum
+import scipy.integrate
 import mne
 import numpy as np
-from scipy import integrate, signal
+from numpy import linspace
+from scipy import signal
 from numpy_ringbuffer import RingBuffer
+from spectrum import arburg, arma2psd
 
 # Global variables
 R = None
@@ -11,10 +15,18 @@ FMAX = 12.0
 # WINDOW_SIZE = 1
 THRESHOLD = 1
 SAMPLING_FREQ = 125
-WEIGHT = 1.4
+WEIGHT = 2
+
+
+class PSD_METHOD(enum.Enum):
+    fft = 1
+    multitaper = 2
+    burg = 3
+    periodogram = 4
 
 
 def norm_data(in_data):
+    # normalize data
     mean = np.mean(in_data)
     std = np.std(in_data)
     out_data = in_data - mean
@@ -25,7 +37,7 @@ def norm_data(in_data):
 def mute_outliers(samples: np.ndarray):
     mean = np.mean(samples)
     std = np.std(samples)
-    x = 2.0
+    x = 4.0
     output = samples
     for i in range(len(samples)):
         if samples[i] > mean + x * std:
@@ -126,7 +138,7 @@ def perform_multitaper(samples: np.ndarray, jobs=-1):
 
 
 def perform_periodogram(samples: np.ndarray):
-    return signal.periodogram(samples, 250)
+    return signal.periodogram(samples, SAMPLING_FREQ)
 
 
 def perform_rfft(samples: np.ndarray):
@@ -138,32 +150,46 @@ def perform_rfft(samples: np.ndarray):
              freqs: the corresponding frequencies
     """
     fft_spectrum = np.fft.rfft(samples)
-    freqs = np.fft.rfftfreq(len(samples), d=1 / 250)
+    freqs = np.fft.rfftfreq(len(samples), d=1 / SAMPLING_FREQ)
     fft_spectrum_abs = np.abs(fft_spectrum)
 
     return fft_spectrum_abs, freqs
 
 
-def integrate_psd_values(samples: np.ndarray, frequency_list: np.ndarray, use_frequency_filter=False):
+def perform_burg(sample: np.array):
+    """
+    recommended for small window sizes
+    """
+    AR, P, k = arburg(sample, 10)
+    PSD = arma2psd(AR)
+    space = linspace(0, 50, PSD.size)
+
+    # caution! bandpassfilter with 50Hz required
+    return PSD, space
+
+
+def integrate_psd_values(samples: np.ndarray, frequency_list: np.ndarray, used_filter):
     """
     Integrates over the calculated PSD values in between the specified frequencies (FMIN, FMAX)
     :param samples: F(C3), F(C4)
     :param frequency_list: list of the included frequencies
-    :param use_frequency_filter: FALSE: if frequencies are already filtered (e.g. with multitaper algorithm),
-                                 TRUE: use intern filter
     :return: sum of all PSDs in the given frequency range
     """
 
     psds_in_band_power = list()
     requested_frequency_range = list()
 
-    if (use_frequency_filter):
+    if used_filter == PSD_METHOD.fft or used_filter == PSD_METHOD.burg or used_filter == PSD_METHOD.periodogram:
         for i in range(len(frequency_list)):
             if FMAX >= frequency_list[i] >= FMIN:
                 psds_in_band_power.append(samples[i])
                 requested_frequency_range.append(frequency_list[i])
 
-    band_power = integrate.simps(psds_in_band_power, requested_frequency_range) if use_frequency_filter else integrate.simps(samples, frequency_list)
+        band_power = scipy.integrate.trapz(psds_in_band_power, requested_frequency_range) if len(requested_frequency_range) > 0 else 0
+    else:
+        band_power = scipy.integrate.trapz(samples, frequency_list)
+
+    # band_power = integrate.simps(psds_in_band_power, requested_frequency_range) if use_frequency_filter else integrate.simps(samples, frequency_list)
 
     return band_power
 
@@ -178,7 +204,7 @@ def manage_ringbuffer(window_size, offset_in_percentage:float):
     global R
     if not R:
         offset = window_size/(offset_in_percentage*100.0)
-        R = RingBuffer(capacity=int(((15-window_size) / offset)+1), dtype=np.float)
+        R = RingBuffer(capacity=int(((30-window_size) / offset)+1), dtype=np.float)
     return R
 
 
@@ -196,6 +222,8 @@ def perform_algorithm(sliding_window, used_ch_names, sample_rate, queue_hcon=Non
     :return: the normalized value representing horizontal movement
     """
 
+    used_method = PSD_METHOD.multitaper
+
     # 0. mute outliers
     for i in range(len(sliding_window)):
         sliding_window[i] = norm_data(sliding_window[i])
@@ -207,21 +235,33 @@ def perform_algorithm(sliding_window, used_ch_names, sample_rate, queue_hcon=Non
     samples_c3a, samples_c4a = calculate_spatial_filtering(sliding_window, used_ch_names)
 
     # 2. Spectral analysis
-    # psd_c3a, f_c3a = perform_multitaper(samples_c3a)
-    # psd_c4a, f_c4a = perform_multitaper(samples_c4a)
-    f_c3a, psd_c3a = perform_periodogram(samples_c3a)
-    f_c4a, psd_c4a = perform_periodogram(samples_c4a)
+    if used_method == PSD_METHOD.fft:
+        psd_c3a, f_c3a = perform_rfft(samples_c3a)
+        psd_c4a, f_c4a = perform_rfft(samples_c4a)
+    elif used_method == PSD_METHOD.periodogram:
+        f_c3a, psd_c3a = perform_periodogram(samples_c3a)
+        f_c4a, psd_c4a = perform_periodogram(samples_c4a)
+    elif  used_method == PSD_METHOD.burg:
+        f_c3a, psd_c3a = perform_burg(samples_c3a)
+        f_c4a, psd_c4a = perform_burg(samples_c4a)
+    elif used_method == PSD_METHOD.multitaper:
+        psd_c3a, f_c3a = perform_multitaper(samples_c3a)
+        psd_c4a, f_c4a = perform_multitaper(samples_c4a)
+    else:
+        raise NotImplementedError(f'The specified method {used_method} is NOT supported!')
 
     # 3. Band Power calculation
-    area_c3 = integrate_psd_values(psd_c3a, f_c3a, True)
-    area_c4 = integrate_psd_values(psd_c4a, f_c4a, True)
+    area_c3 = integrate_psd_values(psd_c3a, f_c3a, used_method)
+    area_c4 = integrate_psd_values(psd_c4a, f_c4a, used_method)
 
     # 4. Derive cursor control samples
     hcon = (area_c4*WEIGHT) - area_c3
 
     # normalize to zero mean and unit variance to derive the cursor control samples
     ringbuffer = manage_ringbuffer((len(sliding_window[0]) + 1)/sample_rate, offset_in_percentage)
-    ringbuffer.append(hcon)
+    if not ringbuffer.is_full:
+        ringbuffer.append(hcon)
+
     values = np.array(ringbuffer)
     mean = np.mean(values)
     standard_deviation = np.std(values)
@@ -231,7 +271,7 @@ def perform_algorithm(sliding_window, used_ch_names, sample_rate, queue_hcon=Non
     threshold = THRESHOLD
 
     # converts the returned hcon to the corresponding label
-    if normalized_hcon > threshold:     # left
+    if normalized_hcon > threshold-0.2:     # left
         calculated_label = 0
     elif normalized_hcon < -threshold:  # right
         calculated_label = 1
@@ -240,12 +280,12 @@ def perform_algorithm(sliding_window, used_ch_names, sample_rate, queue_hcon=Non
 
     try:
         if queue_hcon:
-            queue_hcon.put(normalized_hcon)
+            queue_hcon.put(0)
         if queue_c3:
             queue_c3.put(area_c3)
         if queue_c4:
             queue_c4.put(area_c4)
     except:
-        print('Fehler: kann nicht reingeldaden werden')
+        print('Fehler: hcon kann nicht reingeldaden werden')
 
     return calculated_label

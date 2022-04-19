@@ -7,7 +7,7 @@ import scripts.data.visualisation.liveplot
 # GLOBAL DATA
 TMIN = 500.0  # Minimum time value shown in the following figures
 TMAX = 850.0  # Maximum time value shown in the following figures
-TS_SIZE = 1.0  # 1 s time slice
+TS_SIZE = 0.2  # 1 s time slice
 TS_STEP = 0.2  # 50 ms in percentage
 SAMPLING_RATE = 250
 num_used_channels = 0
@@ -75,14 +75,14 @@ def test_algorithm(chan_data, label_data, used_ch_names):
         stop_idx = int(((toff[i] + TS_SIZE) * SAMPLING_RATE) - 1)
 
         # calls the one and only cursor control algorithm
-        calculated_label = cursor_online_control.perform_algorithm(chan_data[:, start_idx:stop_idx], used_ch_names, SAMPLING_RATE, QUEUE_HCON, TS_STEP)
+        calculated_label = cursor_online_control.perform_algorithm(chan_data[:, start_idx:stop_idx], used_ch_names, SAMPLING_RATE, QUEUE_HCON, QUEUE_LABEL, QUEUE_CLABEL,  TS_STEP)
 
-        try:
-            global QUEUE_LABEL, QUEUE_CLABEL
-            QUEUE_LABEL.put(label[i])
-            QUEUE_CLABEL.put(calculated_label)
-        except:
-            print('Fehler: kann nicht reingeldaden werden')
+        # try:
+        #     global QUEUE_LABEL, QUEUE_CLABEL
+        #     QUEUE_LABEL.put(label[i])
+        #     QUEUE_CLABEL.put(calculated_label)
+        # except:
+        #     print('Fehler: kann nicht reingeldaden werden')
 
         # compare the calculated label with the predefined label, if same -> increase accuracy
         if label[i] != -1:
@@ -108,9 +108,9 @@ def connect_queues():
     QUEUE_LABEL = queue.Queue(100)
     QUEUE_CLABEL = queue.Queue(100)
     QUEUE_HCON = queue.Queue(100)
-    scripts.data.visualisation.liveplot.add_queue(('QUEUE_CLABEL', '#76FF03', QUEUE_CLABEL))
-    scripts.data.visualisation.liveplot.add_queue(('QUEUE_LABEL', '#76FF03', QUEUE_LABEL))
-    scripts.data.visualisation.liveplot.add_queue(('QUEUE_HCON', '#76FF03', QUEUE_HCON))
+    scripts.data.visualisation.liveplot.add_queue(('QUEUE_CLABEL', '#F1C40F', QUEUE_CLABEL))
+    scripts.data.visualisation.liveplot.add_queue(('QUEUE_LABEL', '#16A085', QUEUE_LABEL))
+    scripts.data.visualisation.liveplot.add_queue(('QUEUE_HCON', '#9B59B6', QUEUE_HCON))
 
 
 def sort_incoming_channels(sliding_window, used_ch_names):
@@ -158,4 +158,4 @@ if __name__ == '__main__':
     print('CCA-test main started ...')
     threading.Thread(target=test_algorithm_with_dataset, daemon=True).start()
     scripts.data.visualisation.liveplot.start_liveplot()
-
+    # test_algorithm_with_dataset()

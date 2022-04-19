@@ -1,4 +1,5 @@
 import os
+import signal
 from typing import List
 import mne
 import numpy as np
@@ -74,7 +75,7 @@ def get_channel_rawdata(subject: int, n_class: int = 4, ch_names: List[str] = CH
     events_duration = data['edur'].T
     artifacts = data['artifacts'].T
 
-    chan_data = BP_notch_filtering(chan_data)  # Optional bandpass and notch filtering
+    # chan_data = BP_notch_filtering(chan_data)  # Optional bandpass and notch filtering
 
     # create labels channel
     n_events = events_type.shape[1]

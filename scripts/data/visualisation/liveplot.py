@@ -19,14 +19,14 @@ class MainWindow(QtWidgets.QMainWindow):
 
         self.x = list(range(100))
 
-        # self.graphWidget.setYRange(-10, 10)
+        self.graphWidget.setYRange(-1.1, 1.1)
         self.graphWidget.addLegend()
 
         self.graphWidget.setBackground('k')
         # self.graphWidget.showGrid(x=True, y=True)
 
         self.timer = QtCore.QTimer()
-        self.timer.setInterval(10)
+        self.timer.setInterval(50)
         self.timer.timeout.connect(self.update_plot_data)
         self.timer.start()
 
@@ -77,6 +77,7 @@ def start_liveplot():
     app = QtWidgets.QApplication(sys.argv)
     MAIN_WINDOW = MainWindow()
     MAIN_WINDOW.show()
+    MAIN_WINDOW.showFullScreen()
     global WINDOW_READY
     WINDOW_READY = True
     window = app.exec_()
