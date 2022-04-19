@@ -35,8 +35,16 @@ class KeyStrategy(IStrategy):
 
 
 class AlgorithmsStrategy(IStrategy):
+    """
+    Control Strategy to control the player with Algorithm
+    """
 
     @staticmethod
     def __str__(player: player.Player):
+        """
+        Binds events posted by the algorithm with the move methods of the player
+        :param player: player object
+        :return: None
+        """
         subscribe("move_left_direction", player.move_left)
         subscribe("move_right_direction", player.move_right)

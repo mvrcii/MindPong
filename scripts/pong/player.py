@@ -55,9 +55,9 @@ class Player:
     @staticmethod
     def request(strategy):
         """
-        Returns the control strategy to use
+        Returns the control strategy that is used for the player movement
         :param strategy: Strategy class to
-        :return: Strategy class to use
+        :return: Strategy class that is used
         """
         return strategy()
 
@@ -158,7 +158,7 @@ class Player:
         self.pos = self.canvas.coords(self.id)
         self.target.spawn_new_target(self.pos)
 
-    def move_left(self):
+    def move_left(self, event):
         """
         Move paddle left
         :return: None
@@ -173,7 +173,7 @@ class Player:
         self.direction = -1
         self.direction_update = True
 
-    def move_right(self):
+    def move_right(self, event):
         """
         Move paddle right
         :return: None
