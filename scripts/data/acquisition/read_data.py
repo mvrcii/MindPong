@@ -3,6 +3,7 @@ import threading
 import time
 
 import mne
+import time
 import numpy as np
 from numpy_ringbuffer import RingBuffer
 import serial
@@ -72,9 +73,10 @@ def init():
 def search_port():
     """
     Search for the name of the used usb port
-    :return: name of the used serial port
-    :rtype: str
+    :return: port_name: name of the used serial port None: None
+    :rtype: str, None
     """
+
     print('Search...')
     ports = serial.tools.list_ports.comports(include_links=False)
     for port in ports:
@@ -121,7 +123,9 @@ def handle_samples():
 def send_window():
     """
     Create sliding window and send it to the algorithm
+    :return: None
     """
+
     global window_buffer, number_channels
     window = np.zeros((number_channels, sliding_window_samples), dtype=float)
     for i in range(len(window)):
@@ -139,7 +143,9 @@ def send_window():
 def stop_stream():
     """
     Stops the data stream and the releases session
+    :return: None
     """
+
     global stream_available
     stream_available = False
     # time.sleep(0.3) , needed for multithreading
