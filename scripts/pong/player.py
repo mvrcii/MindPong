@@ -1,3 +1,5 @@
+import time
+
 import scripts.pong.game as game
 import scripts.pong.target as target
 from scripts.config import *
@@ -62,6 +64,9 @@ class Player:
         self.direction_update = False
         self.target = target
         self.hit_occurred = False
+        self.start_time_trial = time.time()
+        self.trial_is_valid = True
+        self.last_direction_update = None
 
         self.request(strategy).__str__(self)
 
@@ -214,3 +219,10 @@ class Player:
         if hit_from_left or hit_from_right:
             self.hit_occurred = True
             self.target.respawn()
+
+    def start_trial(self):
+        self.start_time_trial = time.time()
+        self.trial_is_valid = True
+
+    def is_trial_valid(self):
+        pass
