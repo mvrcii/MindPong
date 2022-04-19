@@ -1,10 +1,12 @@
 from abc import ABCMeta, abstractmethod
 import scripts.pong.player as player
 
+
 class IStrategy(metaclass=ABCMeta):
     """
     Abstract Control Strategy Class for the player
     """
+
     @staticmethod
     @abstractmethod
     def __str__(player: player.Player):
@@ -29,4 +31,3 @@ class KeyStrategy(IStrategy):
         """
         player.canvas.bind_all('<KeyPress-Left>', player.move_left)
         player.canvas.bind_all('<KeyPress-Right>', player.move_right)
-
