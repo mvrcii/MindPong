@@ -14,7 +14,7 @@ class App(tk.Tk):
         self.resizable(False, False)
 
         # Set the theme initially to light mode
-        self.call("source", "azure.tcl")
+        self.call("source", "gui\\azure.tcl")
         self.call("set_theme", "light")
 
         # Initialize data model
