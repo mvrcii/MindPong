@@ -54,7 +54,7 @@ class Playing(GameState):
     :return: None
     """
     name = "playing"
-    allowed = ['idle', 'respawn', 'end']
+    allowed = ['idle', 'hit', 'end', 'respawn']
 
 
 class Idle(GameState):
@@ -64,7 +64,13 @@ class Idle(GameState):
     """
 
     name = "idle"
-    allowed = ['playing', 'end']
+    allowed = ['playing', 'hit', 'respawn', 'end']
+
+
+class Hit(GameState):
+    """A child of GameState defining the state respawn"""
+    name = "hit"
+    allowed = ['idle', 'respawn', 'end']
 
 
 class Respawn(GameState):
@@ -125,8 +131,11 @@ class Game(tk.Frame):
         # State of the game - default is idle
         self.state = Idle()
 
+        self.counter = 0
         self.score = 0
         self.miss = 0
+
+        self.time_over_in_percentage = []
 
         self.curr_restart_time = 0
 
@@ -134,18 +143,24 @@ class Game(tk.Frame):
         self.last_update = 0
         self.passed_time = 0
 
+        self.first_hit_update = True
+
         self.canvas = Canvas(self, width=self.width, height=self.height, bd=0, highlightthickness=0, relief='ridge')
-        self.score_label = None
+        self.score_label, self.score_per_label, self.time_label, self.average_time_label = None, None, None, None
         self.init_labels()
         self.canvas.pack()
 
         self.target = target.Target(self, self.canvas, 'red', 60)
         self.player = player.Player(self, self.canvas, 60, 60, 'blue', target=self.target,
                                     strategy=strategy.KeyStrategy)
+        self.target.spawn_new_target(self.player.pos)
+
         self.ground = self.canvas.create_rectangle(0, 0, WINDOW_WIDTH, 10, fill='Black')
         self.canvas.move(self.ground, 0, WINDOW_HEIGHT * 0.5)
 
         self.bind("<space>", lambda event: self.change(Playing) if self.state.name is Idle.name else self.change(Idle))
+
+        # ToDo mro: Connect the session saving with the GUI here
         self.bind('e', lambda event: self.change(End))
 
         self.update()
@@ -171,7 +186,36 @@ class Game(tk.Frame):
             self.target.update(delta_time=delta)
             # Draw
             self.player.draw()
+
+        elif curr_state is Hit.name:
+            if self.first_hit_update:
+                self.canvas.itemconfig(self.target.id, fill='green')
+
+                needed_time = self.target.time_last_hit / 1000.0
+                max_time = TIME_TO_CATCH_PER_PIXEL * self.target.start_distance / 1000.0
+                time_over = (1 - (needed_time / max_time)) * 100
+                self.time_over_in_percentage.append(time_over)
+
+                if SHOW_SCORE:
+                    self.canvas.moveto(self.time_label, self.target.pos[0] + (self.target.size / 2),
+                                       self.height * 0.35)
+                    self.canvas.itemconfig(self.time_label,
+                                           text="Time left: " + str(round(time_over)) + "%", state=NORMAL)
+
+                self.first_hit_update = False
+
+            if self.counter >= TIME_NEW_SPAWN:
+                self.counter = 0
+                self.score += 1
+                self.canvas.itemconfig(self.time_label, state=HIDDEN)
+                self.change(Respawn)
+                self.first_hit_update = True
+
+            else:
+                self.counter += delta
+
         elif curr_state is Respawn.name:
+
             self.canvas.delete(self.target.id)
 
             self.player.speed_factor = 0
@@ -181,12 +225,32 @@ class Game(tk.Frame):
             self.target.spawn_new_target(self.player.pos)
 
             self.change(Playing)
+
         elif curr_state is End.name:
+            self.canvas.itemconfig(self.time_label, state=HIDDEN)
             self.canvas.itemconfig(self.player.id, state=HIDDEN)
             self.canvas.itemconfig(self.target.id, state=HIDDEN)
             self.canvas.itemconfig(self.ground, state=HIDDEN)
-            tries = self.score + self.miss
-            self.canvas.itemconfig(self.score_label, text="Score: " + str(self.score) + "/" + str(tries), state=NORMAL)
+
+            average_time_in_percentage = 0
+            if len(self.time_over_in_percentage) > 0:
+                average_time_in_percentage = round(
+                    sum(self.time_over_in_percentage) / len(self.time_over_in_percentage))
+
+            total_attempts = self.score + self.miss
+
+            catches_per = 0
+            if total_attempts > 0:
+                catches_per = round(self.score / total_attempts * 100)
+
+            self.canvas.itemconfig(self.score_label,
+                                   text="Caught targets: " + str(self.score) + "/" + str(total_attempts),
+                                   state=NORMAL)
+            self.canvas.itemconfig(self.score_per_label, text="Caught targets in Percentage: " + str(catches_per) + "%",
+                                   state=NORMAL)
+            self.canvas.itemconfig(self.average_time_label,
+                                   text="Average time left for a caught Target in percentage: " + str(
+                                       average_time_in_percentage) + "%", state=NORMAL)
 
         # Repeat
         self.after(5, self.update)
@@ -237,6 +301,20 @@ class Game(tk.Frame):
         :return: None
         """
 
-        self.score_label = self.canvas.create_text(self.width / 2, self.height * 0.5,
-                                                   anchor=CENTER, text="Score: 0", font=('Helvetica', '20', 'bold'))
+        self.score_label = self.canvas.create_text(self.width / 2, self.height * 0.3,
+                                                   anchor=CENTER, text="", font=('Helvetica', '20', 'bold'))
         self.canvas.itemconfig(self.score_label, state=HIDDEN)
+
+        self.score_per_label = self.canvas.create_text(self.width / 2, self.height * 0.5,
+                                                       anchor=CENTER, text="", font=('Helvetica', '20', 'bold'))
+        self.canvas.itemconfig(self.score_per_label, state=HIDDEN)
+
+        self.average_time_label = self.canvas.create_text(self.width / 2, self.height * 0.7,
+                                                          anchor=CENTER, text="",
+                                                          font=('Helvetica', '20', 'bold'))
+        self.canvas.itemconfig(self.average_time_label, state=HIDDEN)
+
+        self.time_label = self.canvas.create_text(self.width / 2, self.height * 0.3,
+                                                  anchor=CENTER, text="",
+                                                  font=('Helvetica', '15', 'bold'))
+        self.canvas.itemconfig(self.time_label, state=HIDDEN)

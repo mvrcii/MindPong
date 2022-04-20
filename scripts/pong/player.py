@@ -1,5 +1,4 @@
 import scripts.pong.game as game
-import scripts.pong.target as target
 from scripts.config import *
 
 
@@ -46,7 +45,6 @@ class Player:
         self.start_pos = True
         self.direction_update = False
         self.target = target
-        self.hit_occurred = False
 
         self.request(strategy).__str__(self)
 
@@ -80,11 +78,6 @@ class Player:
             if self.speed_factor <= 0:
                 self.speed_factor = 0
 
-        if self.target.spawn_target:
-            self.root.change(game.Respawn)
-            self.target.spawn_target = False
-            self.hit_occurred = False
-
     def calculate_velocity(self):
         """
         Calculates velocity of the player depending on his direction and whether he should be stopped
@@ -92,9 +85,6 @@ class Player:
         :rtype: int
         """
         if self.start_pos:
-            return 0
-
-        if self.hit_occurred:
             return 0
 
         if self.direction == 1:
@@ -156,7 +146,6 @@ class Player:
         self.canvas.move(self.id, (self.canvas_width - self.width) / 2, self.canvas_height * 0.5 - self.height)
         # Update position
         self.pos = self.canvas.coords(self.id)
-        self.target.spawn_new_target(self.pos)
 
     def move_left(self, evt):
         """
@@ -197,5 +186,4 @@ class Player:
         hit_from_right = self.target.pos[0] <= self.pos[2] <= self.target.pos[2]
         hit_from_left = self.target.pos[2] >= self.pos[0] >= self.target.pos[0]
         if hit_from_left or hit_from_right:
-            self.hit_occurred = True
-            self.target.respawn()
+            self.root.change(game.Hit)
