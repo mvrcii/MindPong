@@ -8,22 +8,34 @@ class MetaData:
 
     Attribute:
     ----------
-    :attribute int __subject_ID: Subject ID
-    :attribute str __subject_sex: Subject Sex
-    :attribute int__subject_age: Subject Age
-    :attribute datetime.date __date: Date
-    :attribute datetime.time() __time: Time
-    :attribute int __sampling_rate: Sampling rate
-    :attribute int np.ndarray __channel_mapping: Channel mapping
-    :attribute str __recording_type: Recording type
-    :attribute str __headset: Headset
-    :attribute int __amount_trials: Amount trials
-    :attribute str __comment: Comment
-    :attribute int __amount_different_events: Different events
+    __subject_ID: int
+        Subject ID
+    __subject_sex: str
+        Subject Sex
+    __subject_age: int
+        Subject Age
+    __date: datetime.date
+        Date
+   __time:  datetime.time()
+        Time
+    __sampling_rate: int
+        Sampling rate
+    __channel_mapping: int np.ndarray
+        Channel mapping
+    __recording_type: str
+        Recording type
+    __headset: str
+        Headset
+    __amount_trials: int
+        Amount trials
+    __comment: str
+        Comment
+    __amount_different_events: int
+        Different events
 
     Methods
     -------
-    :method switch(state):
+    switch(state):
         Switches the current state to the passed state if it is listed in the allowed states
     """
 
@@ -41,8 +53,10 @@ class MetaData:
     __amount_different_events: int
 
     # channel configuration of the headset we use
-    bci_channels = ['C3', 'Cz', 'C4', 'P3', 'Pz', 'P4', 'O1', 'O2', 'FC5', 'FC1', 'FC2', 'FC6', 'CP5', 'CP1', 'CP2',
-                    'CP6']
+    # bci_channels = ['C3', 'Cz', 'C4', 'P3', 'Pz', 'P4', 'O1', 'O2', 'FC5', 'FC1', 'FC2', 'FC6', 'CP5', 'CP1', 'CP2',
+    #                 'CP6']
+
+    bci_channels = ['C3', 'Cz', 'C4', 'P3', '?', 'P4', 'T3', '?', '?', 'F3', 'F4', '?', '?', '?', '?', 'T4']  # large laplacian
 
     def __init__(self, sid, sex, age, amount_trials, comment, amount_events, time=datetime.datetime.now().time(),
                  sampling_rate=125, channel_mapping=bci_channels, recording_type='game', headset='BCI'):
