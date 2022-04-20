@@ -1,3 +1,5 @@
+import scripts.pong.strategy as strategy
+
 # Pong
 WINDOW_WIDTH = 1920
 WINDOW_HEIGHT = 1080
@@ -5,6 +7,7 @@ TIME_NEW_SPAWN = 500
 MIN_DISTANCE_TARGET = 400
 TIME_TO_STOP_PLAYER = 2000
 TIME_TO_CATCH_PER_PIXEL = 10
+USED_STRATEGY_CLASS = strategy.KeyStrategy
 
 # Calibration
 CALIBRATION_WAIT_TIMER = 3

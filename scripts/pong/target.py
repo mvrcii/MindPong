@@ -1,6 +1,6 @@
 import random
 
-from scripts.config import *
+import scripts.config as config
 
 
 class Target:
@@ -31,7 +31,7 @@ class Target:
         """
         if self.hit_player_target:
             self.canvas.itemconfig(self.id, fill='green')
-            if self.counter >= TIME_NEW_SPAWN:
+            if self.counter >= config.TIME_NEW_SPAWN:
                 self.hit_player_target = False
                 self.spawn_target = True
                 self.counter = 0
@@ -40,7 +40,7 @@ class Target:
                 self.counter += delta_time
         else:
             self.time_last_hit += delta_time
-            if self.time_last_hit >= TIME_TO_CATCH_PER_PIXEL*self.start_distance:
+            if self.time_last_hit >=config.TIME_TO_CATCH_PER_PIXEL*self.start_distance:
                 self.spawn_target = True
 
     def respawn(self):
@@ -62,10 +62,10 @@ class Target:
         condition = True
         while condition:
             random_x = random.uniform(min_x, max_x)
-            if (random_x + (self.size / 2) + MIN_DISTANCE_TARGET) <= player_pos[0]:
+            if (random_x + (self.size / 2) + config.MIN_DISTANCE_TARGET) <= player_pos[0]:
                 condition = False
                 self.start_distance = player_pos[0] - random_x
-            elif (random_x - (self.size / 2) - MIN_DISTANCE_TARGET) >= player_pos[2]:
+            elif (random_x - (self.size / 2) - config.MIN_DISTANCE_TARGET) >= player_pos[2]:
                 condition = False
                 self.start_distance = random_x - player_pos[2]
 
