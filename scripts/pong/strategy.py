@@ -1,6 +1,6 @@
 from abc import ABCMeta, abstractmethod
 import scripts.pong.player as player
-from scripts.event_listener import subscribe
+from scripts.utils.event_listener import subscribe
 
 
 class IStrategy(metaclass=ABCMeta):
