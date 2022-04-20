@@ -2,7 +2,7 @@ import tkinter as tk
 import tkinter.ttk as ttk
 from abc import abstractmethod
 
-from scripts.pong.main import MindPong
+from scripts.pong.game import Game
 
 
 class View(tk.Frame):
@@ -122,7 +122,7 @@ class GameView(View):
         control_frame.columnconfigure(0, weight=1)
         control_frame.grid(row=1, column=1, sticky='nsew')
 
-        frame = MindPong(control_frame, self)
+        frame = Game(control_frame, self)
         frame.grid(row=0, column=0, sticky='nsew')
         frame.focus_set()
         frame.tkraise()
