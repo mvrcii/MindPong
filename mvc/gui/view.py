@@ -32,7 +32,7 @@ class ConfigView(View):
         self.build_subject_section(control_frame, "Subject", row=0, column=0)
         self.build_graph_section(control_frame, "Graph", row=0, column=1)
         self.build_algorithm_section(control_frame, "Algorithm", row=1, column=0)
-        self.build_window_section(control_frame, "Window", row=2, column=0)
+        self.build_window_section(control_frame, "Trial", row=2, column=0)
         self.create_button(control_frame, "Start", row=3, column=0)
 
         # Switch for dark/light mode
@@ -43,7 +43,10 @@ class ConfigView(View):
         graph_frame = ttk.LabelFrame(frame, text=label)
         self.create_switch(graph_frame, "C3", row=0, column=0, variable=tk.BooleanVar(), command=None)
         self.create_switch(graph_frame, "C4", row=1, column=0, variable=tk.BooleanVar(), command=None)
-        graph_frame.grid(padx=10, pady=5, row=row, column=column, sticky='nsew')
+        self.create_switch(graph_frame, "C3a", row=2, column=0, variable=tk.BooleanVar(), command=None)
+        self.create_switch(graph_frame, "C4a", row=3, column=0, variable=tk.BooleanVar(), command=None)
+        self.create_switch(graph_frame, "Label", row=4, column=0, variable=tk.BooleanVar(), command=None)
+        graph_frame.grid(padx=10, pady=5, row=row, column=column, rowspan=3, sticky='nsew')
 
     def build_subject_section(self, frame, label, row, column):
         label_frame = ttk.LabelFrame(frame, text=label)
@@ -57,15 +60,15 @@ class ConfigView(View):
         self.create_entry(label_frame, "Threshold", row=0, column=0, text_var=tk.DoubleVar())
         self.create_entry(label_frame, "f_min", row=0, column=1, text_var=tk.DoubleVar())
         self.create_entry(label_frame, "f_max", row=0, column=2, text_var=tk.DoubleVar())
+        self.create_spinbox(label_frame, "window_size", "Sliding Window Size", row=1, column=0, from_=200, to=2000,
+                            interval=200)
+        self.create_spinbox(label_frame, "window_offset", "Sliding Window Offset", row=1, column=1, from_=40, to=400,
+                            interval=40)
         label_frame.grid(padx=10, pady=5, row=row, column=column, sticky='nsew')
 
     def build_window_section(self, frame, label, row, column):
         spinbox_frame = ttk.LabelFrame(frame, text=label)
-        self.create_spinbox(spinbox_frame, "window_size", "Window Size", row=0, column=0, from_=200, to=2000,
-                            interval=200)
-        self.create_spinbox(spinbox_frame, "window_offset", "Window Offset", row=0, column=1, from_=40, to=400,
-                            interval=40)
-        self.create_spinbox(spinbox_frame, "trial_min_duration", "Trial Min-Duration", row=0, column=2, from_=800,
+        self.create_spinbox(spinbox_frame, "trial_min_duration", "Trial Min-Duration", row=0, column=0, from_=800,
                             to=1500, interval=100)
         spinbox_frame.grid(padx=10, pady=5, row=row, column=column, sticky='nsew')
 
