@@ -4,7 +4,7 @@ import time
 
 import scripts.pong.player as player
 import scripts.pong.target as target
-from scripts.config import *
+import scripts.config as config
 
 
 class GameState(object):
@@ -161,7 +161,7 @@ class Game(tk.Frame):
 
         self.target = target.Target(self, self.canvas, 'red', 60)
         self.player = player.Player(self, self.canvas, 60, 60, 'blue', target=self.target,
-                                    strategy=USED_STRATEGY_CLASS)
+                                    strategy=config.USED_STRATEGY_CLASS)
         self.target.spawn_new_target(self.player.pos)
         self.ground = self.canvas.create_rectangle(0, 0, WINDOW_WIDTH, 10, fill='Black')
         self.canvas.move(self.ground, 0, WINDOW_HEIGHT * 0.5)
@@ -200,11 +200,11 @@ class Game(tk.Frame):
                 self.canvas.itemconfig(self.target.id, fill='green')
 
                 needed_time = self.target.time_last_hit / 1000.0
-                max_time = TIME_TO_CATCH_PER_PIXEL * self.target.start_distance / 1000.0
+                max_time = config.TIME_TO_CATCH_PER_PIXEL * self.target.start_distance / 1000.0
                 time_over = (1 - (needed_time / max_time)) * 100
                 self.time_over_in_percentage.append(time_over)
 
-                if SHOW_SCORE:
+                if config.SHOW_SCORE:
                     self.canvas.moveto(self.time_label, self.target.pos[0] + (self.target.size / 2),
                                        self.height * 0.35)
                     self.canvas.itemconfig(self.time_label,
@@ -212,7 +212,7 @@ class Game(tk.Frame):
 
                 self.first_hit_update = False
 
-            if self.counter >= TIME_NEW_SPAWN:
+            if self.counter >= config.TIME_NEW_SPAWN:
                 self.counter = 0
                 self.score += 1
                 self.canvas.itemconfig(self.time_label, state=HIDDEN)

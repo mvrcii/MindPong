@@ -1,6 +1,6 @@
 import random
 import scripts.pong.game as game
-from scripts.config import *
+import scripts.config as config
 
 
 class Target:
@@ -28,7 +28,7 @@ class Target:
         :return: None
         """
         self.time_last_hit += delta_time
-        if self.time_last_hit >= TIME_TO_CATCH_PER_PIXEL * self.start_distance:
+        if self.time_last_hit >= config.TIME_TO_CATCH_PER_PIXEL * self.start_distance:
             self.root.miss += 1
             self.root.change(game.Respawn)
 
@@ -44,11 +44,10 @@ class Target:
         condition = True
         while condition:
             random_x = random.uniform(min_x, max_x)
-            if (random_x + (self.size / 2) + offset_border + MIN_DISTANCE_TARGET) <= player_pos[0]:
-                print((random_x + (self.size / 2) + MIN_DISTANCE_TARGET), player_pos[0])
+            if (random_x + (self.size / 2) + offset_border + config.MIN_DISTANCE_TARGET) <= player_pos[0]:
                 condition = False
                 self.start_distance = player_pos[0] - random_x
-            elif (random_x - (self.size / 2) - offset_border - MIN_DISTANCE_TARGET) >= player_pos[2]:
+            elif (random_x - (self.size / 2) - offset_border - config.MIN_DISTANCE_TARGET) >= player_pos[2]:
                 condition = False
                 self.start_distance = random_x - player_pos[2]
 
