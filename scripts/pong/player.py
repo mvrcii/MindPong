@@ -61,9 +61,7 @@ class Player:
         self.direction_update = False
         self.target = target
         self.hit_occurred = False
-        self.used_strategy = strategy
-        print("PLAYER - init: ", self.used_strategy)
-        self.request(self.used_strategy).__str__(self)
+        self.request(strategy).__str__(self)
 
         self.init()
 

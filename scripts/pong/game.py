@@ -138,11 +138,9 @@ class Game(tk.Frame):
         self.init_labels()
         self.canvas.pack()
 
-        print("GAME - before: ", config.USED_STRATEGY_CLASS)
         self.target = target.Target(self, self.canvas, 'red', 60)
         self.player = player.Player(self, self.canvas, 60, 60, 'blue', target=self.target,
                                     strategy=config.USED_STRATEGY_CLASS)
-        print("GAME - after: ", self.player.used_strategy)
         self.ground = self.canvas.create_rectangle(0, 0, WINDOW_WIDTH, 10, fill='Black')
         self.canvas.move(self.ground, 0, WINDOW_HEIGHT * 0.5)
 
