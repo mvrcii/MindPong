@@ -1,6 +1,5 @@
 import scripts.pong.game as game
-import scripts.pong.target as target
-from scripts.config import *
+import scripts.config as config
 
 
 # Define paddle properties and functions
@@ -62,8 +61,9 @@ class Player:
         self.direction_update = False
         self.target = target
         self.hit_occurred = False
-
-        self.request(strategy).__str__(self)
+        self.used_strategy = strategy
+        print("PLAYER - init: ", self.used_strategy)
+        self.request(self.used_strategy).__str__(self)
 
         self.init()
 
@@ -74,6 +74,7 @@ class Player:
         :param strategy: Strategy class to
         :return: Strategy class that is used
         """
+        print("PLAYER - request: ", strategy)
         return strategy()
 
     def update(self, delta_time):
@@ -90,7 +91,7 @@ class Player:
             self.direction_update = False
             self.speed_factor = 1
         else:
-            self.speed_factor -= (delta_time * 4) / TIME_TO_STOP_PLAYER
+            self.speed_factor -= (delta_time * 4) / config.TIME_TO_STOP_PLAYER
             # prevents the speed_factor from becoming negative
             if self.speed_factor <= 0:
                 self.speed_factor = 0
