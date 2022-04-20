@@ -22,6 +22,7 @@ class ConfigController(Controller):
         self.data = self.master.data_model
         self.init_config_view_values()
         self.view.buttons["Start"].configure(command=self.start_button)
+        self.view.check_buttons["Trial Recording"].configure(command=self.toggle_trial_recording)
 
     def init_config_view_values(self):
         self.set_entry_text(self.view.entries["ID"], self.data.subject_id)
@@ -34,6 +35,7 @@ class ConfigController(Controller):
         self.view.spin_boxes["window_size"].set(self.data.window_size)
         self.view.spin_boxes["window_offset"].set(self.data.window_offset)
         self.view.spin_boxes["trial_min_duration"].set(self.data.trial_min_duration)
+        self.view.check_button_vars["Trial Recording"].set(self.data.trial_recording)
 
     @staticmethod
     def set_entry_text(entry, value):
@@ -46,6 +48,9 @@ class ConfigController(Controller):
         # Create second top level window
         if self.valid_form:
             self.master.create_game_window()
+
+    def toggle_trial_recording(self):
+        self.data.trial_recording = self.view.check_button_vars["Trial Recording"].get()
 
     def validate_form(self):
         """

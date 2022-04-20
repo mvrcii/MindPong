@@ -21,7 +21,8 @@ class ConfigView(View):
         self.labels = {}
         self.buttons = {}
         self.combo_boxes = {}
-        self.switches = {}
+        self.check_buttons = {}
+        self.check_button_vars = {}
         self.comment_box = None
         self.grid(row=0, column=0, sticky='nsew')
 
@@ -31,26 +32,18 @@ class ConfigView(View):
         control_frame.columnconfigure(0, weight=1)
         control_frame.grid(row=0, column=0, sticky='nsew')
 
+        # First Column
         self.build_subject_section(control_frame, "Subject", row=0, column=0)
-        self.build_graph_section(control_frame, "Graph", row=0, column=1)
         self.build_algorithm_section(control_frame, "Algorithm", row=1, column=0)
         self.build_window_section(control_frame, "Trial", row=2, column=0)
         self.build_comment_section(control_frame, "Comment", row=3, column=0)
         self.create_button(control_frame, "Start", row=4, column=0)
 
-        # Switch for dark/light mode
-        self.create_switch(control_frame, "Dark-Mode", row=4, column=1, variable=tk.BooleanVar(),
-                           command=self.toggle_dark_mode)
+        # Second Column
+        self.build_graph_section(control_frame, "Graph", row=0, column=1)
+        self.build_switch_section(control_frame, row=3, column=1)
 
-    def build_graph_section(self, frame, label, row, column):
-        graph_frame = ttk.LabelFrame(frame, text=label)
-        self.create_switch(graph_frame, "C3", row=0, column=0, variable=tk.BooleanVar(), command=None)
-        self.create_switch(graph_frame, "C4", row=1, column=0, variable=tk.BooleanVar(), command=None)
-        self.create_switch(graph_frame, "C3a", row=2, column=0, variable=tk.BooleanVar(), command=None)
-        self.create_switch(graph_frame, "C4a", row=3, column=0, variable=tk.BooleanVar(), command=None)
-        self.create_switch(graph_frame, "Label", row=4, column=0, variable=tk.BooleanVar(), command=None)
-        graph_frame.grid(padx=10, pady=5, row=row, column=column, rowspan=2, sticky='nsew')
-
+    # First Column Sections
     def build_subject_section(self, frame, label, row, column):
         label_frame = ttk.LabelFrame(frame, text=label)
         self.create_entry(label_frame, "ID", row=0, column=0, text_var=tk.IntVar(value=1))
@@ -81,6 +74,26 @@ class ConfigView(View):
         self.comment_box.grid(row=3, column=0, pady=10, padx=10)
         comment_box_frame.grid(padx=10, pady=5, row=row, column=column, sticky='nsew')
 
+    # Second Column Sections
+    def build_graph_section(self, frame, label, row, column):
+        graph_frame = ttk.LabelFrame(frame, text=label)
+        self.create_check_button(graph_frame, "C3", row=0, column=0, variable=tk.BooleanVar(), command=None)
+        self.create_check_button(graph_frame, "C4", row=1, column=0, variable=tk.BooleanVar(), command=None)
+        self.create_check_button(graph_frame, "C3a", row=2, column=0, variable=tk.BooleanVar(), command=None)
+        self.create_check_button(graph_frame, "C4a", row=3, column=0, variable=tk.BooleanVar(), command=None)
+        self.create_check_button(graph_frame, "Label", row=4, column=0, variable=tk.BooleanVar(), command=None)
+        graph_frame.grid(padx=10, pady=5, row=row, column=column, rowspan=2, sticky='nsew')
+
+    def build_switch_section(self, frame, row, column):
+        switch_frame = ttk.Frame(frame)
+        # Switch to toggle the recording of trials
+        self.create_check_button(switch_frame, "Trial Recording", row=0, column=0, variable=tk.BooleanVar(),
+                                 command=None)
+        # Switch for dark/light mode (not persisted in the data model)
+        self.create_check_button(switch_frame, "Dark-Mode", row=1, column=0, variable=tk.BooleanVar(),
+                                 command=self.toggle_dark_mode)
+        switch_frame.grid(row=row, column=column, rowspan=2, sticky='sew')
+
     # Helper functions
     def create_entry(self, frame, label, row, column, text_var):
         self.labels[label] = ttk.Label(text=label)
@@ -101,10 +114,11 @@ class ConfigView(View):
         self.combo_boxes[label].grid(row=0, column=0, padx=5, pady=5, sticky='ew')
         label_frame.grid(padx=10, pady=5, row=row, column=column, sticky='nsew')
 
-    def create_switch(self, frame, label, variable, row, column, command):
-        self.switches[label] = variable
+    def create_check_button(self, frame, label, variable, row, column, command):
+        self.check_button_vars[label] = variable
         check_button = ttk.Checkbutton(frame, text=label, style='Switch.TCheckbutton', variable=variable,
                                        onvalue=True, offvalue=False, command=command)
+        self.check_buttons[label] = check_button
         check_button.grid(padx=10, pady=5, row=row, column=column, sticky='nsew')
 
     def create_spinbox(self, frame, label, text, row, column, from_, to, interval):
@@ -115,7 +129,7 @@ class ConfigView(View):
         label_frame.grid(padx=10, pady=5, row=row, column=column, sticky='nsew')
 
     def toggle_dark_mode(self):
-        if self.switches["Dark-Mode"].get():
+        if self.check_button_vars["Dark-Mode"].get():
             self.master.call("set_theme", "dark")
         else:
             self.master.call("set_theme", "light")
