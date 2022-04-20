@@ -67,6 +67,7 @@ class ConfigController(Controller):
         self.validate_window_size()
         self.validate_window_offset()
         self.validate_trial_min_duration()
+        self.set_comment()
 
     def validate_subject_id(self):
         """
@@ -203,6 +204,9 @@ class ConfigController(Controller):
             self.on_invalid(label)
         else:
             self.on_valid(label)
+
+    def set_comment(self):
+        self.data.comment = self.view.comment_box.get('1.0', 'end-1c')
 
     def on_invalid(self, label):
         self.view.labels[label].config(foreground='red')

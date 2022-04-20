@@ -1,5 +1,6 @@
 import tkinter as tk
 import tkinter.ttk as ttk
+from tkinter.scrolledtext import ScrolledText
 from abc import abstractmethod
 
 from scripts.pong.main import MindPong
@@ -21,6 +22,7 @@ class ConfigView(View):
         self.buttons = {}
         self.combo_boxes = {}
         self.switches = {}
+        self.comment_box = None
         self.grid(row=0, column=0, sticky='nsew')
 
     def create_view(self):
@@ -33,10 +35,11 @@ class ConfigView(View):
         self.build_graph_section(control_frame, "Graph", row=0, column=1)
         self.build_algorithm_section(control_frame, "Algorithm", row=1, column=0)
         self.build_window_section(control_frame, "Trial", row=2, column=0)
-        self.create_button(control_frame, "Start", row=3, column=0)
+        self.build_comment_section(control_frame, "Comment", row=3, column=0)
+        self.create_button(control_frame, "Start", row=4, column=0)
 
         # Switch for dark/light mode
-        self.create_switch(control_frame, "Dark-Mode", row=3, column=1, variable=tk.BooleanVar(),
+        self.create_switch(control_frame, "Dark-Mode", row=4, column=1, variable=tk.BooleanVar(),
                            command=self.toggle_dark_mode)
 
     def build_graph_section(self, frame, label, row, column):
@@ -46,7 +49,7 @@ class ConfigView(View):
         self.create_switch(graph_frame, "C3a", row=2, column=0, variable=tk.BooleanVar(), command=None)
         self.create_switch(graph_frame, "C4a", row=3, column=0, variable=tk.BooleanVar(), command=None)
         self.create_switch(graph_frame, "Label", row=4, column=0, variable=tk.BooleanVar(), command=None)
-        graph_frame.grid(padx=10, pady=5, row=row, column=column, rowspan=3, sticky='nsew')
+        graph_frame.grid(padx=10, pady=5, row=row, column=column, rowspan=2, sticky='nsew')
 
     def build_subject_section(self, frame, label, row, column):
         label_frame = ttk.LabelFrame(frame, text=label)
@@ -71,6 +74,12 @@ class ConfigView(View):
         self.create_spinbox(spinbox_frame, "trial_min_duration", "Trial Min-Duration", row=0, column=0, from_=800,
                             to=1500, interval=100)
         spinbox_frame.grid(padx=10, pady=5, row=row, column=column, sticky='nsew')
+
+    def build_comment_section(self, frame, label, row, column):
+        comment_box_frame = ttk.LabelFrame(frame, text=label)
+        self.comment_box = ScrolledText(comment_box_frame, wrap=tk.WORD, height=4)
+        self.comment_box.grid(row=3, column=0, pady=10, padx=10)
+        comment_box_frame.grid(padx=10, pady=5, row=row, column=column, sticky='nsew')
 
     # Helper functions
     def create_entry(self, frame, label, row, column, text_var):
