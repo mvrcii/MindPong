@@ -1,7 +1,6 @@
 import threading, queue
 import numpy as np
-import algorithms.cursor_online_control as cursor_online_control
-import algorithms.BCIC_dataset_loader as bdl
+from scripts import algorithms as cursor_online_control, algorithms as bdl
 import scripts.data.visualisation.liveplot
 
 # GLOBAL DATA

@@ -14,7 +14,7 @@ CHANNELS = [
 SAMPLERATE = 250
 TMIN = -2
 TMAX = 5.5
-path = 'BCIC_dataset'
+path = 'scripts\\algorithms\\BCIC_dataset'
 NOTCH_FILTER_FREQ: float = 50
 
 
