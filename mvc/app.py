@@ -1,8 +1,8 @@
 import tkinter as tk
 
-from mvc.gui.controllers import ConfigController, GameController
-from mvc.gui.models import ConfigData
-from mvc.gui.view import ConfigView, GameView
+from scripts.mvc.controllers import ConfigController, GameController
+from scripts.mvc.models import ConfigData
+from scripts.mvc.view import ConfigView, GameView
 
 
 class App(tk.Tk):
@@ -14,7 +14,7 @@ class App(tk.Tk):
         self.resizable(False, False)
 
         # Set the theme initially to light mode
-        self.call("source", "gui\\azure.tcl")
+        self.call("source", "mvc\\azure.tcl")
         self.call("set_theme", "light")
 
         # Initialize data model

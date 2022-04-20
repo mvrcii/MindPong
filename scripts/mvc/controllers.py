@@ -1,6 +1,6 @@
 from abc import ABC, abstractmethod
 
-from mvc.gui.view import View, ConfigView, GameView
+from scripts.mvc.view import View, ConfigView, GameView
 
 
 class Controller(ABC):
