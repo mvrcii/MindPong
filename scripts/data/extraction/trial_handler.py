@@ -53,6 +53,7 @@ def mark_trial(start: time.time(), end: time.time(), label: Labels):
     event_duration.append(duration)
     event_type.append(label)
     event_pos.append(pos)
+    print("Finished storing")
 
 
 def create_raw_data_array() -> np.ndarray:

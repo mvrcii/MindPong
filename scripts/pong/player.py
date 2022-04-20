@@ -1,9 +1,19 @@
 import time
+from enum import Enum
 
 import scripts.pong.game as game
 import scripts.pong.target as target
 from scripts.config import *
 
+import scripts.data.extraction.trial_handler as trial_handler
+
+
+class Labels(Enum):
+    INVALID = 99
+    LEFT = 0
+    RIGHT = 1
+    EYES_OPEN = 2
+    EYES_CLOSED = 3
 
 # Define paddle properties and functions
 class Player:
@@ -67,6 +77,7 @@ class Player:
         self.start_time_trial = time.time()
         self.trial_is_valid = True
         self.last_direction_update = None
+        self.trial_label = Labels.INVALID
 
         self.request(strategy).__str__(self)
 
@@ -102,6 +113,7 @@ class Player:
 
         if self.target.spawn_target:
             self.root.change(game.Respawn)
+            self.stop_trial()
             self.target.spawn_target = False
             self.hit_occurred = False
 
@@ -192,6 +204,7 @@ class Player:
             self.start_pos = False
         self.direction = -1
         self.direction_update = True
+        self.trial_is_valid
 
     def move_right(self, event):
         """
@@ -207,6 +220,7 @@ class Player:
             self.start_pos = False
         self.direction = 1
         self.direction_update = True
+        self.is_trial_valid()
 
     def collision_with_target(self):
         """
@@ -222,7 +236,38 @@ class Player:
 
     def start_trial(self):
         self.start_time_trial = time.time()
-        self.trial_is_valid = True
 
     def is_trial_valid(self):
-        pass
+        # Trial has not started
+        if self.last_direction_update == None:
+            # Target is right and player moves to the right
+            if self.pos[0] < self.target.pos[0] and self.direction == 1:
+                print("right")
+                self.trial_label = Labels.RIGHT
+                self.start_trial()
+                self.last_direction_update = self.direction
+            # Target is left and player moves to the left
+            elif self.pos[0] > self.target.pos[0] and self.direction == -1:
+                print("left")
+                self.trial_label = Labels.LEFT
+                self.start_trial()
+                self.last_direction_update = self.direction
+        # Player is still moving in the same direction --> Trial is valid
+        elif self.last_direction_update == self.direction:
+            self.last_direction_update = self.direction
+        # Player do not move in the right direction --> Trial is invalid
+        else:
+            print("Stopped Trial")
+            self.stop_trial()
+
+    def stop_trial(self):
+        """
+        Stops
+        :return:
+        """
+        stop_time_trial = time.time()
+        if (stop_time_trial - self.start_time_trial) > MIN_DURATION_OF_TRIAL and self.last_direction_update is not None:
+            #trial_handler.mark_trial(self.start_trial(), stop_time_trial, self.trial_label)
+            print("Valid trial is stored")
+            print(self.start_time_trial, stop_time_trial, self.trial_label)
+        self.last_direction_update = None
