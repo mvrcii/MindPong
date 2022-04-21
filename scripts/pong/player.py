@@ -76,7 +76,7 @@ class Player:
         self.hit_occurred = False
         self.start_time_trial = time.time()
         self.trial_is_valid = True
-        self.last_direction_update = None
+        self.last_direction_update = 0
         self.trial_label = Labels.INVALID
 
         self.request(strategy).__str__(self)
@@ -204,7 +204,7 @@ class Player:
             self.start_pos = False
         self.direction = -1
         self.direction_update = True
-        self.trial_is_valid
+        self.is_trial_valid()
 
     def move_right(self, event):
         """
@@ -239,7 +239,9 @@ class Player:
 
     def is_trial_valid(self):
         # Trial has not started
-        if self.last_direction_update == None:
+        if self.last_direction_update == 0:
+            print(self.pos[0])
+            print(self.target.pos[0])
             # Target is right and player moves to the right
             if self.pos[0] < self.target.pos[0] and self.direction == 1:
                 print("right")
@@ -266,8 +268,9 @@ class Player:
         :return:
         """
         stop_time_trial = time.time()
+        print("stop")
         if (stop_time_trial - self.start_time_trial) > MIN_DURATION_OF_TRIAL and self.last_direction_update is not None:
             #trial_handler.mark_trial(self.start_trial(), stop_time_trial, self.trial_label)
             print("Valid trial is stored")
             print(self.start_time_trial, stop_time_trial, self.trial_label)
-        self.last_direction_update = None
+        self.last_direction_update = 0
