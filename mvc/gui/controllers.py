@@ -53,8 +53,7 @@ class ConfigController(Controller):
         self.data.trial_recording = self.view.check_button_vars["Trial Recording"].get()
 
     def validate_form(self):
-        """
-        Validates the whole form by calling all the individual validation methods
+        """Validates the whole form by calling all the individual validation methods
 
         If one of the parameters is not valid, the boolean valid_form is set to false.
         :return: None
@@ -75,9 +74,8 @@ class ConfigController(Controller):
         self.set_comment()
 
     def validate_subject_id(self):
-        """
-        Validate the subject id
-        :return:
+        """Validate and set the subject id
+        :return: None
         """
         label = "ID"
         try:
@@ -88,8 +86,7 @@ class ConfigController(Controller):
             self.on_valid(label)
 
     def validate_subject_age(self):
-        """
-        Validate the subject age
+        """Validate and set the subject age
         :return: None
         """
         label = "Age"
@@ -101,8 +98,7 @@ class ConfigController(Controller):
             self.on_valid(label)
 
     def validate_subject_sex(self):
-        """
-        Validate the subject sex
+        """Validate and set the subject sex
         :return: None
         """
         label = "Sex"
@@ -114,8 +110,7 @@ class ConfigController(Controller):
             self.on_valid(label)
 
     def validate_threshold(self):
-        """
-        Validate the threshold
+        """Validate and set the threshold
         :return: None
         """
         label = "Threshold"
@@ -127,8 +122,7 @@ class ConfigController(Controller):
             self.on_valid(label)
 
     def validate_f_min(self):
-        """
-        Validate the minimal frequency f_min
+        """Validate and set the minimal frequency f_min
         :return: None
         """
         label = "f_min"
@@ -140,8 +134,7 @@ class ConfigController(Controller):
             self.on_valid(label)
 
     def validate_f_max(self):
-        """
-        Validate the maximum frequency f_max
+        """Validate and set the maximum frequency f_max
         :return: None
         """
         label = "f_max"
@@ -153,8 +146,7 @@ class ConfigController(Controller):
             self.on_valid(label)
 
     def validate_frequencies(self):
-        """
-        Validate that f_max is always greater than or equal to f_min
+        """Validate that f_max is always greater than or equal to f_min and set it in the model.
         :return: None
         """
         f_min_label = "f_min"
@@ -172,8 +164,7 @@ class ConfigController(Controller):
             self.valid_form = False
 
     def validate_window_size(self):
-        """
-        Validate the window size
+        """Validate and set the window size
         :return: None
         """
         label = "window_size"
@@ -185,8 +176,7 @@ class ConfigController(Controller):
             self.on_valid(label)
 
     def validate_window_offset(self):
-        """
-        Validate the window offset
+        """Validate and set the window offset
         :return: None
         """
         label = "window_offset"
@@ -198,8 +188,7 @@ class ConfigController(Controller):
             self.on_valid(label)
 
     def validate_trial_min_duration(self):
-        """
-        Validate the minimum trial duration
+        """Validate and set the minimum trial duration
         :return: None
         """
         label = "trial_min_duration"
@@ -211,6 +200,9 @@ class ConfigController(Controller):
             self.on_valid(label)
 
     def set_comment(self):
+        """Set the comment content in the model
+        :return: None
+        """
         self.data.comment = self.view.comment_box.get('1.0', 'end-1c')
 
     def on_invalid(self, label):
