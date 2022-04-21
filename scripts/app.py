@@ -4,6 +4,8 @@ from scripts.mvc.controllers import ConfigController, GameController
 from scripts.mvc.models import ConfigData
 from scripts.mvc.view import ConfigView, GameView
 
+from pathlib import Path
+
 
 class App(tk.Tk):
     def __init__(self, *args, **kwargs):
@@ -14,7 +16,8 @@ class App(tk.Tk):
         self.resizable(False, False)
 
         # Set the theme initially to light mode
-        self.call("source", "mvc\\azure.tcl")
+        theme_data_folder = Path("mvc")
+        self.call("source", theme_data_folder / "azure.tcl")
         self.call("set_theme", "light")
 
         # Initialize data model
