@@ -109,6 +109,14 @@ class ConfigView(View):
 
     # Second Column Sections
     def build_graph_section(self, frame, label, row, column):
+        """Frame where the checkboxes to toggle the graphs are placed in (C3, C4, C3a, C4a, Label).
+
+        :param any frame: the parent container to place the children in.
+        :param str label: the label which is used in the label frame.
+        :param int row: the row number in the parent container.
+        :param int column: the column number in the parent container.
+        :return: None
+        """
         graph_frame = ttk.LabelFrame(frame, text=label)
         self.create_checkbutton(graph_frame, "C3", row=0, column=0, command=None)
         self.create_checkbutton(graph_frame, "C4", row=1, column=0, command=None)
@@ -118,6 +126,13 @@ class ConfigView(View):
         graph_frame.grid(padx=10, pady=5, row=row, column=column, rowspan=2, sticky='nsew')
 
     def build_switch_section(self, frame, row, column):
+        """Frame where the checkboxes to toggle overall settings are placed in (Dark-mode, Trial recording).
+
+        :param any frame: the parent container to place the children in.
+        :param int row: the row number in the parent container.
+        :param int column: the column number in the parent container.
+        :return: None
+        """
         switch_frame = ttk.Frame(frame)
         # Switch to toggle the recording of trials
         self.create_checkbutton(switch_frame, "Trial Recording", row=0, column=0, command=None)

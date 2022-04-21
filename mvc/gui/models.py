@@ -212,7 +212,7 @@ class ConfigData(object):
 
         By default, the trial recording is set to true.
         If set to true, the trials will be recorded during the session.
-        
+
         :param bool value: the new value for the trial recording
         :return: None
         """
