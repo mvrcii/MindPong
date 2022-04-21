@@ -114,7 +114,7 @@ class Game(tk.Frame):
         :attribute int self.miss: the current amount of missed targets
         :attribute float self.curr_restart_timer: the current restart timer, which will be set to a value and then count down
             until it reaches zero. This variable is also displayed while the game is being restarted
-        :attribute int self.update_counter: the tick curr_restart_time
+        :attribute int self.update_counter: the tick counter
         :attribute float self.last_update: the timestamp of the last update
         :attribute float self.passed_time: the time that has passed since last_update
         :attribute Canvas self.canvas: the canvas to draw on
@@ -195,8 +195,12 @@ class Game(tk.Frame):
             if self.curr_restart_time == 0:
                 self.canvas.itemconfig(self.target.id, fill='green')
 
+                # time that player needed to reach the target in s
                 needed_time = self.target.time_last_hit / 1000.0
+
+                # time that the player had available to reach the target in s
                 max_time = config.TIME_TO_CATCH_PER_PIXEL * self.target.start_distance / 1000.0
+
                 remaining_time_percentage = (1 - (needed_time / max_time)) * 100
                 self.remaining_time_history.append(remaining_time_percentage)
 
