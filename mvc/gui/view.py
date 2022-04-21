@@ -22,7 +22,8 @@ class ConfigView(View):
         self.labels = {}
         self.buttons = {}
         self.combo_boxes = {}
-        self.switches = {}
+        self.check_buttons = {}
+        self.check_button_vars = {}
         self.comment_box = None
         self.grid(row=0, column=0, sticky='nsew')
 
@@ -32,33 +33,18 @@ class ConfigView(View):
         control_frame.columnconfigure(0, weight=1)
         control_frame.grid(row=0, column=0, sticky='nsew')
 
+        # First Column
         self.build_subject_section(control_frame, "Subject", row=0, column=0)
-        self.build_graph_section(control_frame, "Graph", row=0, column=1)
         self.build_algorithm_section(control_frame, "Algorithm", row=1, column=0)
         self.build_trial_section(control_frame, "Trial", row=2, column=0)
         self.build_comment_section(control_frame, "Comment", row=3, column=0)
         self.create_button(control_frame, "Start", row=4, column=0)
 
-        # Switch for dark/light mode
-        self.create_checkbutton(control_frame, "Dark-Mode", row=4, column=1, command=self.toggle_dark_mode)
+        # Second Column
+        self.build_graph_section(control_frame, "Graph", row=0, column=1)
+        self.build_switch_section(control_frame, row=3, column=1)
 
-    def build_graph_section(self, frame, label, row, column):
-        """Frame where the checkboxes to toggle the graphs are placed in (C3, C4, C3a, C4a, Label).
-
-        :param any frame: the parent container to place the children in.
-        :param str label: the label which is used in the label frame.
-        :param int row: the row number in the parent container.
-        :param int column: the column number in the parent container.
-        :return: None
-        """
-        graph_frame = ttk.LabelFrame(frame, text=label)
-        self.create_checkbutton(graph_frame, "C3", row=0, column=0, command=None)
-        self.create_checkbutton(graph_frame, "C4", row=1, column=0, command=None)
-        self.create_checkbutton(graph_frame, "C3a", row=2, column=0, command=None)
-        self.create_checkbutton(graph_frame, "C4a", row=3, column=0, command=None)
-        self.create_checkbutton(graph_frame, "Label", row=4, column=0, command=None)
-        graph_frame.grid(padx=10, pady=5, row=row, column=column, rowspan=2, sticky='nsew')
-
+    # First Column Sections
     def build_subject_section(self, frame, label, row, column):
         """Frame where the subject information is filled in (id, age, sex).
 
@@ -121,6 +107,39 @@ class ConfigView(View):
         self.comment_box.grid(row=3, column=0, pady=10, padx=10)
         comment_box_frame.grid(padx=10, pady=5, row=row, column=column, sticky='nsew')
 
+    # Second Column Sections
+    def build_graph_section(self, frame, label, row, column):
+        """Frame where the checkboxes to toggle the graphs are placed in (C3, C4, C3a, C4a, Label).
+
+        :param any frame: the parent container to place the children in.
+        :param str label: the label which is used in the label frame.
+        :param int row: the row number in the parent container.
+        :param int column: the column number in the parent container.
+        :return: None
+        """
+        graph_frame = ttk.LabelFrame(frame, text=label)
+        self.create_checkbutton(graph_frame, "C3", row=0, column=0, command=None)
+        self.create_checkbutton(graph_frame, "C4", row=1, column=0, command=None)
+        self.create_checkbutton(graph_frame, "C3a", row=2, column=0, command=None)
+        self.create_checkbutton(graph_frame, "C4a", row=3, column=0, command=None)
+        self.create_checkbutton(graph_frame, "Label", row=4, column=0, command=None)
+        graph_frame.grid(padx=10, pady=5, row=row, column=column, rowspan=2, sticky='nsew')
+
+    def build_switch_section(self, frame, row, column):
+        """Frame where the checkboxes to toggle overall settings are placed in (Dark-mode, Trial recording).
+
+        :param any frame: the parent container to place the children in.
+        :param int row: the row number in the parent container.
+        :param int column: the column number in the parent container.
+        :return: None
+        """
+        switch_frame = ttk.Frame(frame)
+        # Switch to toggle the recording of trials
+        self.create_checkbutton(switch_frame, "Trial Recording", row=0, column=0, command=None)
+        # Switch for dark/light mode (not persisted in the data model)
+        self.create_checkbutton(switch_frame, "Dark-Mode", row=1, column=0, command=self.toggle_dark_mode)
+        switch_frame.grid(row=row, column=column, rowspan=2, sticky='sew')
+
     # Helper functions
     def create_entry(self, frame, label, row, column, text_var):
         """Creates an entry field with the given parameters.
@@ -179,10 +198,11 @@ class ConfigView(View):
         :param any command: the command that is triggered when the checkbutton state changes.
         :return: None
         """
-        self.switches[label] = tk.BooleanVar()
-        check_button = ttk.Checkbutton(frame, text=label, style='Switch.TCheckbutton', variable=self.switches[label],
-                                       onvalue=True, offvalue=False, command=command)
-        check_button.grid(padx=10, pady=5, row=row, column=column, sticky='nsew')
+        self.check_button_vars[label] = tk.BooleanVar()
+        self.check_buttons[label] = ttk.Checkbutton(frame, text=label, style='Switch.TCheckbutton',
+                                                    variable=self.check_button_vars[label],
+                                                    onvalue=True, offvalue=False, command=command)
+        self.check_buttons[label].grid(padx=10, pady=5, row=row, column=column, sticky='nsew')
 
     def create_spinbox(self, frame, label, text, row, column, from_, to, interval):
         """Creates a spinbox with the given parameters.
@@ -205,7 +225,7 @@ class ConfigView(View):
 
     def toggle_dark_mode(self):
         """Toggles the config view between dark and light mode."""
-        if self.switches["Dark-Mode"].get():
+        if self.check_button_vars["Dark-Mode"].get():
             self.master.call("set_theme", "dark")
         else:
             self.master.call("set_theme", "light")
