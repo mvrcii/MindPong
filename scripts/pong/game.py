@@ -1,3 +1,4 @@
+from enum import Enum
 from tkinter import *
 import tkinter as tk
 import time
@@ -6,6 +7,8 @@ import scripts.pong.player as player
 import scripts.pong.target as target
 import scripts.pong.strategy as strategy
 from scripts.config import *
+
+
 
 
 class GameState(object):

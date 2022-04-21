@@ -8,17 +8,6 @@ from scripts.config import *
 import scripts.data.extraction.trial_handler as trial_handler
 
 
-class Labels(Enum):
-    """
-    An Enum Class for different trial labels for event types
-    """
-    INVALID = 99
-    LEFT = 0
-    RIGHT = 1
-    EYES_OPEN = 2
-    EYES_CLOSED = 3
-
-
 # Define player properties and functions
 class Player:
     """
@@ -91,7 +80,7 @@ class Player:
         self.hit_occurred = False
         self.start_time_trial = time.time()
         self.last_direction_update = 0
-        self.trial_label = Labels.INVALID
+        self.trial_label = trial_handler.Labels.INVALID
 
         self.request(strategy).__str__(self)
 
@@ -270,13 +259,13 @@ class Player:
             # Target is right and player moves to the right
             if self.pos[0] < self.target.pos[0] and self.direction == 1:
                 print("right")
-                self.trial_label = Labels.RIGHT
+                self.trial_label = trial_handler.Labels.RIGHT
                 self.start_trial()
                 self.last_direction_update = self.direction
             # Target is left and player moves to the left
             elif self.pos[0] > self.target.pos[0] and self.direction == -1:
                 print("left")
-                self.trial_label = Labels.LEFT
+                self.trial_label = trial_handler.Labels.LEFT
                 self.start_trial()
                 self.last_direction_update = self.direction
         # Player is still moving in the same direction --> Trial is valid
@@ -294,7 +283,7 @@ class Player:
         """
         stop_time_trial = time.time()
         if (stop_time_trial - self.start_time_trial) > MIN_DURATION_OF_TRIAL and self.last_direction_update is not None:
-            # trial_handler.mark_trial(self.start_trial(), stop_time_trial, self.trial_label)
+            trial_handler.mark_trial(self.start_time_trial, stop_time_trial, self.trial_label)
             print("Valid trial is stored")
             print(self.start_time_trial, stop_time_trial, self.trial_label)
         self.last_direction_update = 0
