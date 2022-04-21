@@ -1,8 +1,6 @@
 import queue
 import threading
-import time
 
-import mne
 import time
 import numpy as np
 from numpy_ringbuffer import RingBuffer
@@ -12,7 +10,7 @@ import brainflow
 from brainflow.board_shim import BoardShim, BrainFlowInputParams
 
 import scripts.data.visualisation.liveplot
-from algorithms import cca_test
+from scripts.algorithms import cca_test
 from scripts.data.extraction import trial_handler, MetaData
 
 SAMPLING_RATE = BoardShim.get_sampling_rate(brainflow.board_shim.BoardIds.CYTON_DAISY_BOARD)
