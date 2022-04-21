@@ -22,7 +22,7 @@ class ConfigController(Controller):
         self.data = self.master.data_model
         self.init_config_view_values()
         self.view.buttons["Start"].configure(command=self.start_button)
-        self.view.check_buttons["Trial Recording"].configure(command=self.toggle_trial_recording)
+        self.view.check_buttons["Trial Recording"].configure(command=self.set_trial_recording)
 
     def init_config_view_values(self):
         self.set_entry_text(self.view.entries["ID"], self.data.subject_id)
@@ -48,9 +48,6 @@ class ConfigController(Controller):
         # Create second top level window
         if self.valid_form:
             self.master.create_game_window()
-
-    def toggle_trial_recording(self):
-        self.data.trial_recording = self.view.check_button_vars["Trial Recording"].get()
 
     def validate_form(self):
         """Validates the whole form by calling all the individual validation methods
@@ -204,6 +201,10 @@ class ConfigController(Controller):
         :return: None
         """
         self.data.comment = self.view.comment_box.get('1.0', 'end-1c')
+
+    def set_trial_recording(self):
+        """Set the trial recording in the model"""
+        self.data.trial_recording = self.view.check_button_vars["Trial Recording"].get()
 
     def on_invalid(self, label):
         self.view.labels[label].config(foreground='red')
