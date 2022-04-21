@@ -76,6 +76,14 @@ class ConfigView(View):
         spinbox_frame.grid(padx=10, pady=5, row=row, column=column, sticky='nsew')
 
     def build_comment_section(self, frame, label, row, column):
+        """Frame where the comment box is placed in.
+
+        :param any frame: the parent container to place the children in.
+        :param str label: the label which is used in the label frame.
+        :param int row: the row number in the parent container.
+        :param int column: the column number in the parent container.
+        :return: None
+        """
         comment_box_frame = ttk.LabelFrame(frame, text=label)
         self.comment_box = ScrolledText(comment_box_frame, wrap=tk.WORD, height=4)
         self.comment_box.grid(row=3, column=0, pady=10, padx=10)
