@@ -2,8 +2,7 @@ import time
 from enum import Enum
 
 import scripts.pong.game as game
-import scripts.pong.target as target
-from scripts.config import *
+import scripts.config as config
 
 import scripts.data.extraction.trial_handler as trial_handler
 
@@ -109,7 +108,7 @@ class Player:
             self.direction_update = False
             self.speed_factor = 1
         else:
-            self.speed_factor -= (delta_time * 4) / TIME_TO_STOP_PLAYER
+            self.speed_factor -= (delta_time * 4) / config.TIME_TO_STOP_PLAYER
             # prevents the speed_factor from becoming negative
             if self.speed_factor <= 0:
                 self.speed_factor = 0
@@ -234,8 +233,7 @@ class Player:
         hit_from_right = self.target.pos[0] <= self.pos[2] <= self.target.pos[2]
         hit_from_left = self.target.pos[2] >= self.pos[0] >= self.target.pos[0]
         if hit_from_left or hit_from_right:
-            self.hit_occurred = True
-            self.target.respawn()
+            self.root.change(game.Hit)
 
     def start_trial(self):
         """
