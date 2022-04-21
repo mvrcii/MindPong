@@ -19,12 +19,23 @@ y_vec = np.zeros(size)
 fig = plt.figure(tight_layout=True)
 
 
+# fill queue for testing purposes with random values
+def create_values():
+    while True:
+        rand_val = np.random.randn(1)
+        try:
+            q.put(rand_val)
+            # print('Alive')
+        except queue.Empty:
+            time.sleep(0.005)
+
+
 def live_plotter(identifier='', pause_time=0.1):
-    global x_vec, y_vec, line1
+    global x_vec, y_vec, line1, x_label
     y1_data = y_vec
 
-    if line1 == []:
-        global fig, x_label
+    if not line1:
+        global fig
         # this is the call to matplotlib that allows dynamic plotting
         plt.ion()
         ax = fig.add_subplot(111)
@@ -56,34 +67,29 @@ def live_plotter(identifier='', pause_time=0.1):
     return line1
 
 
-# fill queue for testing purposes with random values
-def create_values():
-    while True:
-        rand_val = np.random.randn(1)
-        try:
-            q.put(rand_val)
-            # print('Alive')
-        except queue.Empty:
-            time.sleep(0.005)
-
-
 def do_live_plot():
-    global y_vec, x_vec, line1, fig
-    while True:
-        # necessary if you want to get out of the endless loop after the figure is closed
-        if not plt.get_fignums():
-            break
-        try:
-            rand_val = q.get_nowait()
-            y_vec[-1] = rand_val
-            line1 = live_plotter()
-            y_vec = np.append(y_vec[1:], 0.0)
+    global y_vec, x_vec, line1, fig, q
+    if q:
+        while True:
+            # necessary if you want to get out of the endless loop after the figure is closed
+            if not plt.get_fignums():
+                break
+            try:
+                rand_val = q.get_nowait()
+                y_vec[-1] = rand_val
+                line1 = live_plotter()
+                y_vec = np.append(y_vec[1:], 0.0)
 
-        except queue.Empty:
-            time.sleep(0.005)
+            except queue.Empty:
+                time.sleep(0.01)
+
+
+def connect_queue(queue: queue.Queue):
+    global q
+    q = queue
+    do_live_plot()
 
 
 if __name__ == '__main__':
-
     threading.Thread(target=create_values, daemon=True).start()
     do_live_plot()
