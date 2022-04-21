@@ -9,13 +9,17 @@ import scripts.data.extraction.trial_handler as trial_handler
 
 
 class Labels(Enum):
+    """
+    An Enum Class for different trial labels for event types
+    """
     INVALID = 99
     LEFT = 0
     RIGHT = 1
     EYES_OPEN = 2
     EYES_CLOSED = 3
 
-# Define paddle properties and functions
+
+# Define player properties and functions
 class Player:
     """
     A Class to create the player
@@ -30,6 +34,9 @@ class Player:
     :method move_left(self, evt): Move paddle left
     :method move_right(self, evt): Move paddle right
     :method collision_with_target(self): checks collision with target
+    :method start_trial(self): sets the timestamp of the start of a trial
+    :method is_trial_valid(self): checks if the trial is still valid (player moves to target)
+    :method stop_trial(self): stops trial recording and saves valid trials
     """
 
     def __init__(self, root, canvas, width, height, color, target, strategy):
@@ -40,21 +47,29 @@ class Player:
         :param Any width: width of player
         :param Any height: height of player
         :param Any color: color of player
+        :param Any target: target
+        :param Any strategy: strategy for player movement
         :attribute Any self.root: Root
         :attribute Any self.canvas: Canvas
         :attribute Any self.canvas:width: Canvas width
         :attribute Any self.height: Canvas height
-        :attribute Any self.color: Color
-        :attribute Any self.width: Width
-        :attribute Any self.height: Height
-        :attribute None self.pos: Position
+        :attribute Any self.color: Color of the player
+        :attribute Any self.width: Width of the player
+        :attribute Any self.height: Height of the player
+        :attribute None self.pos: Position of the player in x axis
         :attribute int self.speed_factor: Speed factor
-        :attribute None self.id: Id
+        :attribute None self.id: ID
         :attribute int self.root: Root
-        :attribute int self.v_x: v_x
-        :attribute int self.direction: Direction
-        :attribute bool self.wall_hit: Wall hit
-        :attribute bool self.start_pos: Start position
+        :attribute int self.velocity_x_axis: velocity in x axis
+        :attribute int self.direction: Direction of player movement
+        :attribute bool self.wall_hit: Had the player an hit with the wall
+        :attribute bool self.start_pos: Is player at the start position
+        :attribute bool self.direction_update: Occurred a direction update
+        :attribute Any self.target: target of the game
+        :attribute bool self.hit_occurred:Occurred a hit with the target
+        :attribute Any self.start_time_trial: timestamp of the start of a trial in s
+        :attribute int self.last_direction_update: last direction update
+        :attribute Label self.trial_label: type of the event in the trial
         """
 
         self.root = root
@@ -75,7 +90,6 @@ class Player:
         self.target = target
         self.hit_occurred = False
         self.start_time_trial = time.time()
-        self.trial_is_valid = True
         self.last_direction_update = 0
         self.trial_label = Labels.INVALID
 
@@ -94,7 +108,7 @@ class Player:
 
     def update(self, delta_time):
         """
-        Update the delta time
+        Update the delta time (time between now and the time at the last update)
         :param delta_time: delta time for velocity x-axis
         :return: None
         """
@@ -159,7 +173,7 @@ class Player:
 
     def draw(self):
         """
-        Draw the paddle
+        Draw the player
         :return: None
         """
 
@@ -168,7 +182,7 @@ class Player:
 
     def reset(self):
         """
-        Reset the paddle
+        Reset the player
         :return: None
         """
 
@@ -179,7 +193,7 @@ class Player:
 
     def init(self):
         """
-        Initializes the paddle object and its position
+        Initializes the player object and its position
         :return: None
         """
 
@@ -192,7 +206,7 @@ class Player:
 
     def move_left(self, event):
         """
-        Move paddle left
+        Move player left
         :return: None
         """
 
@@ -208,7 +222,7 @@ class Player:
 
     def move_right(self, event):
         """
-        Move paddle right
+        Move player right
         :return: None
         """
 
@@ -235,9 +249,20 @@ class Player:
             self.target.respawn()
 
     def start_trial(self):
+        """
+        Saves the timestamp by the start of a trial
+        :return: None
+        """
         self.start_time_trial = time.time()
 
     def is_trial_valid(self):
+        """
+        1. Checks if a trial is still valid during his recording
+            a) At the start of a trial it checks if the player is moving in the direction of the player
+            b) During the recording it checks if the player is still moving in the right direction
+        2. Stops the trial recording if the trial is not valid anymore
+        :return: None
+        """
         # Trial has not started
         if self.last_direction_update == 0:
             print(self.pos[0])
@@ -264,13 +289,12 @@ class Player:
 
     def stop_trial(self):
         """
-        Stops
-        :return:
+        Stops the recording of a trial and stores valid trials
+        :return: None
         """
         stop_time_trial = time.time()
-        print("stop")
         if (stop_time_trial - self.start_time_trial) > MIN_DURATION_OF_TRIAL and self.last_direction_update is not None:
-            #trial_handler.mark_trial(self.start_trial(), stop_time_trial, self.trial_label)
+            # trial_handler.mark_trial(self.start_trial(), stop_time_trial, self.trial_label)
             print("Valid trial is stored")
             print(self.start_time_trial, stop_time_trial, self.trial_label)
         self.last_direction_update = 0

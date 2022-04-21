@@ -3,7 +3,7 @@ import time
 import brainflow
 import numpy as np
 from brainflow import BoardShim
-from scripts.data.extraction.Labels import Labels
+from scripts.pong.player import Labels
 
 number_channels = len(BoardShim.get_eeg_channels(brainflow.board_shim.BoardIds.CYTON_DAISY_BOARD))
 
