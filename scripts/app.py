@@ -1,5 +1,5 @@
 import tkinter as tk
-from threading import Thread
+import threading
 
 from scripts.mvc.controllers import ConfigController, GameController
 from scripts.mvc.models import ConfigData
@@ -22,6 +22,9 @@ class App(tk.Tk):
         self.call("source", theme_data_folder / "azure.tcl")
         self.call("set_theme", "light")
 
+        # Starting the thread to read data
+        threading.Thread(target=read_data.init, daemon=True).start()
+
         # Initialize data model
         self.__data_model = ConfigData()
 
@@ -29,9 +32,6 @@ class App(tk.Tk):
         self.game_window = None
         self.config_window = ConfigWindow(self)
 
-        # Starting the thread to read data
-        data_thread = Thread(target=read_data.init())
-        data_thread.start()
         self.update()
 
 

@@ -57,9 +57,9 @@ def init():
     while not scripts.data.visualisation.liveplot.is_window_ready:
         # wait until plot window is initialized
         time.sleep(0.05)
-    """
+    
     connect_queues()
-
+    """
     print("after while")
 
     if params.serial_port is not None:
