@@ -112,12 +112,6 @@ class Player:
             if self.speed_factor <= 0:
                 self.speed_factor = 0
 
-        if self.target.spawn_target:
-            self.root.change(game.Respawn)
-            self.stop_trial()
-            self.target.spawn_target = False
-            self.hit_occurred = False
-
     def calculate_velocity(self):
         """
         Calculates velocity of the player depending on his direction and whether he should be stopped

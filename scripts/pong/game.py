@@ -196,6 +196,7 @@ class Game(tk.Frame):
 
         elif curr_state is Hit.name:
             if self.curr_restart_time == 0:
+                self.player.stop_trial()
                 self.canvas.itemconfig(self.target.id, fill='green')
 
                 # time that player needed to reach the target in s
@@ -237,6 +238,7 @@ class Game(tk.Frame):
             self.target = target.Target(self, self.canvas, 'red', 60)
             self.player.target = self.target
             self.target.spawn_new_target(self.player.pos)
+            self.player.stop_trial()
 
             self.change(Playing)
 
