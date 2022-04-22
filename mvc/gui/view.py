@@ -1,5 +1,6 @@
 import tkinter as tk
 import tkinter.ttk as ttk
+from tkinter.scrolledtext import ScrolledText
 from abc import abstractmethod
 
 from scripts.pong.main import MindPong
@@ -22,6 +23,7 @@ class ConfigView(View):
         self.buttons = {}
         self.combo_boxes = {}
         self.switches = {}
+        self.comment_box = None
         self.grid(row=0, column=0, sticky='nsew')
 
     def create_view(self):
@@ -34,10 +36,11 @@ class ConfigView(View):
         self.build_graph_section(control_frame, "Graph", row=0, column=1)
         self.build_algorithm_section(control_frame, "Algorithm", row=1, column=0)
         self.build_trial_section(control_frame, "Trial", row=2, column=0)
-        self.create_button(control_frame, "Start", row=3, column=0)
+        self.build_comment_section(control_frame, "Comment", row=3, column=0)
+        self.create_button(control_frame, "Start", row=4, column=0)
 
         # Switch for dark/light mode
-        self.create_checkbutton(control_frame, "Dark-Mode", row=3, column=1, command=self.toggle_dark_mode)
+        self.create_checkbutton(control_frame, "Dark-Mode", row=4, column=1, command=self.toggle_dark_mode)
 
     def build_graph_section(self, frame, label, row, column):
         """Frame where the checkboxes to toggle the graphs are placed in (C3, C4, C3a, C4a, Label).
@@ -54,7 +57,7 @@ class ConfigView(View):
         self.create_checkbutton(graph_frame, "C3a", row=2, column=0, command=None)
         self.create_checkbutton(graph_frame, "C4a", row=3, column=0, command=None)
         self.create_checkbutton(graph_frame, "Label", row=4, column=0, command=None)
-        graph_frame.grid(padx=10, pady=5, row=row, column=column, rowspan=3, sticky='nsew')
+        graph_frame.grid(padx=10, pady=5, row=row, column=column, rowspan=2, sticky='nsew')
 
     def build_subject_section(self, frame, label, row, column):
         """Frame where the subject information is filled in (id, age, sex).
@@ -103,6 +106,20 @@ class ConfigView(View):
         self.create_spinbox(spinbox_frame, "trial_min_duration", "Trial Min-Duration", row=0, column=0, from_=800,
                             to=1500, interval=100)
         spinbox_frame.grid(padx=10, pady=5, row=row, column=column, sticky='nsew')
+
+    def build_comment_section(self, frame, label, row, column):
+        """Frame where the comment box is placed in.
+
+        :param any frame: the parent container to place the children in.
+        :param str label: the label which is used in the label frame.
+        :param int row: the row number in the parent container.
+        :param int column: the column number in the parent container.
+        :return: None
+        """
+        comment_box_frame = ttk.LabelFrame(frame, text=label)
+        self.comment_box = ScrolledText(comment_box_frame, wrap=tk.WORD, height=4)
+        self.comment_box.grid(row=3, column=0, pady=10, padx=10)
+        comment_box_frame.grid(padx=10, pady=5, row=row, column=column, sticky='nsew')
 
     # Helper functions
     def create_entry(self, frame, label, row, column, text_var):
