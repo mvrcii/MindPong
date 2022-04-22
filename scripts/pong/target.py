@@ -55,3 +55,4 @@ class Target:
         self.time_last_hit = 0
         self.canvas.moveto(self.id, random_x, self.canvas_height * 0.5 - self.size)
         self.pos = self.canvas.coords(self.id)
+        return True

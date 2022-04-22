@@ -112,11 +112,14 @@ class Player:
             if self.speed_factor <= 0:
                 self.speed_factor = 0
 
-        if self.target.spawn_target:
-            self.root.change(game.Respawn)
-            self.stop_trial()
-            self.target.spawn_target = False
-            self.hit_occurred = False
+    def target_respawn_handler(self):
+        """
+        Handles game state and variables of the player after the target respawned
+        :return: None
+        """
+        self.root.change(game.Respawn)
+        self.stop_trial()
+        self.hit_occurred = False
 
     def calculate_velocity(self):
         """
