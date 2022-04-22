@@ -1,8 +1,10 @@
 import tkinter as tk
+from threading import Thread
 
 from scripts.mvc.controllers import ConfigController, GameController
 from scripts.mvc.models import ConfigData
 from scripts.mvc.view import ConfigView, GameView
+import scripts.data.acquisition.read_data as read_data
 
 from pathlib import Path
 
@@ -26,7 +28,12 @@ class App(tk.Tk):
         # Initialize the windows
         self.game_window = None
         self.config_window = ConfigWindow(self)
+
+        # Starting the thread to read data
+        data_thread = Thread(target=read_data.init())
+        data_thread.start()
         self.update()
+
 
     def create_game_window(self):
         self.game_window = GameWindow(self)

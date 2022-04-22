@@ -273,7 +273,7 @@ class Player:
         :return: None
         """
         stop_time_trial = time.time()
-        if (stop_time_trial - self.start_time_trial) > MIN_DURATION_OF_TRIAL and self.last_direction_update is not None:
+        if (stop_time_trial - self.start_time_trial) > config.MIN_DURATION_OF_TRIAL and self.last_direction_update is not None:
             trial_handler.mark_trial(self.start_time_trial, stop_time_trial, self.trial_label)
             print("Valid trial is stored")
             print(self.start_time_trial, stop_time_trial, self.trial_label)
