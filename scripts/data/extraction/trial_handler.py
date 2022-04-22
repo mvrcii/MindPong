@@ -1,9 +1,19 @@
-import os.path
 import time
 import brainflow
 import numpy as np
 from brainflow import BoardShim
-from scripts.pong.player import Labels
+from enum import Enum
+
+
+class Labels(Enum):
+    """
+    An Enum Class for different trial labels for event types
+    """
+    INVALID = 99
+    LEFT = 0
+    RIGHT = 1
+    EYES_OPEN = 2
+    EYES_CLOSED = 3
 
 number_channels = len(BoardShim.get_eeg_channels(brainflow.board_shim.BoardIds.CYTON_DAISY_BOARD))
 
