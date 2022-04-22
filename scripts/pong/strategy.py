@@ -1,6 +1,6 @@
 from abc import ABCMeta, abstractmethod
 import scripts.pong.player as player
-from scripts.event_listener import subscribe
+from scripts.utils.event_listener import subscribe
 
 
 class IStrategy(metaclass=ABCMeta):
@@ -10,7 +10,7 @@ class IStrategy(metaclass=ABCMeta):
 
     @staticmethod
     @abstractmethod
-    def __str__(player: player.Player):
+    def __str__(player):
         """
         Abstract method
         :param player: player object
@@ -24,7 +24,7 @@ class KeyStrategy(IStrategy):
     """
 
     @staticmethod
-    def __str__(player: player.Player):
+    def __str__(player):
         """
         Binds the keys with the move methods of the player
         :param player: player object
@@ -40,7 +40,7 @@ class AlgorithmsStrategy(IStrategy):
     """
 
     @staticmethod
-    def __str__(player: player.Player):
+    def __str__(player):
         """
         Binds events posted by the algorithm with the move methods of the player
         :param player: player object

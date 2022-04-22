@@ -1,10 +1,8 @@
-import os.path
 import time
-from enum import Enum
-
 import brainflow
 import numpy as np
 from brainflow import BoardShim
+from enum import Enum
 
 
 class Labels(Enum):
@@ -16,7 +14,6 @@ class Labels(Enum):
     RIGHT = 1
     EYES_OPEN = 2
     EYES_CLOSED = 3
-
 
 number_channels = len(BoardShim.get_eeg_channels(brainflow.board_shim.BoardIds.CYTON_DAISY_BOARD))
 
@@ -137,5 +134,3 @@ def save_session(metadata: np.ndarray, npz_name: str):
 
     np.savez(file_path, meta=metadata, raw_data=create_raw_data_array(), event_type=create_event_type_array(),
              event_pos=create_position_array(), event_duration=create_duration_array())
-
-
