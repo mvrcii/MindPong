@@ -5,6 +5,7 @@ import mne
 import numpy as np
 from pathlib import Path
 
+
 CHANNELS = [
             'Fz', 'FC3', 'FC1', 'FCz', 'FC2', 'FC4', 'C5',
             'C3', 'C1', 'Cz', 'C2', 'C4', 'C6', 'CP3',
