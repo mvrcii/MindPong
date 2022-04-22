@@ -234,8 +234,6 @@ class Player:
         :return: None
         """
         self.start_time_trial = time.time()
-        print("aktuelle Zeit", time.time()-self.start_time_trial)
-        print("start of trial", self.start_time_trial)
 
     def is_trial_valid(self):
         """

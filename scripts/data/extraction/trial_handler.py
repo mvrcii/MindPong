@@ -58,15 +58,8 @@ def mark_trial(start: float, end: float, label: Labels):
     """
 
     global start_time
-    print("start_time ", start_time)
-    print("start ", start)
-    print("end ", end)
-    print(time_for_one_sample)
-    print("duration in s: ", (end-start))
     pos = round((start - start_time) / time_for_one_sample)
-    print("pos ", pos)
     duration = round((end - start) / time_for_one_sample)
-    print("duration ", duration)
     event_duration.append(duration)
     event_type.append(label)
     event_pos.append(pos)
