@@ -112,15 +112,6 @@ class Player:
             if self.speed_factor <= 0:
                 self.speed_factor = 0
 
-    def target_respawn_handler(self):
-        """
-        Handles game state and variables of the player after the target respawned
-        :return: None
-        """
-        self.root.change(game.Respawn)
-        self.stop_trial()
-        self.hit_occurred = False
-
     def calculate_velocity(self):
         """
         Calculates velocity of the player depending on his direction and whether he should be stopped
@@ -282,7 +273,8 @@ class Player:
         :return: None
         """
         stop_time_trial = time.time()
-        if (stop_time_trial - self.start_time_trial) > config.MIN_DURATION_OF_TRIAL and self.last_direction_update is not None:
+        if (
+                stop_time_trial - self.start_time_trial) > config.MIN_DURATION_OF_TRIAL and self.last_direction_update is not None:
             # trial_handler.mark_trial(self.start_trial(), stop_time_trial, self.trial_label)
             print("Valid trial is stored")
             print(self.start_time_trial, stop_time_trial, self.trial_label)

@@ -235,7 +235,7 @@ class Game(tk.Frame):
             self.target = target.Target(self, self.canvas, 'red', 60)
             self.player.target = self.target
             self.target.spawn_new_target(self.player.pos)
-            self.player.target_respawn_handler()
+            self.player.stop_trial()
 
             self.change(Playing)
 
