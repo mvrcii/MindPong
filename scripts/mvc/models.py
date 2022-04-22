@@ -8,7 +8,9 @@ class ConfigData(object):
                  f_max: float = 10,
                  window_size: int = 1000,
                  window_offset: int = 200,
-                 trial_min_duration: int = 1000):
+                 trial_min_duration: int = 1000,
+                 comment: str = '',
+                 trial_recording: bool = True):
         
         self.__subject_id = subject_id
         self.__subject_age = subject_age
@@ -19,6 +21,8 @@ class ConfigData(object):
         self.__window_size = window_size
         self.__window_offset = window_offset
         self.__trial_min_duration = trial_min_duration
+        self.__comment = comment
+        self.__trial_recording = trial_recording
         self.__valid_subject_sex_values = ['M', 'F', 'D']
 
     @property
@@ -56,6 +60,14 @@ class ConfigData(object):
     @property
     def trial_min_duration(self):
         return self.__trial_min_duration
+
+    @property
+    def comment(self):
+        return self.__comment
+
+    @property
+    def trial_recording(self):
+        return self.__trial_recording
 
     @property
     def valid_subject_sex_values(self):
@@ -183,6 +195,28 @@ class ConfigData(object):
             self.__trial_min_duration = value
         else:
             raise ValueError(f'Invalid trial_min_duration: {value}')
+
+    @comment.setter
+    def comment(self, value: str):
+        """
+        Setter for the comment variable
+        :param str value: the new value for the comment
+        :return: None
+        """
+        self.__comment = value
+
+    @trial_recording.setter
+    def trial_recording(self, value: bool):
+        """
+        Setter for the trial recording variable
+
+        By default, the trial recording is set to true.
+        If set to true, the trials will be recorded during the session.
+
+        :param bool value: the new value for the trial recording
+        :return: None
+        """
+        self.__trial_recording = value
 
     # Currently without persistence of the Config data
     # Variables in the Model will always be overridden when the start button is pressed
