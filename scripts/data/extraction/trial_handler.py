@@ -3,7 +3,7 @@ import time
 import brainflow
 import numpy as np
 from brainflow import BoardShim
-from scripts.data.extraction.Labels import Labels
+from scripts.pong.player import Labels
 
 number_channels = len(BoardShim.get_eeg_channels(brainflow.board_shim.BoardIds.CYTON_DAISY_BOARD))
 
@@ -53,6 +53,7 @@ def mark_trial(start: time.time(), end: time.time(), label: Labels):
     event_duration.append(duration)
     event_type.append(label)
     event_pos.append(pos)
+    print("Finished storing")
 
 
 def create_raw_data_array() -> np.ndarray:
