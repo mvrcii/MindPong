@@ -65,7 +65,7 @@ class Player:
         :attribute bool self.start_pos: Is player at the start position
         :attribute bool self.direction_update: Occurred a direction update
         :attribute Any self.target: target of the game
-        :attribute bool self.hit_occurred:Occurred a hit with the target
+        :attribute bool self.hit_occurred: Occurred a hit with the target
         :attribute Any self.start_time_trial: timestamp of the start of a trial in s
         :attribute int self.last_direction_update: last direction update
         :attribute Label self.trial_label: type of the event in the trial
