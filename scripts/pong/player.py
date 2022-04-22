@@ -1,5 +1,4 @@
 import time
-from enum import Enum
 
 import scripts.pong.game as game
 import scripts.config as config
@@ -54,7 +53,7 @@ class Player:
         :attribute bool self.start_pos: Is player at the start position
         :attribute bool self.direction_update: Occurred a direction update
         :attribute Any self.target: target of the game
-        :attribute bool self.hit_occurred:Occurred a hit with the target
+        :attribute bool self.hit_occurred: Occurred a hit with the target
         :attribute Any self.start_time_trial: timestamp of the start of a trial in s
         :attribute int self.last_direction_update: last direction update
         :attribute Label self.trial_label: type of the event in the trial
@@ -112,12 +111,6 @@ class Player:
             # prevents the speed_factor from becoming negative
             if self.speed_factor <= 0:
                 self.speed_factor = 0
-
-        if self.target.spawn_target:
-            self.root.change(game.Respawn)
-            self.stop_trial()
-            self.target.spawn_target = False
-            self.hit_occurred = False
 
     def calculate_velocity(self):
         """
@@ -252,8 +245,6 @@ class Player:
         """
         # Trial has not started
         if self.last_direction_update == 0:
-            print(self.pos[0])
-            print(self.target.pos[0])
             # Target is right and player moves to the right
             if self.pos[0] < self.target.pos[0] and self.direction == 1:
                 print("right")
@@ -280,7 +271,7 @@ class Player:
         :return: None
         """
         stop_time_trial = time.time()
-        if (stop_time_trial - self.start_time_trial) > MIN_DURATION_OF_TRIAL and self.last_direction_update is not None:
+        if (stop_time_trial - self.start_time_trial) > config.MIN_DURATION_OF_TRIAL and self.last_direction_update is not 0:
             trial_handler.mark_trial(self.start_time_trial, stop_time_trial, self.trial_label)
             print("Valid trial is stored")
             print(self.start_time_trial, stop_time_trial, self.trial_label)
