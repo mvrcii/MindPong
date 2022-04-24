@@ -6,6 +6,8 @@ from numpy import linspace
 from scipy import signal
 from numpy_ringbuffer import RingBuffer
 from spectrum import arburg, arma2psd
+
+from algorithms.cca_test import QueueManager
 from scripts.event_listener import post_event
 
 
@@ -206,7 +208,7 @@ def manage_ringbuffer(window_size, offset_in_percentage:float):
     return ringbuffer_hcon
 
 
-def perform_algorithm(sliding_window, used_ch_names, sample_rate, queue_hcon=None, queue_c3=None, queue_c4=None, offset_in_percentage=0.2):
+def perform_algorithm(sliding_window, used_ch_names, sample_rate, queue_manager:QueueManager, offset_in_percentage=0.2):
     """
     Converts a sliding window into the corresponding horizontal movement
     Contains following steps:
@@ -277,12 +279,9 @@ def perform_algorithm(sliding_window, used_ch_names, sample_rate, queue_hcon=Non
         calculated_label = -1
 
     try:
-        if queue_hcon:
-            queue_hcon.put(0)
-        if queue_c3:
-            queue_c3.put(area_c3)
-        if queue_c4:
-            queue_c4.put(area_c4)
+        queue_manager.queue_hcon.put(hcon)
+        queue_manager.queue_c3_pow.put(area_c3)
+        queue_manager.queue_c4_pow.put(area_c4)
     except:
         print('Fehler: hcon kann nicht reingeldaden werden')
 

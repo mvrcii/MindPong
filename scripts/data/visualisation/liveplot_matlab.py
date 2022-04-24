@@ -4,26 +4,27 @@ import time
 import matplotlib
 import matplotlib.pyplot as plt
 import numpy as np
-# source and idea from https://makersportal.com/blog/2018/8/14/real-time-graphing-in-python
 
 plt.style.use('ggplot')
 # necessary!!! to make sure the backend ist the correct one
 matplotlib.use('TkAgg')
 queues = list()
 size = 100
-x_data = list(range(100))
-fig = plt.figure(tight_layout=True)
-ax = None
+fig = plt.figure(tight_layout=True, figsize=(8, 8))
 q1 = queue.Queue(100)
 q2 = queue.Queue(100)
+qm = None
+plots = dict()
 
 
 class PlotData:
-    def __init__(self, q: queue.Queue):
+    def __init__(self, q: queue.Queue, ax, plot_label):
         self.q = q
+        self.ax = ax
+        self.x_data = list(range(100))
         self.y_data = np.zeros(size)
-        print(type(ax))
-        self.line, = ax.plot(x_data, self.y_data)
+        self.line, = ax.plot(self.x_data, self.y_data)
+        self.name = plot_label
 
 
 def live_plotter(plot_data: PlotData, x_data):
@@ -31,7 +32,7 @@ def live_plotter(plot_data: PlotData, x_data):
     plot_data.line.set_ydata(plot_data.y_data)
     # adjust limits if new data goes beyond bounds
     if np.min(plot_data.y_data) <= plot_data.line.axes.get_ylim()[0] or np.max(plot_data.y_data) >= plot_data.line.axes.get_ylim()[1]:
-        plt.ylim([np.min(plot_data.y_data) - np.std(plot_data.y_data), np.max(plot_data.y_data) + np.std(plot_data.y_data)])
+        plot_data.ax.set_ylim([np.min(plot_data.y_data) - np.std(plot_data.y_data), np.max(plot_data.y_data) + np.std(plot_data.y_data)])
 
     # ascending x-values only the label a changes the x-range remains the same
     # TODO: listen to the warning and Use a FixedLocator
@@ -40,45 +41,45 @@ def live_plotter(plot_data: PlotData, x_data):
     return plot_data.line
 
 
-def do_live_plot():
-    global x_data, fig, queues
+def do_live_plot(pause_time):
+    global fig, queues
     while True:
         # necessary if you want to get out of the endless loop after the figure is closed
         if not plt.get_fignums():
             break
-        try:
-            x_data = x_data[1:]  # Remove the first y element.
-            x_data.append(x_data[-1] + 1)
-            for plot_data in queues:
-                new_val = plot_data.q.get_nowait()
-                plot_data.y_data[-1] = new_val
-                plot_data.line = live_plotter(plot_data, x_data)
-                plot_data.y_data = np.append(plot_data.y_data[1:], 0.0)
-            plt.pause(0.1)
-        except queue.Empty:
-            time.sleep(0.01)
+        for plot_data in queues:
+            if plot_data.q.empty():
+                continue
+            if plot_data.name == 'pow':
+                print('Ist was drin')
+            plot_data.x_data = plot_data.x_data[1:]  # Remove the first y element.
+            plot_data.x_data.append(plot_data.x_data[-1] + 1)
+            new_val = plot_data.q.get_nowait()
+            plot_data.y_data[-1] = new_val
+            plot_data.line = live_plotter(plot_data, plot_data.x_data)
+            plot_data.y_data = np.append(plot_data.y_data[1:], 0.0)
+        plt.pause(pause_time)
 
 
-def connect_queue(toggle_plot, queue: queue.Queue):
-    while not ax:
-        time.sleep(0.1)
-    queues.append(PlotData(queue))
+def connect_queue(toggle_plot, queue: queue.Queue, plot_label, subplot_index):
+    if plot_label in plots:
+        ax = plots.get(plot_label)
+    else:
+        ax = fig.add_subplot(subplot_index)
+        ax.set_xlabel(plot_label)
+        ax.set_ylabel('Time')
+        plots[plot_label] = ax
+    queues.append(PlotData(queue, ax, plot_label))
 
 
-def start_live_plot(identifier='Signal Plot'):
-    global fig, ax
+def start_live_plot(queue_manager, pause_time):
+    global fig, qm
+    qm = queue_manager
     # this is the call to matplotlib that allows dynamic plotting
     plt.ion()
-    ax = fig.add_subplot(111)
-    # update plot label/title
-    plt.ylabel('Time')
-    plt.title('{}'.format(identifier))
-    # to maximize figure, but it shows a strange behavior
-    # mng = plt.get_current_fig_manager()
-    # mng.resize(*mng.window.maxsize())
     plt.show()
     # start liveplot
-    do_live_plot()
+    do_live_plot(pause_time)
 
 
 # fill queue for testing purposes with random values
