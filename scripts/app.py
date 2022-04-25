@@ -37,7 +37,8 @@ class App(tk.Tk):
     def create_game_window(self):
         self.game_window = GameWindow(self)
         # Starting the thread to read data
-        threading.Thread(target=read_data.init, daemon=True).start()
+        data = self.data_model
+        threading.Thread(target=read_data.init, args=[data], daemon=True).start()
 
     @property
     def data_model(self):
