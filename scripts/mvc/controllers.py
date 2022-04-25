@@ -47,6 +47,7 @@ class ConfigController(Controller):
 
         # Create second top level window
         if self.valid_form:
+            self.view.disable_inputs()
             self.master.create_game_window()
 
     def validate_form(self):
