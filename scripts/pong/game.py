@@ -103,11 +103,12 @@ class Game(tk.Frame):
         Changes the internal state to state if possible
     """
 
-    def __init__(self, parent, controller):
+    def __init__(self, parent, controller, data):
         """
         Constructor method
         :param Any parent: parent
         :param Any controller: controller
+        :param Any data: data model
         :attribute int self.width: the width of the pong window
         :attribute int self.height: the height of the pong window
         :attribute GameState self.state: the current game state
@@ -123,6 +124,7 @@ class Game(tk.Frame):
         :attribute Target self.target: the target object
         :attribute int self.curr_restart_time: counts time for hit state
         :attribute float[] self.remaining_time_history: list with left over time
+        :attribute Any self.data: data model
         """
 
         tk.Frame.__init__(self, parent)
@@ -140,6 +142,8 @@ class Game(tk.Frame):
 
         self.score = 0
         self.miss = 0
+
+        self.data = data
 
         self.remaining_time_history = []
 
@@ -196,7 +200,9 @@ class Game(tk.Frame):
 
         elif curr_state is Hit.name:
             if self.curr_restart_time == 0:
-                self.player.stop_trial()
+                # Trials are stopped only if trials are recorded
+                if self.data.trial_recording:
+                    self.player.stop_trial()
                 self.canvas.itemconfig(self.target.id, fill='green')
 
                 # time that player needed to reach the target in s

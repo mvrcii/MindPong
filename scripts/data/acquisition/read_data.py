@@ -40,9 +40,10 @@ first_data = True
 stream_available = False  # indicates if stream is available
 board: BoardShim
 window_buffer = [RingBuffer(capacity=sliding_window_samples, dtype=float) for _ in range(number_channels)]
+data_model = None
 
 
-def init():
+def init(data_mdl):
     """
     --- starting point ---
     Initializing steps:
@@ -52,8 +53,8 @@ def init():
     """
     params = BrainFlowInputParams()
     params.serial_port = search_port()
-
-    print("for while")
+    global data_model
+    data_model = data_mdl
 
     """"
     while not scripts.data.visualisation.liveplot.is_window_ready:
@@ -62,7 +63,7 @@ def init():
     
     connect_queues()
     """
-    print("after while")
+
 
     if params.serial_port is not None:
         # BoardShim.enable_dev_board_logger()
@@ -118,11 +119,13 @@ def handle_samples():
                 brainflow.DataFilter.perform_bandstop(data[channel], SAMPLING_RATE, 0.0, 50.0, 5,
                                                       brainflow.FilterTypes.BUTTERWORTH.value, 0)
 
-            if first_data:
-                trial_handler.send_raw_data(data, start=time.time())
-                first_data = False
-            else:
-                trial_handler.send_raw_data(data)
+            # only sends trial_handler raw data if trial recording is wished
+            if data_model.trial_recording:
+                if first_data:
+                    trial_handler.send_raw_data(data, start=time.time())
+                    first_data = False
+                else:
+                    trial_handler.send_raw_data(data)
             if allow_window_creation:
                 for i in range(len(data)):
                     window_buffer[i].extend(data[i])

@@ -196,7 +196,10 @@ class Player:
             self.start_pos = False
         self.direction = -1
         self.direction_update = True
-        self.is_trial_valid()
+
+        # Checks only if the trial is valid if trials are recorded
+        if self.root.data.trial_recording:
+            self.is_trial_valid()
 
     def move_right(self, event):
         """
@@ -212,7 +215,10 @@ class Player:
             self.start_pos = False
         self.direction = 1
         self.direction_update = True
-        self.is_trial_valid()
+
+        # Checks only if the trial is valid if trials are recorded
+        if self.root.data.trial_recording:
+            self.is_trial_valid()
 
     def collision_with_target(self):
         """
