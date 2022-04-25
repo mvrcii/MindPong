@@ -1,4 +1,6 @@
 import threading, queue
+import time
+
 import numpy as np
 import algorithms.cursor_online_control as cursor_online_control
 import algorithms.BCIC_dataset_loader as bdl
@@ -96,6 +98,7 @@ def test_algorithm(chan_data, label_data, used_ch_names):
         for i in range(len(channel_0)):
             queue_manager.queue_c3.put(channel_0[i])
             queue_manager.queue_c4.put(channel_1[i])
+            time.sleep(0.008)
 
         try:
             queue_manager.queue_label.put_nowait(label[i])
@@ -128,9 +131,9 @@ def connect_queues():
     # scripts.data.visualisation.liveplot.add_queue(('QUEUE_HCON', '#9B59B6', queue_hcon))
     # liveplot_matlab.connect_queue(None, queue_manager.queue_hcon, 'hcon', 211)
     liveplot_matlab.connect_queue(None, queue_manager.queue_c3, 'raw', 211)
-    liveplot_matlab.connect_queue(None, queue_manager.queue_c4, 'raw', 211)
-    liveplot_matlab.connect_queue(None, queue_manager.queue_c3_pow, 'pow', 212)
-    liveplot_matlab.connect_queue(None, queue_manager.queue_c4_pow, 'pow', 212)
+    # liveplot_matlab.connect_queue(None, queue_manager.queue_c4, 'raw', 211)
+    # liveplot_matlab.connect_queue(None, queue_manager.queue_c3_pow, 'pow', 212)
+    # liveplot_matlab.connect_queue(None, queue_manager.queue_c4_pow, 'pow', 212)
 
 def sort_incoming_channels(sliding_window, used_ch_names):
 

@@ -9,7 +9,7 @@ plt.style.use('ggplot')
 # necessary!!! to make sure the backend ist the correct one
 matplotlib.use('TkAgg')
 queues = list()
-size = 100
+size = 200
 fig = plt.figure(tight_layout=True, figsize=(8, 8))
 q1 = queue.Queue(100)
 q2 = queue.Queue(100)
@@ -21,7 +21,7 @@ class PlotData:
     def __init__(self, q: queue.Queue, ax, plot_label):
         self.q = q
         self.ax = ax
-        self.x_data = list(range(100))
+        self.x_data = list(range(size))
         self.y_data = np.zeros(size)
         self.line, = ax.plot(self.x_data, self.y_data)
         self.name = plot_label
@@ -52,12 +52,17 @@ def do_live_plot(pause_time):
                 continue
             if plot_data.name == 'pow':
                 print('Ist was drin')
-            plot_data.x_data = plot_data.x_data[1:]  # Remove the first y element.
-            plot_data.x_data.append(plot_data.x_data[-1] + 1)
-            new_val = plot_data.q.get_nowait()
-            plot_data.y_data[-1] = new_val
+            content_y = np.asarray(list(plot_data.q.queue))
+            plot_data.q.queue.clear()
+            bound = plot_data.x_data[-1] + 1
+            content_x = list(range(bound, bound+ len(content_y)))  # creates a list with the same dimensions as content_y and as start value the last one of x_data
+            plot_data.x_data = plot_data.x_data[len(content_x):]  # takes as many elements from the list as new ones are added
+            plot_data.x_data += content_x                         # append the new values
+            plot_data.y_data = np.append(plot_data.y_data[len(content_y):], [0.0] * len(content_y)) # concatenate 2 arrays
+            plot_data.y_data[-len(content_y):] = content_y          # overwrites the last elements with the new values
             plot_data.line = live_plotter(plot_data, plot_data.x_data)
-            plot_data.y_data = np.append(plot_data.y_data[1:], 0.0)
+
+            print()
         plt.pause(pause_time)
 
 
