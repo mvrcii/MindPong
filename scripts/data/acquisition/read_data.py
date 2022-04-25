@@ -12,7 +12,8 @@ from brainflow.board_shim import BoardShim, BrainFlowInputParams
 
 import scripts.data.visualisation.liveplot
 from scripts.algorithms import cca_test
-from scripts.data.extraction import trial_handler, MetaData
+from scripts.mvc.models import MetaData
+from scripts.data.extraction import trial_handler
 
 SAMPLING_RATE = BoardShim.get_sampling_rate(brainflow.board_shim.BoardIds.CYTON_DAISY_BOARD)
 queue_clabel = queue.Queue(100)
