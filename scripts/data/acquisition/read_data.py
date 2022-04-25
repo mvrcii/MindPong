@@ -1,5 +1,6 @@
 import queue
 import threading
+import platform
 
 import time
 import numpy as np
@@ -77,10 +78,14 @@ def search_port():
 
     print('Search...')
     ports = serial.tools.list_ports.comports(include_links=False)
+    print(platform.system())
     for port in ports:
         if port.vid == 1027 and port.pid == 24597:
             port_name = port.device
             print('found port: ', port_name)
+            if platform.system() == 'Linux':
+                import os
+                os.system('ls')
             return port_name
     return None
 
