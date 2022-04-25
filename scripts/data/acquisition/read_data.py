@@ -7,7 +7,7 @@ from numpy_ringbuffer import RingBuffer
 import serial
 import serial.tools.list_ports
 import brainflow
-from brainflow.board_shim import BoardShim, BrainFlowInputParams
+from brainflow.board_shim import BoardShim, BrainFlowInputParams, BrainFlowError
 
 import scripts.data.visualisation.liveplot
 from scripts.algorithms import cca_test
@@ -60,10 +60,14 @@ def init():
         # BoardShim.enable_dev_board_logger()
         global board, stream_available
         board = BoardShim(brainflow.board_shim.BoardIds.CYTON_DAISY_BOARD, params)
-        board.prepare_session()
-        board.start_stream()
-        stream_available = True
-        handle_samples()
+        try:
+            board.prepare_session()
+            board.start_stream()
+            stream_available = True
+            handle_samples()
+        except BrainFlowError as err:
+            print(err.args[0])
+
     else:
         print('Port not found')
 
