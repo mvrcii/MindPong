@@ -200,6 +200,7 @@ class Player:
         self.direction = -1
         self.direction_update = True
 
+        # Checks only if the trial is valid if trials are recorded
         if self.root.data.trial_recording:
             self.is_trial_valid()
 
@@ -218,6 +219,7 @@ class Player:
         self.direction = 1
         self.direction_update = True
 
+        # Checks only if the trial is valid if trials are recorded
         if self.root.data.trial_recording:
             self.is_trial_valid()
 

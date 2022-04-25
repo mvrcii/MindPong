@@ -200,6 +200,7 @@ class Game(tk.Frame):
 
         elif curr_state is Hit.name:
             if self.curr_restart_time == 0:
+                # Trials are stopped only if trials are recorded
                 if self.data.trial_recording:
                     self.player.stop_trial()
                 self.canvas.itemconfig(self.target.id, fill='green')
