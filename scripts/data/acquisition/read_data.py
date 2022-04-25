@@ -51,10 +51,16 @@ def init():
     params = BrainFlowInputParams()
     params.serial_port = search_port()
 
+    print("for while")
+
+    """"
     while not scripts.data.visualisation.liveplot.is_window_ready:
         # wait until plot window is initialized
         time.sleep(0.05)
+    
     connect_queues()
+    """
+    print("after while")
 
     if params.serial_port is not None:
         # BoardShim.enable_dev_board_logger()
@@ -82,6 +88,7 @@ def search_port():
             port_name = port.device
             print('found port: ', port_name)
             return port_name
+    print("Ended Search")
     return None
 
 

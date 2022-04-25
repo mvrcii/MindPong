@@ -245,8 +245,6 @@ class Player:
         """
         # Trial has not started
         if self.last_direction_update == 0:
-            print(self.pos[0])
-            print(self.target.pos[0])
             # Target is right and player moves to the right
             if self.pos[0] < self.target.pos[0] and self.direction == 1:
                 print("right")
@@ -273,9 +271,8 @@ class Player:
         :return: None
         """
         stop_time_trial = time.time()
-        if (
-                stop_time_trial - self.start_time_trial) > config.MIN_DURATION_OF_TRIAL and self.last_direction_update is not None:
-            # trial_handler.mark_trial(self.start_trial(), stop_time_trial, self.trial_label)
+        if (stop_time_trial - self.start_time_trial) > config.MIN_DURATION_OF_TRIAL and self.last_direction_update != 0:
+            trial_handler.mark_trial(self.start_time_trial, stop_time_trial, self.trial_label)
             print("Valid trial is stored")
             print(self.start_time_trial, stop_time_trial, self.trial_label)
         self.last_direction_update = 0
