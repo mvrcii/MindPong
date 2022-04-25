@@ -75,7 +75,6 @@ class Player:
         self.start_pos = True
         self.direction_update = False
         self.target = target
-        self.hit_occurred = False
         self.start_time_trial = time.time()
         self.last_direction_update = 0
         self.trial_label = trial_handler.Labels.INVALID
@@ -99,9 +98,10 @@ class Player:
         :param delta_time: delta time for velocity x-axis
         :return: None
         """
+        self.velocity_x_axis = self.calculate_velocity() * delta_time
 
         self.collision_with_target()
-        self.velocity_x_axis = self.calculate_velocity() * delta_time
+
         # every time the direction is not updated the player gets slower
         if self.direction_update:
             self.direction_update = False
@@ -119,9 +119,6 @@ class Player:
         :rtype: int
         """
         if self.start_pos:
-            return 0
-
-        if self.hit_occurred:
             return 0
 
         if self.direction == 1:
@@ -223,9 +220,10 @@ class Player:
         (2) Initiates the handling of the hit
         :return: None
         """
-        hit_from_right = self.target.pos[0] <= self.pos[2] <= self.target.pos[2]
-        hit_from_left = self.target.pos[2] >= self.pos[0] >= self.target.pos[0]
+        hit_from_right = self.target.pos[0] <= self.pos[2]+(self.velocity_x_axis * self.speed_factor) <= self.target.pos[2]
+        hit_from_left = self.target.pos[2] >= self.pos[0]+(self.velocity_x_axis * self.speed_factor) >= self.target.pos[0]
         if hit_from_left or hit_from_right:
+            self.velocity_x_axis = 0
             self.root.change(game.Hit)
 
     def start_trial(self):
