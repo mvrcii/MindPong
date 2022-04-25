@@ -78,14 +78,19 @@ def search_port():
 
     print('Search...')
     ports = serial.tools.list_ports.comports(include_links=False)
-    print(platform.system())
     for port in ports:
         if port.vid == 1027 and port.pid == 24597:
             port_name = port.device
             print('found port: ', port_name)
+
+            # If operating system is Linux set the Latency of the USB-Port to 1ms
             if platform.system() == 'Linux':
                 import os
-                os.system('ls')
+                set_latency_cmd = 'setserial ' + port_name + ' low_latency'
+                os.system(set_latency_cmd)
+                get_latency_cmd = 'cat /sys/bus/usb-serial/devices/' + port_name[5:] + '/latency_timer'
+                print('set latency timer to: ' + os.popen(get_latency_cmd).read().strip() + 'ms')
+
             return port_name
     return None
 
@@ -102,7 +107,8 @@ def handle_samples():
         if len(data[0]) > 0:
             # filter data
             for channel in range(number_channels):
-                brainflow.DataFilter.perform_bandstop(data[channel], SAMPLING_RATE, 0.0, 50.0, 5, brainflow.FilterTypes.BUTTERWORTH.value, 0)
+                brainflow.DataFilter.perform_bandstop(data[channel], SAMPLING_RATE, 0.0, 50.0, 5,
+                                                      brainflow.FilterTypes.BUTTERWORTH.value, 0)
 
             if first_data:
                 trial_handler.send_raw_data(data, start=time.time())
@@ -134,7 +140,9 @@ def send_window():
         window[i] = np.array(window_buffer[i])
     # push window to cursor control algorithm
     # TODO: change offset_duration to percentage? Else change calculation in coc algorithm
-    calculated_label = cca_test.test_algorithm_with_livedata(window, MetaData.bci_channels, SAMPLING_RATE, queue_hcon, queue_c3, queue_c4, offset_duration / sliding_window_duration)
+    calculated_label = cca_test.test_algorithm_with_livedata(window, MetaData.bci_channels, SAMPLING_RATE, queue_hcon,
+                                                             queue_c3, queue_c4,
+                                                             offset_duration / sliding_window_duration)
     try:
         global queue_clabel
         queue_clabel.put(calculated_label)
