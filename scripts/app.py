@@ -27,10 +27,6 @@ class App(tk.Tk):
         # Initialize data model
         self.__data_model = ConfigData()
 
-        # Starting the thread to read data
-        data = self.__data_model
-        threading.Thread(target=read_data.init, args=[data], daemon=True).start()
-
         # Initialize the windows
         self.game_window = None
         self.config_window = ConfigWindow(self)
@@ -40,6 +36,8 @@ class App(tk.Tk):
 
     def create_game_window(self):
         self.game_window = GameWindow(self)
+        # Starting the thread to read data
+        threading.Thread(target=read_data.init, daemon=True).start()
 
     @property
     def data_model(self):
