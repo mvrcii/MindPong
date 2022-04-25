@@ -5,7 +5,8 @@ import unittest
 import numpy as np
 from numpy import dtype
 
-from scripts.data.extraction import trial_handler, MetaData
+from scripts.mvc.models import MetaData
+from scripts.data.extraction import trial_handler
 
 
 class MyTestCase(unittest.TestCase):
