@@ -8,8 +8,6 @@ import scripts.pong.target as target
 import scripts.config as config
 
 
-
-
 class GameState(object):
     """
     A class used to handle the state management in the Game
@@ -135,6 +133,7 @@ class Game(tk.Frame):
         WINDOW_HEIGHT = self.winfo_screenheight()
         self.width = WINDOW_WIDTH
         self.height = WINDOW_HEIGHT
+        print("Hight ", self.height)
 
         # State of the game - default is idle
         self.state = Idle()
@@ -153,8 +152,9 @@ class Game(tk.Frame):
         self.canvas = Canvas(self, width=self.width, height=self.height, bd=0, highlightthickness=0, relief='ridge')
         self.score_label, self.score_per_label, self.time_label, self.average_time_label = None, None, None, None
 
-        self.target = target.Target(self, self.canvas, 'red', 60)
-        self.player = player.Player(self, self.canvas, 60, 60, 'blue', target=self.target,
+        self.target = target.Target(self, self.canvas, 'red', self.height / config.OBJECT_SIZE)
+        self.player = player.Player(self, self.canvas, self.height / config.OBJECT_SIZE,
+                                    self.height / config.OBJECT_SIZE, 'blue', target=self.target,
                                     strategy=config.USED_STRATEGY_CLASS)
         self.target.spawn_new_target(self.player.pos)
         self.ground = self.canvas.create_rectangle(0, 0, WINDOW_WIDTH, 10, fill='Black')
@@ -235,7 +235,7 @@ class Game(tk.Frame):
 
             self.player.speed_factor = 0
             del self.target
-            self.target = target.Target(self, self.canvas, 'red', 60)
+            self.target = target.Target(self, self.canvas, 'red', self.height / config.OBJECT_SIZE)
             self.player.target = self.target
             self.target.spawn_new_target(self.player.pos)
             self.player.stop_trial()
