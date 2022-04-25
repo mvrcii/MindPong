@@ -235,16 +235,19 @@ class GameView(View):
     def __init__(self, master):
         super().__init__(master)
         self.grid(row=0, column=0, sticky='nsew')
-
+        self.data = None
         self.frames = {}
         self.mind_pong = None
+
+    def bind_data(self, data):
+        self.data = data
 
     def create_view(self):
         control_frame = tk.Frame(master=self)
         control_frame.columnconfigure(0, weight=1)
         control_frame.grid(row=1, column=1, sticky='nsew')
 
-        frame = Game(control_frame, self)
+        frame = Game(control_frame, self, self.data)
         frame.grid(row=0, column=0, sticky='nsew')
         frame.focus_set()
         frame.tkraise()
