@@ -22,11 +22,14 @@ class App(tk.Tk):
         self.call("source", theme_data_folder / "azure.tcl")
         self.call("set_theme", "light")
 
-        # Starting the thread to read data
-        threading.Thread(target=read_data.init, daemon=True).start()
+
 
         # Initialize data model
         self.__data_model = ConfigData()
+
+        # Starting the thread to read data
+        data = self.__data_model
+        threading.Thread(target=read_data.init, args=[data], daemon=True).start()
 
         # Initialize the windows
         self.game_window = None
