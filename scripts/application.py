@@ -8,8 +8,11 @@ from matplotlib import style
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg, NavigationToolbar2Tk
 from matplotlib.figure import Figure
 
+from threading import Thread
+
 from scripts.config import *
 from scripts.pong.game import Game
+import scripts.data.acquisition.read_data as read_data
 
 matplotlib.use("TkAgg")
 LARGE_FONT = ("Verdana", 16)
@@ -75,7 +78,10 @@ class App(tk.Tk):
 
         # initializing frames to an empty array
         self.frames = {}
+
         self.mind_pong = Game(container, self)
+        data_thread = Thread(target=read_data.init())
+        data_thread.start()
 
         # iterating through a tuple consisting
         # of the different page layouts
@@ -160,6 +166,7 @@ class StartPage(tk.Frame):
         kalibriert werden.\n\n\n'Space' to continue\n\n\n'G' to show the graphs'''), font=LARGE_FONT)
         label.pack(fill=BOTH, expand=True)
         self.bind("<space>", lambda event: controller.show_frame(CalibrationPageOne))
+
 
 
 class CalibrationPageOne(tk.Frame):

@@ -1,8 +1,6 @@
 import queue
 import threading
-import time
 
-import mne
 import time
 import numpy as np
 from numpy_ringbuffer import RingBuffer
@@ -12,7 +10,7 @@ import brainflow
 from brainflow.board_shim import BoardShim, BrainFlowInputParams
 
 import scripts.data.visualisation.liveplot
-from algorithms import cca_test
+from scripts.algorithms import cca_test
 from scripts.data.extraction import trial_handler, MetaData
 
 SAMPLING_RATE = BoardShim.get_sampling_rate(brainflow.board_shim.BoardIds.CYTON_DAISY_BOARD)
@@ -53,10 +51,16 @@ def init():
     params = BrainFlowInputParams()
     params.serial_port = search_port()
 
+    print("for while")
+
+    """"
     while not scripts.data.visualisation.liveplot.is_window_ready:
         # wait until plot window is initialized
         time.sleep(0.05)
+    """
     connect_queues()
+
+    print("after while")
 
     if params.serial_port is not None:
         # BoardShim.enable_dev_board_logger()
@@ -84,6 +88,7 @@ def search_port():
             port_name = port.device
             print('found port: ', port_name)
             return port_name
+    print("Ended Search")
     return None
 
 

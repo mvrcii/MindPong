@@ -1,9 +1,19 @@
-import os.path
 import time
 import brainflow
 import numpy as np
 from brainflow import BoardShim
-from scripts.data.extraction.Labels import Labels
+from enum import Enum
+
+
+class Labels(Enum):
+    """
+    An Enum Class for different trial labels for event types
+    """
+    INVALID = 99
+    LEFT = 0
+    RIGHT = 1
+    EYES_OPEN = 2
+    EYES_CLOSED = 3
 
 number_channels = len(BoardShim.get_eeg_channels(brainflow.board_shim.BoardIds.CYTON_DAISY_BOARD))
 
@@ -14,7 +24,7 @@ raw_data = [[] for _ in range(number_channels)]
 event_type = []
 event_pos = []
 event_duration = []
-start_time: time.time()
+start_time = time.time()
 
 
 def send_raw_data(data, start: time.time() = None):
@@ -34,7 +44,7 @@ def send_raw_data(data, start: time.time() = None):
         raw_data[i].append(data[i][0])
 
 
-def mark_trial(start: time.time(), end: time.time(), label: Labels):
+def mark_trial(start: float, end: float, label: Labels):
     """
     (1) Calculation of the trial position in raw_data
     (2) Calculation of the duration of the trial
@@ -53,6 +63,10 @@ def mark_trial(start: time.time(), end: time.time(), label: Labels):
     event_duration.append(duration)
     event_type.append(label)
     event_pos.append(pos)
+    print("Finished storing")
+    for i in raw_data:
+        print(i[pos:pos+duration])
+
 
 
 def create_raw_data_array() -> np.ndarray:

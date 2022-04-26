@@ -34,7 +34,7 @@ def calc_n_samples(tmin: float, tmax: float, samplerate: float):
 def get_subject_fname(subject: int, training: int = 1):
     if training == 1 and (subject == 3 or subject == 7):
         abs_path = Path(path)
-        abs_parent_path = abs_path.parent.absolute().parent
+        abs_parent_path = abs_path.parent.absolute()
         return abs_parent_path.joinpath(path + '/A0' + str(subject) + 'T.npz')
     else:
         print('Error: Illegal parameter')
