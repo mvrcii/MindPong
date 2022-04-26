@@ -3,7 +3,7 @@ from tkinter.messagebox import askyesno, showinfo
 
 from scripts.mvc.view import View, ConfigView, GameView
 from scripts.pong.game import End
-from scripts.data.extraction.trial_handler import save_session, count_trials
+from scripts.data.extraction.trial_handler import save_session, count_trials, count_event_types
 from scripts.mvc.models import MetaData
 from datetime import datetime
 
@@ -80,6 +80,7 @@ class ConfigController(Controller):
 
             if self.data.trial_recording:
                 from scripts.data.extraction.trial_handler import count_trials
+                print(count_trials)
                 if count_trials > 0:
                     self.view.show_button("Discard Session")
                     self.view.show_button("Save Session", column=1)
@@ -89,8 +90,9 @@ class ConfigController(Controller):
                         showinfo("Information", "%d Trials have been recorded." % count_trials)
                 else:
                     showinfo("Information", "There are no trials to save.")
-
-            self.discard_session()
+                    self.discard_session()
+            else:
+                self.discard_session()
 
     def save_session(self):
         """Creates a MetaData object and saves the current session.
@@ -100,7 +102,7 @@ class ConfigController(Controller):
         """
         self.set_comment()
         meta_data = MetaData(sid=self.data.subject_id, age=self.data.subject_age, sex=self.data.subject_sex,
-                             comment=self.data.comment, amount_events=2, amount_trials=count_trials)
+                             comment=self.data.comment, amount_events=count_event_types, amount_trials=count_trials)
         print(meta_data)
         file_name = "session-%s-%s" % (self.data.subject_id, datetime.now().strftime("%d%m%Y-%H%M%S"))
 
