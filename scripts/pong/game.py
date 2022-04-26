@@ -38,11 +38,11 @@ class GameState(object):
         """
 
         if state.name in self.allowed:
-            print('Current State:', self, ' => switched to new state', state.name)
+            # print('Current State:', self, ' => switched to new state', state.name)
             self.__class__ = state
-            print(self.__class__)
         else:
-            print('Current State:', self, ' => switching to', state.name, 'not possible.')
+            # print('Current State:', self, ' => switching to', state.name, 'not possible.')
+            pass
 
     def __str__(self):
         """
@@ -135,7 +135,6 @@ class Game(tk.Frame):
         WINDOW_HEIGHT = self.winfo_screenheight()
         self.width = WINDOW_WIDTH
         self.height = WINDOW_HEIGHT
-        print("Hight ", self.height)
 
         # State of the game - default is idle
         self.state = Idle()
