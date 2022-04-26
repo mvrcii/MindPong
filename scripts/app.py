@@ -33,12 +33,14 @@ class App(tk.Tk):
 
         self.update()
 
-
     def create_game_window(self):
         self.game_window = GameWindow(self)
         # Starting the thread to read data
         data = self.data_model
         threading.Thread(target=read_data.init, args=[data], daemon=True).start()
+
+    def end_state(self):
+        self.game_window.game_controller.end_state()
 
     @property
     def data_model(self):
@@ -67,13 +69,12 @@ class GameWindow(tk.Toplevel):
         self.resizable(False, False)
         self.attributes("-fullscreen", True)
 
-        game_controller = GameController(self.master)  # Create Controller
-        game_view = GameView(self)
-        game_controller.bind(game_view)  # Bind View to Controller
+        self.game_controller = GameController(self.master)  # Create Controller
+        self.game_view = GameView(self)  # Create View
+        self.game_controller.bind(self.game_view)  # Bind View to Controller
 
 
 if __name__ == "__main__":
     app = App()
-
     app.bind("<Escape>", quit)
     app.mainloop()

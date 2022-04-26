@@ -3,7 +3,7 @@ import tkinter.ttk as ttk
 from tkinter.scrolledtext import ScrolledText
 from abc import abstractmethod
 
-from scripts.pong.game import Game
+from scripts.pong.game import Game, End
 
 
 class View(tk.Frame):
@@ -38,7 +38,7 @@ class ConfigView(View):
         self.build_algorithm_section(control_frame, "Algorithm", row=1, column=0)
         self.build_trial_section(control_frame, "Trial", row=2, column=0)
         self.build_comment_section(control_frame, "Comment", row=3, column=0)
-        self.create_button(control_frame, "Start", row=4, column=0)
+        self.build_button_section(control_frame, row=4, column=0)
 
         # Second Column
         self.build_graph_section(control_frame, "Graph", row=0, column=1)
@@ -139,6 +139,20 @@ class ConfigView(View):
         # Switch for dark/light mode (not persisted in the data model)
         self.create_checkbutton(switch_frame, "Dark-Mode", row=1, column=0, command=self.toggle_dark_mode)
         switch_frame.grid(row=row, column=column, rowspan=2, sticky='sew')
+
+    def build_button_section(self, frame, row, column):
+        """Frame where the buttons are placed in (start session, stop session, save session).
+
+        :param any frame: the parent container to place the children in.
+        :param int row: the row number in the parent container.
+        :param int column: the column number in the parent container.
+        :return: None
+        """
+        button_frame = ttk.Frame(frame)
+        self.create_button(button_frame, "Start Session", row=0, column=0)
+        self.create_button(button_frame, "Stop Session", row=0, column=0)
+        self.create_button(button_frame, "Save Session", row=0, column=0)
+        button_frame.grid(row=row, column=column, sticky="nsew")
 
     # Helper functions
     def create_entry(self, frame, label, row, column, text_var):
@@ -255,6 +269,24 @@ class ConfigView(View):
         self.spin_boxes["trial_min_duration"].configure(state=state)
         self.check_buttons["Trial Recording"].configure(state=state)
 
+    def hide_button(self, label):
+        """Hides the button with the given label
+
+        :param any label: the label to identify the button
+        :return: None
+        """
+        self.buttons[label].grid_forget()
+
+    def show_button(self, label, row=0, column=0):
+        """Shows the button with the given label
+
+        :param any label: the label to identify the button
+        :param int row: the row for the button (default = 0)
+        :param int column: the row for the button (default = 0)
+        :return: None
+        """
+        self.buttons[label].grid(padx=10, pady=5, row=row, column=column, sticky="nsew")
+
 
 class GameView(View):
     def __init__(self, master):
@@ -263,6 +295,7 @@ class GameView(View):
         self.data = None
         self.frames = {}
         self.mind_pong = None
+        self.game = None
 
     def bind_data(self, data):
         self.data = data
@@ -272,7 +305,10 @@ class GameView(View):
         control_frame.columnconfigure(0, weight=1)
         control_frame.grid(row=1, column=1, sticky='nsew')
 
-        frame = Game(control_frame, self, self.data)
-        frame.grid(row=0, column=0, sticky='nsew')
-        frame.focus_set()
-        frame.tkraise()
+        self.game = Game(control_frame, self, self.data)
+        self.game.grid(row=0, column=0, sticky='nsew')
+        self.game.focus_set()
+        self.game.tkraise()
+
+    def end_state(self):
+        self.game.change(End)

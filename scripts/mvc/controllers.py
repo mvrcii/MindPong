@@ -1,4 +1,6 @@
 from abc import ABC, abstractmethod
+from enum import Enum
+from tkinter.messagebox import askyesno
 
 from scripts.mvc.view import View, ConfigView, GameView
 
@@ -9,19 +11,37 @@ class Controller(ABC):
         raise NotImplementedError
 
 
+class GuiState(Enum):
+    """
+    An Enum Class for the different gui states
+    """
+    START = 1  # the start button is shown
+    STOP = 2  # the stop button is shown
+    SAVE = 3  # the start and save button is shown
+
+
 class ConfigController(Controller):
     def __init__(self, master=None) -> None:
         self.master = master
         self.view = None
         self.data = None
+        self.gui_state = GuiState.START
         self.valid_form = True
 
     def bind(self, view: ConfigView):
         self.view = view
         self.view.create_view()
+
+    def end_state(self):
+        self.view.end_state()
         self.data = self.master.data_model
         self.init_config_view_values()
-        self.view.buttons["Start"].configure(command=self.start_button)
+
+        self.reset_gui()  # Initially update the gui state
+        self.view.buttons["Start Session"].configure(command=lambda: self.start_session())
+        self.view.buttons["Stop Session"].configure(command=lambda: self.stop_session())
+        self.view.buttons["Save Session"].configure(command=lambda: self.save_session())
+
         self.view.check_buttons["Trial Recording"].configure(command=self.set_trial_recording)
 
     def init_config_view_values(self):
@@ -42,13 +62,39 @@ class ConfigController(Controller):
         entry.delete(0, "end")
         entry.insert(0, value)
 
-    def start_button(self):
+    def start_session(self):
+        # Switch to the view with the stop button
         self.validate_form()
-
         # Create second top level window
         if self.valid_form:
             self.view.disable_inputs()
             self.master.create_game_window()
+            self.view.disable_inputs()
+            self.view.hide_button("Start Session")
+            self.view.hide_button("Save Session")
+            self.view.show_button("Stop Session")
+
+    def stop_session(self):
+        # Switch to the view with the save button
+        # Confirmation Popup for stopping the session
+        answer = askyesno(title="Confirmation", message="Are you sure that you want to stop the session?")
+        if answer:
+            self.master.end_state()  # show the game's end-screen
+            self.view.hide_button("Stop Session")
+            self.view.show_button("Start Session")
+            # ToDo: Show "Save Session" Button only if trial counter > 0
+            self.view.show_button("Save Session", column=1)
+
+    def save_session(self):
+        self.set_comment()
+        # ToDo: Create MetaData object and Save the session
+        self.reset_gui()
+
+    def reset_gui(self):
+        self.view.enable_inputs()
+        self.view.hide_button("Stop Session")
+        self.view.hide_button("Save Session")
+        self.view.show_button("Start Session", row=0, column=0)
 
     def validate_form(self):
         """Validates the whole form by calling all the individual validation methods
