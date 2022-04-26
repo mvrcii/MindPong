@@ -152,6 +152,7 @@ class ConfigView(View):
         self.create_button(button_frame, "Start Session", row=0, column=0)
         self.create_button(button_frame, "Stop Session", row=0, column=0)
         self.create_button(button_frame, "Save Session", row=0, column=0)
+        self.create_button(button_frame, "Discard Session", row=0, column=0)
         button_frame.grid(row=row, column=column, sticky="nsew")
 
     # Helper functions
@@ -309,6 +310,3 @@ class GameView(View):
         self.game.grid(row=0, column=0, sticky='nsew')
         self.game.focus_set()
         self.game.tkraise()
-
-    def end_state(self):
-        self.game.change(End)
