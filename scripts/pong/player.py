@@ -278,5 +278,5 @@ class Player:
         if (stop_time_trial - self.start_time_trial) > config.MIN_DURATION_OF_TRIAL and self.last_direction_update != 0:
             trial_handler.mark_trial(self.start_time_trial, stop_time_trial, self.trial_label)
             print("Valid trial is stored")
-            print(self.start_time_trial, stop_time_trial, self.trial_label)
+            print("Start-Time: ", self.start_time_trial, "End-Time: ", stop_time_trial, "Label: ", self.trial_label)
         self.last_direction_update = 0
