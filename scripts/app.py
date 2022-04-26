@@ -41,6 +41,7 @@ class App(tk.Tk):
         self.game_window.destroy()
         self.game_window = None
         # ToDo: Destroy/Stop Thread
+        # ToDo: Clear the data in read_data or close and start a new read_data thread
 
     @property
     def data_model(self):

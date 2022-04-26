@@ -252,29 +252,29 @@ class MetaData:
     Attribute:
     ----------
     __subject_ID: int
-        Subject ID
+        The subjects ID
     __subject_sex: str
-        Subject Sex
+        The subjects sex
     __subject_age: int
-        Subject Age
-    __date: datetime.date
-        Date
-   __time:  datetime.time()
-        Time
+        The subjects age
+    __date: any
+        The date of the timestamp
+    __time: any
+        The time of the timestamp
     __sampling_rate: int
-        Sampling rate
+        The sampling rate that has been used
     __channel_mapping: int np.ndarray
-        Channel mapping
+        The channel mapping
     __recording_type: str
-        Recording type
+        The recording type
     __headset: str
-        Headset
+        The headset type that was used
     __amount_trials: int
-        Amount trials
+        Total amount of recorded trials
     __comment: str
-        Comment
+        The comment for the session
     __amount_different_events: int
-        Different events
+        The different type of events
 
     Methods
     -------
@@ -299,9 +299,10 @@ class MetaData:
     # bci_channels = ['C3', 'Cz', 'C4', 'P3', 'Pz', 'P4', 'O1', 'O2', 'FC5', 'FC1', 'FC2', 'FC6', 'CP5', 'CP1', 'CP2',
     #                 'CP6']
 
-    bci_channels = ['C3', 'Cz', 'C4', 'P3', '?', 'P4', 'T3', '?', '?', 'F3', 'F4', '?', '?', '?', '?', 'T4']  # large laplacian
+    bci_channels = ['C3', 'Cz', 'C4', 'P3', '?', 'P4', 'T3', '?', '?', 'F3', 'F4', '?', '?', '?', '?',
+                    'T4']  # large laplacian
 
-    def __init__(self, sid, sex, age, amount_trials, comment, amount_events, time=datetime.datetime.now().time(),
+    def __init__(self, sid, sex, age, comment, amount_trials, amount_events, time=datetime.datetime.now().time(),
                  sampling_rate=125, channel_mapping=bci_channels, recording_type='game', headset='BCI'):
         """Constructor method
 
@@ -310,13 +311,13 @@ class MetaData:
         :param str sex: sex of the subject
         :param int age: age of the subject
         :param str comment: comment section for the scientist
-        :param Any amount_events: amount of different events in one session
-        :param datetime.time() time: start time of the trial
+        :param int amount_trials: amount of trials in the session
+        :param int amount_events: amount of different events in the session
+        :param any time: start time of the trial
         :param int sampling_rate: sampling rate
         :param list[str] channel_mapping: used channel occupancy as string numpy array
         :param str recording_type: the way the data was collected (e.g. game, arrows, ...)
         :param str headset: kind of headset which is used for data acquisition
-        :param Any amount_trials: amount of trails in this session
         """
 
         self.__subject_ID = sid

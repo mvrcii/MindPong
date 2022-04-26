@@ -84,10 +84,7 @@ class ConfigController(Controller):
                 if count_trials > 0:
                     self.view.show_button("Discard Session")
                     self.view.show_button("Save Session", column=1)
-                    if count_trials == 1:
-                        showinfo("Information", "1 Trial has been recorded.")
-                    else:
-                        showinfo("Information", "%d Trials have been recorded." % count_trials)
+                    showinfo("Information", "%d Trial(s) recorded." % count_trials)
                 else:
                     showinfo("Information", "There are no trials to save.")
                     self.__discard_session()
@@ -103,7 +100,6 @@ class ConfigController(Controller):
         self.__set_comment()
         meta_data = MetaData(sid=self.data.subject_id, age=self.data.subject_age, sex=self.data.subject_sex,
                              comment=self.data.comment, amount_events=count_event_types, amount_trials=count_trials)
-        print(meta_data)
         file_name = "session-%s-%s" % (self.data.subject_id, datetime.now().strftime("%d%m%Y-%H%M%S"))
 
         save_session(meta_data.turn_into_np_array(), file_name)
@@ -116,7 +112,6 @@ class ConfigController(Controller):
 
         :return: None
         """
-        # ToDo: Clear the data in read_data or close and start a new read_data thread
         self.master.destroy_game_window()
         self.view.reset_view()
         pass
