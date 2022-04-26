@@ -332,6 +332,10 @@ class MetaData:
         self.__amount_different_events = amount_events
         self.__comment = comment
 
+    @property
+    def time(self):
+        return self.__time
+
     def turn_into_np_array(self) -> np.ndarray:
         """
         Creates a numpy array filled with tuples
