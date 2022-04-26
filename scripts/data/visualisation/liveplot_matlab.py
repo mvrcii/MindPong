@@ -27,7 +27,7 @@ class PlotData:
         self.name = plot_label
 
 
-def live_plotter(plot_data: PlotData, x_data):
+def live_plotter(plot_data: PlotData):
     # after the figure, axis, and line are created, we only need to update the y-data
     plot_data.line.set_ydata(plot_data.y_data)
     # adjust limits if new data goes beyond bounds
@@ -36,7 +36,7 @@ def live_plotter(plot_data: PlotData, x_data):
 
     # ascending x-values only the label a changes the x-range remains the same
     # TODO: listen to the warning and Use a FixedLocator
-    plot_data.line.axes.set_xticklabels(x_data)
+    plot_data.line.axes.set_xticklabels(plot_data.x_data)
     # return line, so we can update it again in the next iteration
     return plot_data.line
 
@@ -52,17 +52,17 @@ def do_live_plot(pause_time):
                 continue
             if plot_data.name == 'pow':
                 print('Ist was drin')
-            content_y = np.asarray(list(plot_data.q.queue))
-            plot_data.q.queue.clear()
+            content_y = list()
+            while not plot_data.q.empty() or len(content_y) > 100:
+                content_y.append(plot_data.q.get(True))
+            content_y = np.asarray(content_y)
             bound = plot_data.x_data[-1] + 1
-            content_x = list(range(bound, bound+ len(content_y)))  # creates a list with the same dimensions as content_y and as start value the last one of x_data
+            content_x = list(range(bound, bound + len(content_y)))  # creates a list with the same dimensions as content_y and as start value the last one of x_data
             plot_data.x_data = plot_data.x_data[len(content_x):]  # takes as many elements from the list as new ones are added
             plot_data.x_data += content_x                         # append the new values
             plot_data.y_data = np.append(plot_data.y_data[len(content_y):], [0.0] * len(content_y)) # concatenate 2 arrays
             plot_data.y_data[-len(content_y):] = content_y          # overwrites the last elements with the new values
-            plot_data.line = live_plotter(plot_data, plot_data.x_data)
-
-            print()
+            plot_data.line = live_plotter(plot_data)
         plt.pause(pause_time)
 
 
