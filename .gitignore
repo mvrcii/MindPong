@@ -186,3 +186,5 @@ Temporary Items
 # ----------- PyCharm gitignore --------------------
 # idea directory
 .idea/
+
+scripts/data/session/

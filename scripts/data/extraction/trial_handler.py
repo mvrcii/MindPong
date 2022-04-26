@@ -74,7 +74,6 @@ def mark_trial(start: float, end: float, label: Labels):
         print(i[pos:pos+duration])
 
 
-
 def create_raw_data_array() -> np.ndarray:
     """
     Converts the buffer with the trials to a np.ndarray and clears the buffer

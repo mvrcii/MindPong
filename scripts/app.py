@@ -1,5 +1,5 @@
 import tkinter as tk
-import threading
+from threading import Thread
 
 from scripts.mvc.controllers import ConfigController, GameController
 from scripts.mvc.models import ConfigData
@@ -22,8 +22,6 @@ class App(tk.Tk):
         self.call("source", theme_data_folder / "azure.tcl")
         self.call("set_theme", "light")
 
-
-
         # Initialize data model
         self.__data_model = ConfigData()
 
@@ -33,12 +31,17 @@ class App(tk.Tk):
 
         self.update()
 
-
     def create_game_window(self):
         self.game_window = GameWindow(self)
         # Starting the thread to read data
-        data = self.data_model
-        threading.Thread(target=read_data.init, args=[data], daemon=True).start()
+        thread = Thread(target=read_data.init, args=[self.data_model], daemon=True)
+        thread.start()
+
+    def destroy_game_window(self):
+        self.game_window.destroy()
+        self.game_window = None
+        # ToDo: Destroy/Stop Thread
+        # ToDo: Clear the data in read_data or close and start a new read_data thread
 
     @property
     def data_model(self):
@@ -52,9 +55,9 @@ class ConfigWindow(tk.Frame):
         self.rowconfigure(0, weight=1)
         self.grid(row=0, column=0, sticky='nsew')
 
-        config_controller = ConfigController(self.master)
-        config_view = ConfigView(master)
-        config_controller.bind(config_view)
+        self.config_controller = ConfigController(self.master)
+        self.config_view = ConfigView(master)
+        self.config_controller.bind(self.config_view)
 
 
 class GameWindow(tk.Toplevel):
@@ -67,13 +70,12 @@ class GameWindow(tk.Toplevel):
         self.resizable(False, False)
         self.attributes("-fullscreen", True)
 
-        game_controller = GameController(self.master)  # Create Controller
-        game_view = GameView(self)
-        game_controller.bind(game_view)  # Bind View to Controller
+        self.game_controller = GameController(self.master)  # Create Controller
+        self.game_view = GameView(self)  # Create View
+        self.game_controller.bind(self.game_view)  # Bind View to Controller
 
 
 if __name__ == "__main__":
     app = App()
-
     app.bind("<Escape>", quit)
     app.mainloop()

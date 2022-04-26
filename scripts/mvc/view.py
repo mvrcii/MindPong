@@ -1,5 +1,6 @@
 import tkinter as tk
 import tkinter.ttk as ttk
+from tkinter import END
 from tkinter.scrolledtext import ScrolledText
 from abc import abstractmethod
 
@@ -34,18 +35,53 @@ class ConfigView(View):
         control_frame.grid(row=0, column=0, sticky='nsew')
 
         # First Column
-        self.build_subject_section(control_frame, "Subject", row=0, column=0)
-        self.build_algorithm_section(control_frame, "Algorithm", row=1, column=0)
-        self.build_trial_section(control_frame, "Trial", row=2, column=0)
-        self.build_comment_section(control_frame, "Comment", row=3, column=0)
-        self.create_button(control_frame, "Start", row=4, column=0)
+        self.__build_subject_section(control_frame, "Subject", row=0, column=0)
+        self.__build_algorithm_section(control_frame, "Algorithm", row=1, column=0)
+        self.__build_trial_section(control_frame, "Trial", row=2, column=0)
+        self.__build_comment_section(control_frame, "Comment", row=3, column=0)
+        self.__build_button_section(control_frame, row=4, column=0)
 
         # Second Column
-        self.build_graph_section(control_frame, "Graph", row=0, column=1)
-        self.build_switch_section(control_frame, row=3, column=1)
+        self.__build_graph_section(control_frame, "Graph", row=0, column=1)
+        self.__build_switch_section(control_frame, row=3, column=1)
+
+    def hide_button(self, label):
+        """Hides the button with the given label
+
+        :param any label: the label to identify the button
+        :return: None
+        """
+        self.buttons[label].grid_forget()
+
+    def show_button(self, label, row=0, column=0):
+        """Shows the button with the given label
+
+        :param any label: the label to identify the button
+        :param int row: the row for the button (default = 0)
+        :param int column: the row for the button (default = 0)
+        :return: None
+        """
+        self.buttons[label].grid(padx=10, pady=5, row=row, column=column, sticky="nsew")
+
+    def reset_view(self):
+        """Sets the view """
+        self.enable_inputs()
+        self.hide_button("Stop Session")
+        self.hide_button("Save Session")
+        self.hide_button("Discard Session")
+        self.show_button("Start Session", row=0, column=0)
+        self.__clear_comment_box()
+
+    def enable_inputs(self):
+        """Helper function to enable the input fields"""
+        self.__set_input_state(state='enabled')
+
+    def disable_inputs(self):
+        """Helper function to disable the input fields"""
+        self.__set_input_state(state='disabled')
 
     # First Column Sections
-    def build_subject_section(self, frame, label, row, column):
+    def __build_subject_section(self, frame, label, row, column):
         """Frame where the subject information is filled in (id, age, sex).
 
         :param any frame: the parent container to place the children in.
@@ -55,12 +91,12 @@ class ConfigView(View):
         :return: None
         """
         label_frame = ttk.LabelFrame(frame, text=label)
-        self.create_entry(label_frame, "ID", row=0, column=0, text_var=tk.IntVar(value=1))
-        self.create_entry(label_frame, "Age", row=0, column=1, text_var=None)
-        self.create_combobox(label_frame, "Sex", values=[], row=0, column=2)
+        self.__create_entry(label_frame, "ID", row=0, column=0, text_var=tk.IntVar(value=1))
+        self.__create_entry(label_frame, "Age", row=0, column=1, text_var=None)
+        self.__create_combobox(label_frame, "Sex", values=[], row=0, column=2)
         label_frame.grid(padx=10, pady=5, row=row, column=column, sticky='nsew')
 
-    def build_algorithm_section(self, frame, label, row, column):
+    def __build_algorithm_section(self, frame, label, row, column):
         """Frame where the algorithm parameters are filled in (threshold, f_min, f_max, window_size, window_offset).
 
         :param any frame: the parent container to place the children in.
@@ -70,16 +106,16 @@ class ConfigView(View):
         :return: None
         """
         label_frame = ttk.LabelFrame(frame, text=label)
-        self.create_entry(label_frame, "Threshold", row=0, column=0, text_var=tk.DoubleVar())
-        self.create_entry(label_frame, "f_min", row=0, column=1, text_var=tk.DoubleVar())
-        self.create_entry(label_frame, "f_max", row=0, column=2, text_var=tk.DoubleVar())
-        self.create_spinbox(label_frame, "window_size", "Sliding Window Size", row=1, column=0, from_=200, to=2000,
-                            interval=200)
-        self.create_spinbox(label_frame, "window_offset", "Sliding Window Offset", row=1, column=1, from_=40, to=400,
-                            interval=40)
+        self.__create_entry(label_frame, "Threshold", row=0, column=0, text_var=tk.DoubleVar())
+        self.__create_entry(label_frame, "f_min", row=0, column=1, text_var=tk.DoubleVar())
+        self.__create_entry(label_frame, "f_max", row=0, column=2, text_var=tk.DoubleVar())
+        self.__create_spinbox(label_frame, "window_size", "Sliding Window Size", row=1, column=0, from_=200, to=2000,
+                              interval=200)
+        self.__create_spinbox(label_frame, "window_offset", "Sliding Window Offset", row=1, column=1, from_=40, to=400,
+                              interval=40)
         label_frame.grid(padx=10, pady=5, row=row, column=column, sticky='nsew')
 
-    def build_trial_section(self, frame, label, row, column):
+    def __build_trial_section(self, frame, label, row, column):
         """Frame where the trial parameters are filled in (trial_min_duration).
 
         :param any frame: the parent container to place the children in.
@@ -89,11 +125,11 @@ class ConfigView(View):
         :return: None
         """
         spinbox_frame = ttk.LabelFrame(frame, text=label)
-        self.create_spinbox(spinbox_frame, "trial_min_duration", "Trial Min-Duration", row=0, column=0, from_=800,
-                            to=1500, interval=100)
+        self.__create_spinbox(spinbox_frame, "trial_min_duration", "Trial Min-Duration", row=0, column=0, from_=800,
+                              to=1500, interval=100)
         spinbox_frame.grid(padx=10, pady=5, row=row, column=column, sticky='nsew')
 
-    def build_comment_section(self, frame, label, row, column):
+    def __build_comment_section(self, frame, label, row, column):
         """Frame where the comment box is placed in.
 
         :param any frame: the parent container to place the children in.
@@ -108,7 +144,7 @@ class ConfigView(View):
         comment_box_frame.grid(padx=10, pady=5, row=row, column=column, sticky='nsew')
 
     # Second Column Sections
-    def build_graph_section(self, frame, label, row, column):
+    def __build_graph_section(self, frame, label, row, column):
         """Frame where the checkboxes to toggle the graphs are placed in (C3, C4, C3a, C4a, Label).
 
         :param any frame: the parent container to place the children in.
@@ -118,14 +154,14 @@ class ConfigView(View):
         :return: None
         """
         graph_frame = ttk.LabelFrame(frame, text=label)
-        self.create_checkbutton(graph_frame, "C3", row=0, column=0, command=None)
-        self.create_checkbutton(graph_frame, "C4", row=1, column=0, command=None)
-        self.create_checkbutton(graph_frame, "C3a", row=2, column=0, command=None)
-        self.create_checkbutton(graph_frame, "C4a", row=3, column=0, command=None)
-        self.create_checkbutton(graph_frame, "Label", row=4, column=0, command=None)
+        self.__create_checkbutton(graph_frame, "C3", row=0, column=0, command=None)
+        self.__create_checkbutton(graph_frame, "C4", row=1, column=0, command=None)
+        self.__create_checkbutton(graph_frame, "C3a", row=2, column=0, command=None)
+        self.__create_checkbutton(graph_frame, "C4a", row=3, column=0, command=None)
+        self.__create_checkbutton(graph_frame, "Label", row=4, column=0, command=None)
         graph_frame.grid(padx=10, pady=5, row=row, column=column, rowspan=2, sticky='nsew')
 
-    def build_switch_section(self, frame, row, column):
+    def __build_switch_section(self, frame, row, column):
         """Frame where the checkboxes to toggle overall settings are placed in (Dark-mode, Trial recording).
 
         :param any frame: the parent container to place the children in.
@@ -135,13 +171,28 @@ class ConfigView(View):
         """
         switch_frame = ttk.Frame(frame)
         # Switch to toggle the recording of trials
-        self.create_checkbutton(switch_frame, "Trial Recording", row=0, column=0, command=None)
+        self.__create_checkbutton(switch_frame, "Trial Recording", row=0, column=0, command=None)
         # Switch for dark/light mode (not persisted in the data model)
-        self.create_checkbutton(switch_frame, "Dark-Mode", row=1, column=0, command=self.toggle_dark_mode)
+        self.__create_checkbutton(switch_frame, "Dark-Mode", row=1, column=0, command=self.__toggle_dark_mode)
         switch_frame.grid(row=row, column=column, rowspan=2, sticky='sew')
 
+    def __build_button_section(self, frame, row, column):
+        """Frame where the buttons are placed in (start session, stop session, save session).
+
+        :param any frame: the parent container to place the children in.
+        :param int row: the row number in the parent container.
+        :param int column: the column number in the parent container.
+        :return: None
+        """
+        button_frame = ttk.Frame(frame)
+        self.__create_button(button_frame, "Start Session", row=0, column=0)
+        self.__create_button(button_frame, "Stop Session", row=0, column=0)
+        self.__create_button(button_frame, "Save Session", row=0, column=0)
+        self.__create_button(button_frame, "Discard Session", row=0, column=0)
+        button_frame.grid(row=row, column=column, sticky="nsew")
+
     # Helper functions
-    def create_entry(self, frame, label, row, column, text_var):
+    def __create_entry(self, frame, label, row, column, text_var):
         """Creates an entry field with the given parameters.
 
         :param any frame: the parent container to place the children in.
@@ -158,7 +209,7 @@ class ConfigView(View):
         self.entries[label].pack(padx=5, pady=5, expand=1, fill='x')
         label_frame.grid(padx=10, pady=5, row=row, column=column, sticky='nsew')
 
-    def create_button(self, frame, label, row, column):
+    def __create_button(self, frame, label, row, column):
         """Creates a button with the given parameters.
 
         :param any frame: the parent container to place the children in.
@@ -170,7 +221,7 @@ class ConfigView(View):
         self.buttons[label] = ttk.Button(frame, text=label)
         self.buttons[label].grid(padx=10, pady=5, row=row, column=column, sticky='nsew')
 
-    def create_combobox(self, frame, label, values, row, column):
+    def __create_combobox(self, frame, label, values, row, column):
         """Creates a combobox with the given parameters
 
         :param any frame: the parent container to place the children in.
@@ -186,7 +237,7 @@ class ConfigView(View):
         self.combo_boxes[label].grid(row=0, column=0, padx=5, pady=5, sticky='ew')
         label_frame.grid(padx=10, pady=5, row=row, column=column, sticky='nsew')
 
-    def create_checkbutton(self, frame, label, row, column, command):
+    def __create_checkbutton(self, frame, label, row, column, command):
         """Creates a checkbutton with the given parameters.
 
         By default, the on value is True and the off value is False.
@@ -204,7 +255,7 @@ class ConfigView(View):
                                                     onvalue=True, offvalue=False, command=command)
         self.check_buttons[label].grid(padx=10, pady=5, row=row, column=column, sticky='nsew')
 
-    def create_spinbox(self, frame, label, text, row, column, from_, to, interval):
+    def __create_spinbox(self, frame, label, text, row, column, from_, to, interval):
         """Creates a spinbox with the given parameters.
 
         :param any frame: the parent container to place the children in.
@@ -223,22 +274,14 @@ class ConfigView(View):
         self.spin_boxes[label].grid(row=0, column=0, padx=5, pady=5, sticky="ew")
         label_frame.grid(padx=10, pady=5, row=row, column=column, sticky='nsew')
 
-    def toggle_dark_mode(self):
+    def __toggle_dark_mode(self):
         """Toggles the config view between dark and light mode."""
         if self.check_button_vars["Dark-Mode"].get():
             self.master.call("set_theme", "dark")
         else:
             self.master.call("set_theme", "light")
 
-    def enable_inputs(self):
-        """Helper function to enable the input fields"""
-        self.set_input_state(state='enabled')
-
-    def disable_inputs(self):
-        """Helper function to disable the input fields"""
-        self.set_input_state(state='disabled')
-
-    def set_input_state(self, state):
+    def __set_input_state(self, state):
         """Sets all the input fields of ConfigView to a given state
 
         :param any state: the state to set the input fields ('enabled', 'disabled')
@@ -255,6 +298,10 @@ class ConfigView(View):
         self.spin_boxes["trial_min_duration"].configure(state=state)
         self.check_buttons["Trial Recording"].configure(state=state)
 
+    def __clear_comment_box(self):
+        """Clears the comment box field"""
+        self.comment_box.delete('1.0', END)
+
 
 class GameView(View):
     def __init__(self, master):
@@ -263,6 +310,7 @@ class GameView(View):
         self.data = None
         self.frames = {}
         self.mind_pong = None
+        self.game = None
 
     def bind_data(self, data):
         self.data = data
@@ -272,7 +320,7 @@ class GameView(View):
         control_frame.columnconfigure(0, weight=1)
         control_frame.grid(row=1, column=1, sticky='nsew')
 
-        frame = Game(control_frame, self, self.data)
-        frame.grid(row=0, column=0, sticky='nsew')
-        frame.focus_set()
-        frame.tkraise()
+        self.game = Game(control_frame, self, self.data)
+        self.game.grid(row=0, column=0, sticky='nsew')
+        self.game.focus_set()
+        self.game.tkraise()
