@@ -5,10 +5,10 @@ import numpy as np
 import algorithms.cursor_online_control as cursor_online_control
 import algorithms.BCIC_dataset_loader as bdl
 import scripts.data.visualisation.liveplot
-import scripts.data.visualisation.liveplot_matlab as liveplot_matlab
+from scripts.data.visualisation.liveplot_matlab import start_live_plot, connect_queue
 
 # GLOBAL DATA
-TMIN = 500.0  # Minimum time value shown in the following figures
+TMIN = 100.0  # Minimum time value shown in the following figures
 TMAX = 850.0  # Maximum time value shown in the following figures
 TS_SIZE = 1.0  # 1 s time slice
 TS_STEP = 0.2  # 50 ms in percentage
@@ -20,7 +20,7 @@ SLIDING_WINDOW_SIZE_FACTOR = 5
 
 
 '''
-Sliding window size: 
+Sliding window SIZE: 
     1 -> 200ms
     2 -> 400ms
     ...
@@ -95,15 +95,18 @@ def test_algorithm(chan_data, label_data, used_ch_names):
         calculated_label = cursor_online_control.perform_algorithm(chan_data[:, start_idx:stop_idx], used_ch_names, SAMPLING_RATE, queue_manager, offset_in_percentage=TS_STEP)
         channel_0 = chan_data[0, start_idx:stop_idx]
         channel_1 = chan_data[1, start_idx:stop_idx]
-        for i in range(len(channel_0)):
-            queue_manager.queue_c3.put(channel_0[i])
-            queue_manager.queue_c4.put(channel_1[i])
-            time.sleep(0.008)
+        for sample in range(len(channel_0)):
+            try:
+                queue_manager.queue_c3.put(channel_0[sample], True)
+                queue_manager.queue_c4.put(channel_1[sample], True)
+            except queue.Full:
+                print('Queue is full')
+            time.sleep(0.0008)
 
-        try:
-            queue_manager.queue_label.put_nowait(label[i])
-        except queue.Full:
-            pass
+        # try:
+        #     queue_manager.queue_label.put_nowait(label[i])
+        # except queue.Full:
+        #     pass
 
         # compare the calculated label with the predefined label, if same -> increase accuracy
         if label[i] != -1:
@@ -126,14 +129,13 @@ def test_algorithm(chan_data, label_data, used_ch_names):
 
 def connect_queues():
 
-    # scripts.data.visualisation.liveplot.add_queue(('QUEUE_CLABEL', '#F1C40F', queue_clabel))
-    # scripts.data.visualisation.liveplot.add_queue(('QUEUE_LABEL', '#16A085', queue_label))
+    # scripts.data.visualisation.liveplot.add_queue(('QUEUE_CLABEL', '#F1C40F', queue_manager.queue_c3_pow))
+    # scripts.data.visualisation.liveplot.add_queue(('QUEUE_LABEL', '#16A085', queue_manager.queue_c4_pow))
     # scripts.data.visualisation.liveplot.add_queue(('QUEUE_HCON', '#9B59B6', queue_hcon))
-    # liveplot_matlab.connect_queue(None, queue_manager.queue_hcon, 'hcon', 211)
-    liveplot_matlab.connect_queue(None, queue_manager.queue_c3, 'raw', 211)
-    # liveplot_matlab.connect_queue(None, queue_manager.queue_c4, 'raw', 211)
-    # liveplot_matlab.connect_queue(None, queue_manager.queue_c3_pow, 'pow', 212)
-    # liveplot_matlab.connect_queue(None, queue_manager.queue_c4_pow, 'pow', 212)
+    connect_queue(None, queue_manager.queue_c3, 'raw', 211)
+    connect_queue(None, queue_manager.queue_c4, 'raw', 211)
+    connect_queue(None, queue_manager.queue_c3_pow, 'pow', 212)
+    connect_queue(None, queue_manager.queue_c4_pow, 'pow', 212)
 
 def sort_incoming_channels(sliding_window, used_ch_names):
 
@@ -181,5 +183,5 @@ if __name__ == '__main__':
     queue_manager = QueueManager()
     threading.Thread(target=test_algorithm_with_dataset, daemon=True).start()
     # scripts.data.visualisation.liveplot.start_liveplot()
-    liveplot_matlab.start_live_plot(queue_manager, 0.0001)
+    start_live_plot(queue_manager, 0.00001)
 
