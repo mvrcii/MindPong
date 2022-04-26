@@ -26,34 +26,34 @@ class ConfigController(Controller):
         self.view.create_view()
         self.data = self.master.data_model
 
-        self.init_config_view_values()
+        self.__init_config_view_values()
         self.view.reset_view()
 
-        self.view.buttons["Start Session"].configure(command=self.start_session)
-        self.view.buttons["Stop Session"].configure(command=self.stop_session)
-        self.view.buttons["Save Session"].configure(command=self.save_session)
-        self.view.buttons["Discard Session"].configure(command=self.discard_session)
-        self.view.check_buttons["Trial Recording"].configure(command=self.set_trial_recording)
+        self.view.buttons["Start Session"].configure(command=self.__start_session)
+        self.view.buttons["Stop Session"].configure(command=self.__stop_session)
+        self.view.buttons["Save Session"].configure(command=self.__save_session)
+        self.view.buttons["Discard Session"].configure(command=self.__discard_session)
+        self.view.check_buttons["Trial Recording"].configure(command=self.__set_trial_recording)
 
-    def init_config_view_values(self):
-        self.set_entry_text(self.view.entries["ID"], self.data.subject_id)
-        self.set_entry_text(self.view.entries["Age"], self.data.subject_age)
+    def __init_config_view_values(self):
+        self.__set_entry_text(self.view.entries["ID"], self.data.subject_id)
+        self.__set_entry_text(self.view.entries["Age"], self.data.subject_age)
         self.view.combo_boxes["Sex"]['values'] = self.data.valid_subject_sex_values
         self.view.combo_boxes["Sex"].set(self.data.subject_sex)
-        self.set_entry_text(self.view.entries["Threshold"], self.data.threshold)
-        self.set_entry_text(self.view.entries["f_min"], self.data.f_min)
-        self.set_entry_text(self.view.entries["f_max"], self.data.f_max)
+        self.__set_entry_text(self.view.entries["Threshold"], self.data.threshold)
+        self.__set_entry_text(self.view.entries["f_min"], self.data.f_min)
+        self.__set_entry_text(self.view.entries["f_max"], self.data.f_max)
         self.view.spin_boxes["window_size"].set(self.data.window_size)
         self.view.spin_boxes["window_offset"].set(self.data.window_offset)
         self.view.spin_boxes["trial_min_duration"].set(self.data.trial_min_duration)
         self.view.check_button_vars["Trial Recording"].set(self.data.trial_recording)
 
     @staticmethod
-    def set_entry_text(entry, value):
+    def __set_entry_text(entry, value):
         entry.delete(0, "end")
         entry.insert(0, value)
 
-    def start_session(self):
+    def __start_session(self):
         """Starts the session, if the input fields are valid, by disabling the input fields, starting the game
         window and the liveplot.
 
@@ -68,7 +68,7 @@ class ConfigController(Controller):
             self.view.hide_button("Start Session")
             self.view.show_button("Stop Session")
 
-    def stop_session(self):
+    def __stop_session(self):
         """Stops the current session and changes the view according to the amount of recorded trials.
 
         :return: None
@@ -90,17 +90,17 @@ class ConfigController(Controller):
                         showinfo("Information", "%d Trials have been recorded." % count_trials)
                 else:
                     showinfo("Information", "There are no trials to save.")
-                    self.discard_session()
+                    self.__discard_session()
             else:
-                self.discard_session()
+                self.__discard_session()
 
-    def save_session(self):
+    def __save_session(self):
         """Creates a MetaData object and saves the current session.
 
         Also closes the game window and resets the ConfigView.
         :return: None
         """
-        self.set_comment()
+        self.__set_comment()
         meta_data = MetaData(sid=self.data.subject_id, age=self.data.subject_age, sex=self.data.subject_sex,
                              comment=self.data.comment, amount_events=count_event_types, amount_trials=count_trials)
         print(meta_data)
@@ -111,7 +111,7 @@ class ConfigController(Controller):
         self.master.destroy_game_window()
         self.view.reset_view()
 
-    def discard_session(self):
+    def __discard_session(self):
         """Discards the current session.
 
         :return: None
@@ -140,7 +140,7 @@ class ConfigController(Controller):
         self.validate_window_size()
         self.validate_window_offset()
         self.validate_trial_min_duration()
-        self.set_comment()
+        self.__set_comment()
 
     def validate_subject_id(self):
         """Validate and set the subject id
@@ -150,9 +150,9 @@ class ConfigController(Controller):
         try:
             self.data.subject_id = self.view.entries[label].get()
         except ValueError:
-            self.on_invalid(label)
+            self.__on_invalid(label)
         else:
-            self.on_valid(label)
+            self.__on_valid(label)
 
     def validate_subject_age(self):
         """Validate and set the subject age
@@ -162,9 +162,9 @@ class ConfigController(Controller):
         try:
             self.data.subject_age = self.view.entries[label].get()
         except ValueError:
-            self.on_invalid(label)
+            self.__on_invalid(label)
         else:
-            self.on_valid(label)
+            self.__on_valid(label)
 
     def validate_subject_sex(self):
         """Validate and set the subject sex
@@ -174,9 +174,9 @@ class ConfigController(Controller):
         try:
             self.data.subject_sex = self.view.combo_boxes[label].get()
         except ValueError:
-            self.on_invalid(label)
+            self.__on_invalid(label)
         else:
-            self.on_valid(label)
+            self.__on_valid(label)
 
     def validate_threshold(self):
         """Validate and set the threshold
@@ -186,9 +186,9 @@ class ConfigController(Controller):
         try:
             self.data.threshold = self.view.entries[label].get()
         except ValueError:
-            self.on_invalid(label)
+            self.__on_invalid(label)
         else:
-            self.on_valid(label)
+            self.__on_valid(label)
 
     def validate_f_min(self):
         """Validate and set the minimal frequency f_min
@@ -198,9 +198,9 @@ class ConfigController(Controller):
         try:
             self.data.f_min = self.view.entries[label].get()
         except ValueError:
-            self.on_invalid(label)
+            self.__on_invalid(label)
         else:
-            self.on_valid(label)
+            self.__on_valid(label)
 
     def validate_f_max(self):
         """Validate and set the maximum frequency f_max
@@ -210,9 +210,9 @@ class ConfigController(Controller):
         try:
             self.data.f_max = self.view.entries[label].get()
         except ValueError:
-            self.on_invalid(label)
+            self.__on_invalid(label)
         else:
-            self.on_valid(label)
+            self.__on_valid(label)
 
     def validate_frequencies(self):
         """Validate that f_max is always greater than or equal to f_min and set it in the model.
@@ -224,12 +224,12 @@ class ConfigController(Controller):
             f_min = float(self.view.entries[f_min_label].get())
             f_max = float(self.view.entries[f_max_label].get())
             if f_min > f_max:
-                self.on_invalid(f_min_label)
-                self.on_invalid(f_max_label)
+                self.__on_invalid(f_min_label)
+                self.__on_invalid(f_max_label)
                 self.valid_form = False
         except ValueError:
-            self.on_invalid(f_min_label)
-            self.on_invalid(f_max_label)
+            self.__on_invalid(f_min_label)
+            self.__on_invalid(f_max_label)
             self.valid_form = False
 
     def validate_window_size(self):
@@ -240,9 +240,9 @@ class ConfigController(Controller):
         try:
             self.data.window_size = self.view.spin_boxes[label].get()
         except ValueError:
-            self.on_invalid(label)
+            self.__on_invalid(label)
         else:
-            self.on_valid(label)
+            self.__on_valid(label)
 
     def validate_window_offset(self):
         """Validate and set the window offset
@@ -252,9 +252,9 @@ class ConfigController(Controller):
         try:
             self.data.window_offset = self.view.spin_boxes[label].get()
         except ValueError:
-            self.on_invalid(label)
+            self.__on_invalid(label)
         else:
-            self.on_valid(label)
+            self.__on_valid(label)
 
     def validate_trial_min_duration(self):
         """Validate and set the minimum trial duration
@@ -264,25 +264,25 @@ class ConfigController(Controller):
         try:
             self.data.trial_min_duration = self.view.spin_boxes[label].get()
         except ValueError:
-            self.on_invalid(label)
+            self.__on_invalid(label)
         else:
-            self.on_valid(label)
+            self.__on_valid(label)
 
-    def set_comment(self):
+    def __set_comment(self):
         """Set the comment content in the model
         :return: None
         """
         self.data.comment = self.view.comment_box.get('1.0', 'end-1c')
 
-    def set_trial_recording(self):
+    def __set_trial_recording(self):
         """Set the trial recording in the model"""
         self.data.trial_recording = self.view.check_button_vars["Trial Recording"].get()
 
-    def on_invalid(self, label):
+    def __on_invalid(self, label):
         self.view.labels[label].config(foreground='red')
         self.valid_form = False
 
-    def on_valid(self, label):
+    def __on_valid(self, label):
         self.view.labels[label].config(foreground='black')
 
 

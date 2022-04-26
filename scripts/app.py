@@ -54,9 +54,9 @@ class ConfigWindow(tk.Frame):
         self.rowconfigure(0, weight=1)
         self.grid(row=0, column=0, sticky='nsew')
 
-        config_controller = ConfigController(self.master)
-        config_view = ConfigView(master)
-        config_controller.bind(config_view)
+        self.config_controller = ConfigController(self.master)
+        self.config_view = ConfigView(master)
+        self.config_controller.bind(self.config_view)
 
 
 class GameWindow(tk.Toplevel):
