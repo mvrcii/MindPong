@@ -1,9 +1,11 @@
 from abc import ABC, abstractmethod
-from enum import Enum
 from tkinter.messagebox import askyesno, showinfo
 
 from scripts.mvc.view import View, ConfigView, GameView
 from scripts.pong.game import End
+from scripts.data.extraction.trial_handler import save_session, count_trials
+from scripts.mvc.models import MetaData
+from datetime import datetime
 
 
 class Controller(ABC):
@@ -12,35 +14,25 @@ class Controller(ABC):
         raise NotImplementedError
 
 
-class GuiState(Enum):
-    """
-    An Enum Class for the different gui states
-    """
-    START = 1  # the start button is shown
-    STOP = 2  # the stop button is shown
-    SAVE = 3  # the start and save button is shown
-
-
 class ConfigController(Controller):
     def __init__(self, master=None) -> None:
         self.master = master
         self.view = None
         self.data = None
-        self.gui_state = GuiState.START
         self.valid_form = True
 
     def bind(self, view: ConfigView):
         self.view = view
         self.view.create_view()
         self.data = self.master.data_model
-        self.init_config_view_values()
 
-        self.reset_gui()
+        self.init_config_view_values()
+        self.view.reset_view()
+
         self.view.buttons["Start Session"].configure(command=self.start_session)
         self.view.buttons["Stop Session"].configure(command=self.stop_session)
         self.view.buttons["Save Session"].configure(command=self.save_session)
         self.view.buttons["Discard Session"].configure(command=self.discard_session)
-
         self.view.check_buttons["Trial Recording"].configure(command=self.set_trial_recording)
 
     def init_config_view_values(self):
@@ -62,6 +54,11 @@ class ConfigController(Controller):
         entry.insert(0, value)
 
     def start_session(self):
+        """Starts the session, if the input fields are valid, by disabling the input fields, starting the game
+        window and the liveplot.
+
+        :return: None
+        """
         self.validate_form()
         # Create second top level window
         if self.valid_form:
@@ -72,47 +69,55 @@ class ConfigController(Controller):
             self.view.show_button("Stop Session")
 
     def stop_session(self):
-        # Confirmation Popup for stopping the session
+        """Stops the current session and changes the view according to the amount of recorded trials.
+
+        :return: None
+        """
         answer = askyesno(title="Confirmation", message="Are you sure that you want to stop the session?")
         if answer:
             self.master.game_window.game_controller.show_end_screen()
             self.view.hide_button("Stop Session")
-            from scripts.data.extraction.trial_handler import count_trials
 
-            if count_trials > 0:
-                self.view.show_button("Discard Session")
-                self.view.show_button("Save Session", column=1)
-                showinfo("Information", "%d Trials recorded." % count_trials)
-            else:
-                self.view.show_button("Start Session")
-                showinfo("Information", "There are no trials to save.")
+            if self.data.trial_recording:
+                from scripts.data.extraction.trial_handler import count_trials
+                if count_trials > 0:
+                    self.view.show_button("Discard Session")
+                    self.view.show_button("Save Session", column=1)
+                    if count_trials == 1:
+                        showinfo("Information", "1 Trial has been recorded.")
+                    else:
+                        showinfo("Information", "%d Trials have been recorded." % count_trials)
+                else:
+                    showinfo("Information", "There are no trials to save.")
+
+            self.discard_session()
 
     def save_session(self):
-        self.set_comment()
-        from scripts.data.extraction.trial_handler import save_session, count_trials
-        from scripts.mvc.models import MetaData
-        from datetime import datetime
+        """Creates a MetaData object and saves the current session.
 
+        Also closes the game window and resets the ConfigView.
+        :return: None
+        """
+        self.set_comment()
         meta_data = MetaData(sid=self.data.subject_id, age=self.data.subject_age, sex=self.data.subject_sex,
                              comment=self.data.comment, amount_events=2, amount_trials=count_trials)
+        print(meta_data)
         file_name = "session-%s-%s" % (self.data.subject_id, datetime.now().strftime("%d%m%Y-%H%M%S"))
 
         save_session(meta_data.turn_into_np_array(), file_name)
         showinfo("Information", "Successfully saved the session.")
         self.master.destroy_game_window()
-        self.reset_gui()
+        self.view.reset_view()
 
     def discard_session(self):
-        self.master.destroy_game_window()
-        self.reset_gui()
-        pass
+        """Discards the current session.
 
-    def reset_gui(self):
-        self.view.enable_inputs()
-        self.view.hide_button("Stop Session")
-        self.view.hide_button("Save Session")
-        self.view.hide_button("Discard Session")
-        self.view.show_button("Start Session", row=0, column=0)
+        :return: None
+        """
+        # ToDo: Clear the data in read_data or close and start a new read_data thread
+        self.master.destroy_game_window()
+        self.view.reset_view()
+        pass
 
     def validate_form(self):
         """Validates the whole form by calling all the individual validation methods

@@ -1,5 +1,6 @@
 import tkinter as tk
 import tkinter.ttk as ttk
+from tkinter import END
 from tkinter.scrolledtext import ScrolledText
 from abc import abstractmethod
 
@@ -295,6 +296,11 @@ class ConfigView(View):
         self.hide_button("Save Session")
         self.hide_button("Discard Session")
         self.show_button("Start Session", row=0, column=0)
+        self.clear_comment_box()
+
+    def clear_comment_box(self):
+        """Clears the comment box field"""
+        self.comment_box.delete('1.0', END)
 
 
 class GameView(View):
