@@ -80,7 +80,6 @@ class ConfigController(Controller):
 
             if self.data.trial_recording:
                 from scripts.data.extraction.trial_handler import count_trials
-                print(count_trials)
                 if count_trials > 0:
                     self.view.show_button("Discard Session")
                     self.view.show_button("Save Session", column=1)
