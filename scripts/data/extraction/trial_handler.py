@@ -1,8 +1,9 @@
 import time
+from enum import Enum
+
 import brainflow
 import numpy as np
 from brainflow import BoardShim
-from enum import Enum
 
 
 class Labels(Enum):
@@ -25,6 +26,8 @@ event_type = []
 event_pos = []
 event_duration = []
 start_time = time.time()
+count_trials = 0
+count_event_types = 0
 
 
 def send_raw_data(data, start: time.time() = None):
@@ -57,12 +60,15 @@ def mark_trial(start: float, end: float, label: Labels):
     :return: None
     """
 
-    global start_time
+    global start_time, count_trials, count_event_types
     pos = round((start - start_time) / time_for_one_sample)
     duration = round((end - start) / time_for_one_sample)
     event_duration.append(duration)
+    if label not in event_type:
+        count_event_types += 1
     event_type.append(label)
     event_pos.append(pos)
+    count_trials += 1
     print("Finished storing")
     for i in raw_data:
         print(i[pos:pos+duration])
@@ -134,3 +140,6 @@ def save_session(metadata: np.ndarray, npz_name: str):
 
     np.savez(file_path, meta=metadata, raw_data=create_raw_data_array(), event_type=create_event_type_array(),
              event_pos=create_position_array(), event_duration=create_duration_array())
+    global count_trials, count_event_types
+    count_trials = 0
+    count_event_types = 0

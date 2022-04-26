@@ -230,21 +230,49 @@ class ConfigView(View):
         else:
             self.master.call("set_theme", "light")
 
+    def enable_inputs(self):
+        """Helper function to enable the input fields"""
+        self.set_input_state(state='enabled')
+
+    def disable_inputs(self):
+        """Helper function to disable the input fields"""
+        self.set_input_state(state='disabled')
+
+    def set_input_state(self, state):
+        """Sets all the input fields of ConfigView to a given state
+
+        :param any state: the state to set the input fields ('enabled', 'disabled')
+        :return: None
+        """
+        self.entries["ID"].configure(state=state)
+        self.entries["Age"].configure(state=state)
+        self.combo_boxes["Sex"].configure(state=state)
+        self.entries["Threshold"].configure(state=state)
+        self.entries["f_min"].configure(state=state)
+        self.entries["f_max"].configure(state=state)
+        self.spin_boxes["window_size"].configure(state=state)
+        self.spin_boxes["window_offset"].configure(state=state)
+        self.spin_boxes["trial_min_duration"].configure(state=state)
+        self.check_buttons["Trial Recording"].configure(state=state)
+
 
 class GameView(View):
     def __init__(self, master):
         super().__init__(master)
         self.grid(row=0, column=0, sticky='nsew')
-
+        self.data = None
         self.frames = {}
         self.mind_pong = None
+
+    def bind_data(self, data):
+        self.data = data
 
     def create_view(self):
         control_frame = tk.Frame(master=self)
         control_frame.columnconfigure(0, weight=1)
         control_frame.grid(row=1, column=1, sticky='nsew')
 
-        frame = Game(control_frame, self)
+        frame = Game(control_frame, self, self.data)
         frame.grid(row=0, column=0, sticky='nsew')
         frame.focus_set()
         frame.tkraise()

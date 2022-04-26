@@ -47,6 +47,7 @@ class ConfigController(Controller):
 
         # Create second top level window
         if self.valid_form:
+            self.view.disable_inputs()
             self.master.create_game_window()
 
     def validate_form(self):
@@ -223,4 +224,6 @@ class GameController(Controller):
 
     def bind(self, view: GameView):
         self.view = view
+        self.data = self.master.data_model
+        self.view.bind_data(self.data)
         self.view.create_view()

@@ -2,7 +2,7 @@ import datetime
 import unittest
 import numpy as np
 
-import scripts.data.extraction as extraction
+from scripts.mvc.models import MetaData
 
 
 class TestMetaDataClass(unittest.TestCase):
@@ -10,12 +10,12 @@ class TestMetaDataClass(unittest.TestCase):
         # GIVEN
         time = datetime.datetime.now().time()
         meta = [('id', 1), ('sex', 'f'), ('age', 27), ('date', datetime.date.today()), ('time', time),
-                ('sampling_rate', 125), ('channels', extraction.MetaData.bci_channels),
+                ('sampling_rate', 125), ('channels', MetaData.bci_channels),
                 ('recording_type', 'game'), ('headset', 'BCI'), ('amount_trials', 7), ('different_events', 2),
                 ('comment', 'hallo')]
 
         # WHEN
-        session = extraction.MetaData(sid=1, sex='f', age=27, amount_events=2, comment='hallo', amount_trials=7,
+        session = MetaData(sid=1, sex='f', age=27, amount_events=2, comment='hallo', amount_trials=7,
                                       time=time)
 
         # THEN

@@ -75,7 +75,6 @@ class Player:
         self.start_pos = True
         self.direction_update = False
         self.target = target
-        self.hit_occurred = False
         self.start_time_trial = time.time()
         self.last_direction_update = 0
         self.trial_label = trial_handler.Labels.INVALID
@@ -99,9 +98,10 @@ class Player:
         :param delta_time: delta time for velocity x-axis
         :return: None
         """
+        self.velocity_x_axis = self.calculate_velocity() * delta_time
 
         self.collision_with_target()
-        self.velocity_x_axis = self.calculate_velocity() * delta_time
+
         # every time the direction is not updated the player gets slower
         if self.direction_update:
             self.direction_update = False
@@ -119,9 +119,6 @@ class Player:
         :rtype: int
         """
         if self.start_pos:
-            return 0
-
-        if self.hit_occurred:
             return 0
 
         if self.direction == 1:
@@ -199,7 +196,10 @@ class Player:
             self.start_pos = False
         self.direction = -1
         self.direction_update = True
-        self.is_trial_valid()
+
+        # Checks only if the trial is valid if trials are recorded
+        if self.root.data.trial_recording:
+            self.is_trial_valid()
 
     def move_right(self, event):
         """
@@ -215,7 +215,10 @@ class Player:
             self.start_pos = False
         self.direction = 1
         self.direction_update = True
-        self.is_trial_valid()
+
+        # Checks only if the trial is valid if trials are recorded
+        if self.root.data.trial_recording:
+            self.is_trial_valid()
 
     def collision_with_target(self):
         """
@@ -223,9 +226,10 @@ class Player:
         (2) Initiates the handling of the hit
         :return: None
         """
-        hit_from_right = self.target.pos[0] <= self.pos[2] <= self.target.pos[2]
-        hit_from_left = self.target.pos[2] >= self.pos[0] >= self.target.pos[0]
+        hit_from_right = self.target.pos[0] <= self.pos[2]+(self.velocity_x_axis * self.speed_factor) <= self.target.pos[2]
+        hit_from_left = self.target.pos[2] >= self.pos[0]+(self.velocity_x_axis * self.speed_factor) >= self.target.pos[0]
         if hit_from_left or hit_from_right:
+            self.velocity_x_axis = 0
             self.root.change(game.Hit)
 
     def start_trial(self):
@@ -245,8 +249,6 @@ class Player:
         """
         # Trial has not started
         if self.last_direction_update == 0:
-            print(self.pos[0])
-            print(self.target.pos[0])
             # Target is right and player moves to the right
             if self.pos[0] < self.target.pos[0] and self.direction == 1:
                 print("right")
@@ -273,7 +275,7 @@ class Player:
         :return: None
         """
         stop_time_trial = time.time()
-        if (stop_time_trial - self.start_time_trial) > config.MIN_DURATION_OF_TRIAL and self.last_direction_update is not None:
+        if (stop_time_trial - self.start_time_trial) > config.MIN_DURATION_OF_TRIAL and self.last_direction_update != 0:
             trial_handler.mark_trial(self.start_time_trial, stop_time_trial, self.trial_label)
             print("Valid trial is stored")
             print(self.start_time_trial, stop_time_trial, self.trial_label)

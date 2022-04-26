@@ -8,8 +8,6 @@ import scripts.pong.target as target
 import scripts.config as config
 
 
-
-
 class GameState(object):
     """
     A class used to handle the state management in the Game
@@ -105,11 +103,12 @@ class Game(tk.Frame):
         Changes the internal state to state if possible
     """
 
-    def __init__(self, parent, controller):
+    def __init__(self, parent, controller, data):
         """
         Constructor method
         :param Any parent: parent
         :param Any controller: controller
+        :param Any data: data model
         :attribute int self.width: the width of the pong window
         :attribute int self.height: the height of the pong window
         :attribute GameState self.state: the current game state
@@ -125,6 +124,7 @@ class Game(tk.Frame):
         :attribute Target self.target: the target object
         :attribute int self.curr_restart_time: counts time for hit state
         :attribute float[] self.remaining_time_history: list with left over time
+        :attribute Any self.data: data model
         """
 
         tk.Frame.__init__(self, parent)
@@ -135,12 +135,15 @@ class Game(tk.Frame):
         WINDOW_HEIGHT = self.winfo_screenheight()
         self.width = WINDOW_WIDTH
         self.height = WINDOW_HEIGHT
+        print("Hight ", self.height)
 
         # State of the game - default is idle
         self.state = Idle()
 
         self.score = 0
         self.miss = 0
+
+        self.data = data
 
         self.remaining_time_history = []
 
@@ -153,8 +156,9 @@ class Game(tk.Frame):
         self.canvas = Canvas(self, width=self.width, height=self.height, bd=0, highlightthickness=0, relief='ridge')
         self.score_label, self.score_per_label, self.time_label, self.average_time_label = None, None, None, None
 
-        self.target = target.Target(self, self.canvas, 'red', 60)
-        self.player = player.Player(self, self.canvas, 60, 60, 'blue', target=self.target,
+        self.target = target.Target(self, self.canvas, 'red', self.height / config.OBJECT_SIZE)
+        self.player = player.Player(self, self.canvas, self.height / config.OBJECT_SIZE,
+                                    self.height / config.OBJECT_SIZE, 'blue', target=self.target,
                                     strategy=config.USED_STRATEGY_CLASS)
         self.target.spawn_new_target(self.player.pos)
         self.ground = self.canvas.create_rectangle(0, 0, WINDOW_WIDTH, 10, fill='Black')
@@ -196,7 +200,9 @@ class Game(tk.Frame):
 
         elif curr_state is Hit.name:
             if self.curr_restart_time == 0:
-                self.player.stop_trial()
+                # Trials are stopped only if trials are recorded
+                if self.data.trial_recording:
+                    self.player.stop_trial()
                 self.canvas.itemconfig(self.target.id, fill='green')
 
                 # time that player needed to reach the target in s
@@ -235,7 +241,7 @@ class Game(tk.Frame):
 
             self.player.speed_factor = 0
             del self.target
-            self.target = target.Target(self, self.canvas, 'red', 60)
+            self.target = target.Target(self, self.canvas, 'red', self.height / config.OBJECT_SIZE)
             self.player.target = self.target
             self.target.spawn_new_target(self.player.pos)
             self.player.stop_trial()
