@@ -6,6 +6,7 @@ from typing import List
 import mne
 import numpy as np
 from scripts.config import NOTCH_FILTER_FREQ, NOTCH_FILTER
+from scripts.data.extraction.trial_handler import Labels
 
 
 def bp_notch_filtering(data: np.ndarray, samplerate: int = 125):
@@ -35,7 +36,7 @@ def to_idxs_of_list_str(elements: List[str], list: List[str]):
 
 def get_channel_rawdata(session_path: str, ch_names: List[str] = None):
     """
-    loads the npz file and transform the data for the ML-BCI framework
+    loads the npz file and transforms the data for the ML-BCI framework
     :param session_path: path of the npz file
     :param ch_names: filter for the channels
     :return:

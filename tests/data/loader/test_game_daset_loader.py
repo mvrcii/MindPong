@@ -30,7 +30,7 @@ class MyTestCase(unittest.TestCase):
         self.assertEqual(expected_chan_label.all(), chan_label.all())
 
         chan_data, chan_label = game_dataset_loader.get_channel_rawdata('../../../scripts/data/session/test_loader.npz',
-                                                                       ['C4', 'C3'])
+                                                                        ['C4', 'C3'])
         expected_chan_data = np.array([[1.0369846, 1.9401181, 3.05990587, 3.96296898],
                                        [1.0369846, 1.9401181, 3.05990587, 3.96296898]])
         self.assertEqual(expected_chan_data.all(), chan_data.all())

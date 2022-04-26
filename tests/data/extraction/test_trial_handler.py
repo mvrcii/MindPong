@@ -75,7 +75,7 @@ class MyTestCase(unittest.TestCase):
         expected_metadata = np.array(meta, dtype=dtype)
         expected_pos = np.array([1])
         expected_duration = np.array([4])
-        expected_type = np.array([Labels.LEFT])
+        expected_type = np.array([trial_handler.Labels.LEFT])
         trial_handler.save_session(metadata, 'test_trial_handler.npz')
         test = np.load('../../../scripts/data/session/test_trial_handler.npz', allow_pickle=True)
         self.assertEqual(test['meta'].all(), expected_metadata.all())
