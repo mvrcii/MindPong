@@ -288,6 +288,14 @@ class ConfigView(View):
         """
         self.buttons[label].grid(padx=10, pady=5, row=row, column=column, sticky="nsew")
 
+    def reset_view(self):
+        """Sets the view """
+        self.enable_inputs()
+        self.hide_button("Stop Session")
+        self.hide_button("Save Session")
+        self.hide_button("Discard Session")
+        self.show_button("Start Session", row=0, column=0)
+
 
 class GameView(View):
     def __init__(self, master):
