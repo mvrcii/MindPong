@@ -49,10 +49,10 @@ class MyTestCase(unittest.TestCase):
         self.assertEqual(1, trial_handler.count_event_types)
 
     def test_save_session(self):
-        data1 = [[1] for _ in range(16)]
-        data2 = [[2] for _ in range(16)]
-        data3 = [[3] for _ in range(16)]
-        data4 = [[4] for _ in range(16)]
+        data1 = [[1.0] for _ in range(16)]
+        data2 = [[2.0] for _ in range(16)]
+        data3 = [[3.0] for _ in range(16)]
+        data4 = [[4.0] for _ in range(16)]
         start = time.time()
         trial_handler.send_raw_data(data1, start=start)
         trial_handler.send_raw_data(data2)
@@ -61,7 +61,7 @@ class MyTestCase(unittest.TestCase):
         trial_handler.mark_trial(start + 0.008, start + (0.008 * 5), trial_handler.Labels.LEFT)
         expected_array = [[] for _ in range(16)]
         for i in range(len(expected_array)):
-            expected_array[i] = [1, 2, 3, 4]
+            expected_array[i] = [1.0, 2.0, 3.0, 4.0]
         expected_array = np.array(expected_array)
 
         timestamp = datetime.datetime.now().time()
@@ -76,8 +76,8 @@ class MyTestCase(unittest.TestCase):
         expected_pos = np.array([1])
         expected_duration = np.array([4])
         expected_type = np.array([trial_handler.Labels.LEFT])
-        trial_handler.save_session(metadata, 'test.npz')
-        test = np.load('../../../scripts/data/session/test.npz', allow_pickle=True)
+        trial_handler.save_session(metadata, 'test_trial_handler.npz')
+        test = np.load('../../../scripts/data/session/test_trial_handler.npz', allow_pickle=True)
         self.assertEqual(test['meta'].all(), expected_metadata.all())
         self.assertEqual(test['raw_data'].all(), expected_array.all())
         self.assertEqual(test['event_pos'].all(), expected_pos.all())
