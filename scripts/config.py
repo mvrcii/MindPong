@@ -21,4 +21,12 @@ FOCUS_POINT_TIMER = 3
 NOTCH_FILTER_FREQ: float = 50
 NOTCH_FILTER = True
 
+# Algorithm
+# channel configuration of the headset we use
+# BCI_CHANNELS = ['C3', 'Cz', 'C4', 'P3', 'Pz', 'P4', 'O1', 'O2', 'FC5', 'FC1', 'FC2', 'FC6', 'CP5', 'CP1', 'CP2',
+#                 'CP6']
+
+BCI_CHANNELS = ['C3', 'Cz', 'C4', 'P3', '?', 'P4', 'T3', '?', '?', 'F3', 'F4', '?', '?', '?', '?',
+                'T4']  # large laplacian
+
 
