@@ -10,7 +10,7 @@ class IStrategy(metaclass=ABCMeta):
 
     @staticmethod
     @abstractmethod
-    def __str__(player):
+    def control(player):
         """
         Abstract method
         :param player: player object
@@ -24,7 +24,7 @@ class KeyStrategy(IStrategy):
     """
 
     @staticmethod
-    def __str__(player):
+    def control(player):
         """
         Binds the keys with the move methods of the player
         :param player: player object
@@ -40,7 +40,7 @@ class AlgorithmsStrategy(IStrategy):
     """
 
     @staticmethod
-    def __str__(player):
+    def control(player):
         """
         Binds events posted by the algorithm with the move methods of the player
         :param player: player object
