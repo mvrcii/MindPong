@@ -97,8 +97,10 @@ class ConfigController(Controller):
         :return: None
         """
         self.__set_comment()
+        from scripts.data.extraction.trial_handler import count_trials, count_event_types
         meta_data = MetaData(sid=self.data.subject_id, age=self.data.subject_age, sex=self.data.subject_sex,
                              comment=self.data.comment, amount_events=count_event_types, amount_trials=count_trials)
+        print(meta_data.__str__())
         file_name = "session-%s-%s" % (self.data.subject_id, datetime.now().strftime("%d%m%Y-%H%M%S"))
 
         save_session(meta_data.turn_into_np_array(), file_name)

@@ -15,7 +15,7 @@ class ConfigData(object):
                  trial_min_duration: int = 1000,
                  comment: str = '',
                  trial_recording: bool = True):
-        
+
         self.__subject_id = subject_id
         self.__subject_age = subject_age
         self.__subject_sex = subject_sex
@@ -40,27 +40,27 @@ class ConfigData(object):
     @property
     def subject_sex(self):
         return self.__subject_sex
-    
+
     @property
     def threshold(self):
         return self.__threshold
-    
+
     @property
     def f_min(self):
         return self.__f_min
-    
+
     @property
     def f_max(self):
         return self.__f_max
-    
+
     @property
     def window_size(self):
         return self.__window_size
-    
+
     @property
     def window_offset(self):
         return self.__window_offset
-    
+
     @property
     def trial_min_duration(self):
         return self.__trial_min_duration
@@ -143,7 +143,7 @@ class ConfigData(object):
             self.__f_min = value
         else:
             raise ValueError(f'Invalid f_min: {value}')
-        
+
     @f_max.setter
     def f_max(self, value: float):
         """
@@ -157,7 +157,7 @@ class ConfigData(object):
             self.__f_max = value
         else:
             raise ValueError(f'Invalid f_max: {value}')
-        
+
     @window_size.setter
     def window_size(self, value: int):
         """
@@ -185,7 +185,7 @@ class ConfigData(object):
             self.__window_offset = value
         else:
             raise ValueError(f'Invalid window_offset: {value}')
-        
+
     @trial_min_duration.setter
     def trial_min_duration(self, value: int):
         """
@@ -336,6 +336,10 @@ class MetaData:
     @property
     def time(self):
         return self.__time
+
+    def __str__(self):
+        return (
+            f'======META DATA======\nRecording date: {self.__date.strftime("%d/%m/%y")} \nStart of session: {self.time.strftime("%H:%M:%S")} \n______Subject______\nID: {self.__subject_ID} \nSex: {self.__subject_sex} \nAge: {self.__subject_age} \n______Recording_____\nSampling Rate: {self.__sampling_rate} \nHeadset: {self.__headset} \nChannel Mapping: {self.__channel_mapping} \nRecording Type: {self.__recording_type} \n_______Trials______\nAmount of Trials: {self.__amount_trials} \nAmount of different events: {self.__amount_different_events} \n_______Comment_____\n {self.__comment} \n=====================')
 
     def turn_into_np_array(self) -> np.ndarray:
         """
