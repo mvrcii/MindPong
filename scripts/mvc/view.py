@@ -40,6 +40,7 @@ class ConfigView(View):
         self.__build_trial_section(control_frame, "Trial", row=2, column=0)
         self.__build_comment_section(control_frame, "Comment", row=3, column=0)
         self.__build_button_section(control_frame, row=4, column=0)
+        self.__build_progress_bar_section(control_frame, row=4, column=0)
 
         # Second Column
         self.__build_graph_section(control_frame, "Graph", row=0, column=1)
@@ -79,6 +80,21 @@ class ConfigView(View):
     def disable_inputs(self):
         """Helper function to disable the input fields"""
         self.__set_input_state(state='disabled')
+
+    def set_progress_bar_value(self, percentage):
+        """Sets the value of the progress bar in percentage
+
+        :return: None
+        """
+        self.progress_bar['value'] = percentage
+
+    def hide_progress_bar(self):
+        """Hides the progress bar"""
+        self.progress_bar.grid_forget()
+
+    def show_progress_bar(self, row, column):
+        """Hides the progress bar"""
+        self.progress_bar.grid(padx=10, pady=5, row=row, column=column, sticky="nsew")
 
     # First Column Sections
     def __build_subject_section(self, frame, label, row, column):
@@ -190,6 +206,11 @@ class ConfigView(View):
         self.__create_button(button_frame, "Save Session", row=0, column=0)
         self.__create_button(button_frame, "Discard Session", row=0, column=0)
         button_frame.grid(row=row, column=column, sticky="nsew")
+
+    def __build_progress_bar_section(self, control_frame, row, column):
+        self.progress_bar = ttk.Progressbar(control_frame, orient="horizontal", mode="determinate")
+        self.progress_bar.grid(row=row, column=column, padx=10, pady=5, sticky="nsew")
+        self.progress_bar.grid_forget()
 
     # Helper functions
     def __create_entry(self, frame, label, row, column, text_var):
@@ -306,21 +327,34 @@ class ConfigView(View):
 class GameView(View):
     def __init__(self, master):
         super().__init__(master)
-        self.grid(row=0, column=0, sticky='nsew')
+        self.master = master
         self.data = None
-        self.frames = {}
-        self.mind_pong = None
+        self.grid(sticky='nsew')
+
+        self.control_frame = None
         self.game = None
+        self.calibration = None
 
     def bind_data(self, data):
         self.data = data
 
     def create_view(self):
-        control_frame = tk.Frame(master=self)
-        control_frame.columnconfigure(0, weight=1)
-        control_frame.grid(row=1, column=1, sticky='nsew')
+        # Start the game window with the calibration first
+        self.master.title("Calibration")
+        self.__start_calibration()
 
-        self.game = Game(control_frame, self, self.data)
-        self.game.grid(row=0, column=0, sticky='nsew')
-        self.game.focus_set()
-        self.game.tkraise()
+    def start_game(self):
+        """Creates and displays the game view on the game window"""
+        game = Game(self, self, self.data)
+        game.grid(row=0, column=0, sticky='nsew')
+        game.focus_set()
+        game.tkraise()
+        self.game = game
+
+    def __start_calibration(self):
+        """Creates and displays the calibration view on the game window"""
+        calibration = tk.Frame(master=self)
+        calibration.grid(sticky='nsew')
+        calibration.focus_set()
+        calibration.tkraise()
+        self.calibration = calibration

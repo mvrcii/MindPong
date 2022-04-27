@@ -1,6 +1,6 @@
 import scripts.pong.strategy as strategy
 
-# Pong
+# Game
 WINDOW_WIDTH = 1920
 WINDOW_HEIGHT = 1080
 TARGET_RESPAWN_TIME = 2000
@@ -13,9 +13,7 @@ MIN_DURATION_OF_TRIAL = 1
 OBJECT_SIZE = 14
 
 # Calibration
-CALIBRATION_WAIT_TIMER = 3
-BLACK_WINDOW_TIMER = 3
-FOCUS_POINT_TIMER = 3
+CALIBRATION_TIME = 5  # in seconds
 
 # Loader
 NOTCH_FILTER_FREQ: float = 50
