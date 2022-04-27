@@ -40,14 +40,14 @@ class App(tk.Tk):
         self.after(5, self.__update_controllers)
 
     def create_game_window(self):
-        """Creates the second window and the associated read data thread"""
+        """Creates the second window (game window) and starts the associated read data thread"""
         self.game_window = GameWindow(self)
         # Starting the thread to read data
         self.thread = Thread(target=read_data.init, args=[self.data_model], daemon=True)
         self.thread.start()
 
     def destroy_game_window(self):
-        """Destroys the second window and the associated read data thread"""
+        """Destroys the second window (game window) and stops the associated read data thread"""
         self.game_window.destroy()
         self.game_window = None
         self.__data_model.session_recording = False

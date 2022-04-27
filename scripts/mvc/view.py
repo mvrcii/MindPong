@@ -82,10 +82,7 @@ class ConfigView(View):
         self.__set_input_state(state='disabled')
 
     def set_progress_bar_value(self, percentage):
-        """Sets the value of the progress bar in percentage
-
-        :return: None
-        """
+        """Sets the value of the progress bar in percentage"""
         self.progress_bar['value'] = percentage
 
     def hide_progress_bar(self):
@@ -346,7 +343,7 @@ class GameView(View):
         self.data = data
 
     def create_view(self):
-        # Start the game window with the calibration first
+        """Start the game window with the calibration first"""
         self.master.title("Calibration")
         self.__start_calibration()
 

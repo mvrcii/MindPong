@@ -5,7 +5,7 @@ from tkinter.messagebox import askyesno, showinfo
 from scripts.config import CALIBRATION_TIME
 from scripts.mvc.view import View, ConfigView, GameView
 from scripts.pong.game import End
-from scripts.data.extraction.trial_handler import save_session, count_trials, count_event_types
+from scripts.data.extraction.trial_handler import save_session
 from scripts.mvc.models import MetaData
 from datetime import datetime
 
