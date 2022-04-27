@@ -39,7 +39,7 @@ class App(tk.Tk):
         """
         self.config_window.config_controller.update()
         # self.game_window.game_controller.update()
-        self.after(1, self.__update_controllers)
+        self.after(5, self.__update_controllers)
 
     def create_game_window(self):
         self.game_window = GameWindow(self)

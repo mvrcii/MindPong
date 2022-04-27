@@ -36,9 +36,8 @@ class ConfigController(Controller):
         self.view.buttons["Discard Session"].configure(command=self.__discard_session)
         self.view.check_buttons["Trial Recording"].configure(command=self.__set_trial_recording)
 
-    @staticmethod
-    def update():
-        perform_live_plot(0.00001)
+    def update(self):
+        perform_live_plot()
 
     def __init_config_view_values(self):
         self.__set_entry_text(self.view.entries["ID"], self.data.subject_id)

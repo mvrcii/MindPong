@@ -1,4 +1,6 @@
 import queue
+import time
+
 import matplotlib
 import matplotlib.pyplot as plt
 import numpy as np
@@ -52,16 +54,13 @@ def live_plotter(plot_data: PlotData):
     return plot_data.line
 
 
-def perform_live_plot(pause_time):
+def perform_live_plot():
     """
     Periodically plots new values from each queue in queues.
     :param pause_time: refresh rate of the plot
     """
     global fig, queues
-    while True:
-        # necessary if you want to get out of the endless loop after the figure is closed
-        if not plt.get_fignums():
-            break
+    if fig:
         for plot_data in queues:
             if plot_data.q.empty():
                 # skip if queue has no new values
@@ -84,8 +83,8 @@ def perform_live_plot(pause_time):
             plot_data.y_data[-len(content_y):] = content_y
             # replot data
             plot_data.line = live_plotter(plot_data)
-        # draw and sleep
-        plt.pause(pause_time)
+        # draw canvas
+        fig.canvas.draw()
 
 
 def connect_queue(queue: queue.Queue, plot_label, subplot_index):
@@ -95,6 +94,8 @@ def connect_queue(queue: queue.Queue, plot_label, subplot_index):
     :param plot_label: class name
     :param subplot_index: position of th subplot
     """
+    while not fig:
+        time.sleep(0.05)
     if plot_label in plots:
         ax = plots.get(plot_label)
     else:
@@ -111,5 +112,3 @@ def start_live_plot(figure):
     """
     global fig
     fig = figure
-    # this is the call to matplotlib that allows dynamic plotting
-    plt.ion()

@@ -207,7 +207,7 @@ class ConfigView(View):
         self.canvas.draw()
 
     def show_plot(self, row, column):
-        self.canvas.get_tk_widget().grid(rowspan=4, row=row, column=column, sticky="nsew")
+        self.canvas.get_tk_widget().grid(rowspan=5, row=row, column=column, sticky="nsew")
 
     # Helper functions
     def __create_entry(self, frame, label, row, column, text_var):
