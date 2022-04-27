@@ -1,10 +1,13 @@
 import threading, queue
+import time
+
 import numpy as np
 from scripts.algorithms import cursor_online_control, BCIC_dataset_loader as bdl
 import scripts.data.visualisation.liveplot
+from scripts.data.visualisation.liveplot_matlab import start_live_plot, connect_queue
 
 # GLOBAL DATA
-TMIN = 500.0  # Minimum time value shown in the following figures
+TMIN = 100.0  # Minimum time value shown in the following figures
 TMAX = 850.0  # Maximum time value shown in the following figures
 TS_SIZE = 1.0  # 1 s time slice
 TS_STEP = 0.2  # 50 ms in percentage
@@ -12,16 +15,30 @@ SAMPLING_RATE = 250
 num_used_channels = 0
 mutex = threading.Lock
 SLIDING_WINDOW_SIZE_FACTOR = 5
-queue_label = None
-queue_clabel = None
-queue_hcon = None
+
+
+
 '''
-Sliding window size: 
+Sliding window SIZE: 
     1 -> 200ms
     2 -> 400ms
     ...
     5 -> 1s
 '''
+
+class QueueManager:
+    def __init__(self):
+        self.queue_label = queue.Queue(100)
+        self.queue_clabel = queue.Queue(100)
+
+        self.queue_c3 = queue.Queue(100)
+        self.queue_c4 = queue.Queue(100)
+
+        self.queue_c3_pow = queue.Queue(100)
+        self.queue_c4_pow = queue.Queue(100)
+
+        self.queue_hcon = queue.Queue(100)
+        self.queue_hcon_norm = queue.Queue(100)
 
 
 def load_bcic_dataset(ch_weight):
@@ -74,7 +91,21 @@ def test_algorithm(chan_data, label_data, used_ch_names):
         stop_idx = int(((toff[i] + TS_SIZE) * SAMPLING_RATE) - 1)
 
         # calls the one and only cursor control algorithm
-        calculated_label = cursor_online_control.perform_algorithm(chan_data[:, start_idx:stop_idx], used_ch_names, SAMPLING_RATE, queue_hcon, queue_label, queue_clabel, TS_STEP)
+        calculated_label = cursor_online_control.perform_algorithm(chan_data[:, start_idx:stop_idx], used_ch_names, SAMPLING_RATE, queue_manager, offset_in_percentage=TS_STEP)
+        channel_0 = chan_data[0, start_idx:stop_idx]
+        channel_1 = chan_data[1, start_idx:stop_idx]
+        for sample in range(len(channel_0)):
+            try:
+                queue_manager.queue_c3.put(channel_0[sample], True)
+                queue_manager.queue_c4.put(channel_1[sample], True)
+            except queue.Full:
+                print('Queue is full')
+            # time.sleep(0.00008)
+
+        # try:
+        #     queue_manager.queue_label.put_nowait(label[i])
+        # except queue.Full:
+        #     pass
 
         # compare the calculated label with the predefined label, if same -> increase accuracy
         if label[i] != -1:
@@ -96,14 +127,14 @@ def test_algorithm(chan_data, label_data, used_ch_names):
 
 
 def connect_queues():
-    global queue_label, queue_clabel, queue_hcon
-    queue_label = queue.Queue(100)
-    queue_clabel = queue.Queue(100)
-    queue_hcon = queue.Queue(100)
-    scripts.data.visualisation.liveplot.add_queue(('QUEUE_CLABEL', '#F1C40F', queue_clabel))
-    scripts.data.visualisation.liveplot.add_queue(('QUEUE_LABEL', '#16A085', queue_label))
-    scripts.data.visualisation.liveplot.add_queue(('QUEUE_HCON', '#9B59B6', queue_hcon))
 
+    # scripts.data.visualisation.liveplot.add_queue(('QUEUE_CLABEL', '#F1C40F', queue_manager.queue_c3_pow))
+    # scripts.data.visualisation.liveplot.add_queue(('QUEUE_LABEL', '#16A085', queue_manager.queue_c4_pow))
+    # scripts.data.visualisation.liveplot.add_queue(('QUEUE_HCON', '#9B59B6', queue_hcon))
+    connect_queue(queue_manager.queue_c3, 'raw', 211)
+    connect_queue(queue_manager.queue_c4, 'raw', 211)
+    connect_queue(queue_manager.queue_c3_pow, 'pow', 212)
+    connect_queue(queue_manager.queue_c4_pow, 'pow', 212)
 
 def sort_incoming_channels(sliding_window, used_ch_names):
 
@@ -112,8 +143,6 @@ def sort_incoming_channels(sliding_window, used_ch_names):
 
     #                 'C3', 'Cz', 'C4', 'P3', '?', 'P4', 'T3', '?', '?', 'F3', 'F4', '?', '?', '?', '?', 'T4'
     ch_names_weight = [1,    1,    1,    1,    0,    1,    1,   0,   0,   1,    1,    0,   0,   0,   0,    1]
-
-
 
     filtered_sliding_window = list()
     filtered_channel_names = list()
@@ -141,12 +170,10 @@ def test_algorithm_with_dataset():
     test_algorithm(preloaded_data, preloaded_labels, used_ch_names)
 
 
-def test_algorithm_with_livedata(sliding_window, used_ch_names, sampling_rate, queue_hcon, queue_c3, queue_c4, ts_step):
-    sliding_window, used_ch_names = sort_incoming_channels(sliding_window, used_ch_names)
-    return cursor_online_control.perform_algorithm(sliding_window, used_ch_names, sampling_rate, queue_hcon, queue_c3, queue_c4, offset_in_percentage=ts_step)
-
-
 if __name__ == '__main__':
     print('CCA-test main started ...')
+    queue_manager = QueueManager()
     threading.Thread(target=test_algorithm_with_dataset, daemon=True).start()
-    scripts.data.visualisation.liveplot.start_liveplot()
+    # scripts.data.visualisation.liveplot.start_liveplot()
+    start_live_plot(queue_manager, 0.00001)
+
