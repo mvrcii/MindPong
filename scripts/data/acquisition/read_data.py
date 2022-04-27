@@ -1,19 +1,19 @@
 import queue
 import threading
-import time
+import platform
 
-import mne
 import time
 import numpy as np
 from numpy_ringbuffer import RingBuffer
 import serial
 import serial.tools.list_ports
 import brainflow
-from brainflow.board_shim import BoardShim, BrainFlowInputParams
+from brainflow.board_shim import BoardShim, BrainFlowInputParams, BrainFlowError
 
 import scripts.data.visualisation.liveplot
-from algorithms import cca_test
-from scripts.data.extraction import trial_handler, MetaData
+from scripts.algorithms import cca_test
+from scripts.mvc.models import MetaData
+from scripts.data.extraction import trial_handler
 
 SAMPLING_RATE = BoardShim.get_sampling_rate(brainflow.board_shim.BoardIds.CYTON_DAISY_BOARD)
 queue_clabel = queue.Queue(100)
@@ -40,9 +40,10 @@ first_data = True
 stream_available = False  # indicates if stream is available
 board: BoardShim
 window_buffer = [RingBuffer(capacity=sliding_window_samples, dtype=float) for _ in range(number_channels)]
+data_model = None
 
 
-def init():
+def init(data_mdl):
     """
     --- starting point ---
     Initializing steps:
@@ -52,20 +53,30 @@ def init():
     """
     params = BrainFlowInputParams()
     params.serial_port = search_port()
+    global data_model
+    data_model = data_mdl
 
+    """"
     while not scripts.data.visualisation.liveplot.is_window_ready:
         # wait until plot window is initialized
         time.sleep(0.05)
+    
     connect_queues()
+    """
+
 
     if params.serial_port is not None:
         # BoardShim.enable_dev_board_logger()
         global board, stream_available
         board = BoardShim(brainflow.board_shim.BoardIds.CYTON_DAISY_BOARD, params)
-        board.prepare_session()
-        board.start_stream()
-        stream_available = True
-        handle_samples()
+        try:
+            board.prepare_session()
+            board.start_stream()
+            stream_available = True
+            handle_samples()
+        except BrainFlowError as err:
+            print(err.args[0])
+
     else:
         print('Port not found')
 
@@ -83,7 +94,17 @@ def search_port():
         if port.vid == 1027 and port.pid == 24597:
             port_name = port.device
             print('found port: ', port_name)
+
+            # If operating system is Linux set the Latency of the USB-Port to 1ms
+            if platform.system() == 'Linux':
+                import os
+                set_latency_cmd = 'setserial ' + port_name + ' low_latency'
+                os.system(set_latency_cmd)
+                get_latency_cmd = 'cat /sys/bus/usb-serial/devices/' + port_name[5:] + '/latency_timer'
+                print('set latency timer to: ' + os.popen(get_latency_cmd).read().strip() + 'ms')
+
             return port_name
+    print("Ended Search")
     return None
 
 
@@ -99,13 +120,16 @@ def handle_samples():
         if len(data[0]) > 0:
             # filter data
             for channel in range(number_channels):
-                brainflow.DataFilter.perform_bandstop(data[channel], SAMPLING_RATE, 0.0, 50.0, 5, brainflow.FilterTypes.BUTTERWORTH.value, 0)
+                brainflow.DataFilter.perform_bandstop(data[channel], SAMPLING_RATE, 0.0, 50.0, 5,
+                                                      brainflow.FilterTypes.BUTTERWORTH.value, 0)
 
-            if first_data:
-                trial_handler.send_raw_data(data, start=time.time())
-                first_data = False
-            else:
-                trial_handler.send_raw_data(data)
+            # only sends trial_handler raw data if trial recording is wished
+            if data_model.trial_recording:
+                if first_data:
+                    trial_handler.send_raw_data(data, start=time.time())
+                    first_data = False
+                else:
+                    trial_handler.send_raw_data(data)
             if allow_window_creation:
                 for i in range(len(data)):
                     window_buffer[i].extend(data[i])
@@ -131,7 +155,9 @@ def send_window():
         window[i] = np.array(window_buffer[i])
     # push window to cursor control algorithm
     # TODO: change offset_duration to percentage? Else change calculation in coc algorithm
-    calculated_label = cca_test.test_algorithm_with_livedata(window, MetaData.bci_channels, SAMPLING_RATE, queue_hcon, queue_c3, queue_c4, offset_duration / sliding_window_duration)
+    calculated_label = cca_test.test_algorithm_with_livedata(window, MetaData.bci_channels, SAMPLING_RATE, queue_hcon,
+                                                             queue_c3, queue_c4,
+                                                             offset_duration / sliding_window_duration)
     try:
         global queue_clabel
         queue_clabel.put(calculated_label)

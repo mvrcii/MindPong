@@ -1,12 +1,13 @@
 import random
-
-from scripts.config import *
+import scripts.pong.game as game
+import scripts.config as config
 
 
 class Target:
     """
     Target class
     """
+
     def __init__(self, root, canvas, color, size):
         self.start_distance = 0
         self.root = root
@@ -18,37 +19,18 @@ class Target:
         self.pos = None
         self.id = self.canvas.create_oval(0, 0, self.size, self.size, fill=self.color)
         self.pos = self.canvas.coords(self.id)
-        self.hit_player_target = False
-        self.spawn_target = False
-        self.counter = 0
         self.time_last_hit = 0
 
     def update(self, delta_time):
         """
-        handle time for a new spawn after a hit or when target was not reached in time
+        handle time for a new spawn when target was not reached in time
         :param delta_time:
         :return: None
         """
-        if self.hit_player_target:
-            self.canvas.itemconfig(self.id, fill='green')
-            if self.counter >= TIME_NEW_SPAWN:
-                self.hit_player_target = False
-                self.spawn_target = True
-                self.counter = 0
-                self.root.score += 1
-            else:
-                self.counter += delta_time
-        else:
-            self.time_last_hit += delta_time
-            if self.time_last_hit >= TIME_TO_CATCH_PER_PIXEL*self.start_distance:
-                self.spawn_target = True
-
-    def respawn(self):
-        """
-        Signals that the target was hit by the player
-        :return: None
-        """
-        self.hit_player_target = True
+        self.time_last_hit += delta_time
+        if self.time_last_hit >= config.TIME_TO_CATCH_PER_PIXEL * self.start_distance:
+            self.root.miss += 1
+            self.root.change(game.Respawn)
 
     def spawn_new_target(self, player_pos):
         """
@@ -56,16 +38,16 @@ class Target:
         :param player_pos: position of the player object
         :return: None
         """
+        offset_border = 70.0  # Offset to prevent that the text is in the border
         min_x = 0
         max_x = self.canvas_width - self.size
-        print(type(player_pos))
         condition = True
         while condition:
             random_x = random.uniform(min_x, max_x)
-            if (random_x + (self.size / 2) + MIN_DISTANCE_TARGET) <= player_pos[0]:
+            if (random_x + (self.size / 2) + offset_border + config.MIN_DISTANCE_TARGET) <= player_pos[0]:
                 condition = False
                 self.start_distance = player_pos[0] - random_x
-            elif (random_x - (self.size / 2) - MIN_DISTANCE_TARGET) >= player_pos[2]:
+            elif (random_x - (self.size / 2) - offset_border - config.MIN_DISTANCE_TARGET) >= player_pos[2]:
                 condition = False
                 self.start_distance = random_x - player_pos[2]
 

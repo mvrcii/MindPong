@@ -1,9 +1,12 @@
+import time
+
 import scripts.pong.game as game
-import scripts.pong.target as target
-from scripts.config import *
+import scripts.config as config
+
+import scripts.data.extraction.trial_handler as trial_handler
 
 
-# Define paddle properties and functions
+# Define player properties and functions
 class Player:
     """
     A Class to create the player
@@ -18,6 +21,9 @@ class Player:
     :method move_left(self, evt): Move paddle left
     :method move_right(self, evt): Move paddle right
     :method collision_with_target(self): checks collision with target
+    :method start_trial(self): sets the timestamp of the start of a trial
+    :method is_trial_valid(self): checks if the trial is still valid (player moves to target)
+    :method stop_trial(self): stops trial recording and saves valid trials
     """
 
     def __init__(self, root, canvas, width, height, color, target, strategy):
@@ -28,21 +34,29 @@ class Player:
         :param Any width: width of player
         :param Any height: height of player
         :param Any color: color of player
+        :param Any target: target
+        :param Any strategy: strategy for player movement
         :attribute Any self.root: Root
         :attribute Any self.canvas: Canvas
         :attribute Any self.canvas:width: Canvas width
         :attribute Any self.height: Canvas height
-        :attribute Any self.color: Color
-        :attribute Any self.width: Width
-        :attribute Any self.height: Height
-        :attribute None self.pos: Position
+        :attribute Any self.color: Color of the player
+        :attribute Any self.width: Width of the player
+        :attribute Any self.height: Height of the player
+        :attribute None self.pos: Position of the player in x axis
         :attribute int self.speed_factor: Speed factor
-        :attribute None self.id: Id
+        :attribute None self.id: ID
         :attribute int self.root: Root
-        :attribute int self.v_x: v_x
-        :attribute int self.direction: Direction
-        :attribute bool self.wall_hit: Wall hit
-        :attribute bool self.start_pos: Start position
+        :attribute int self.velocity_x_axis: velocity in x axis
+        :attribute int self.direction: Direction of player movement
+        :attribute bool self.wall_hit: Had the player an hit with the wall
+        :attribute bool self.start_pos: Is player at the start position
+        :attribute bool self.direction_update: Occurred a direction update
+        :attribute Any self.target: target of the game
+        :attribute bool self.hit_occurred: Occurred a hit with the target
+        :attribute Any self.start_time_trial: timestamp of the start of a trial in s
+        :attribute int self.last_direction_update: last direction update
+        :attribute Label self.trial_label: type of the event in the trial
         """
 
         self.root = root
@@ -61,7 +75,9 @@ class Player:
         self.start_pos = True
         self.direction_update = False
         self.target = target
-        self.hit_occurred = False
+        self.start_time_trial = time.time()
+        self.last_direction_update = 0
+        self.trial_label = trial_handler.Labels.INVALID
 
         self.request(strategy).__str__(self)
 
@@ -78,27 +94,23 @@ class Player:
 
     def update(self, delta_time):
         """
-        Update the delta time
+        Update the delta time (time between now and the time at the last update)
         :param delta_time: delta time for velocity x-axis
         :return: None
         """
+        self.velocity_x_axis = self.calculate_velocity() * delta_time
 
         self.collision_with_target()
-        self.velocity_x_axis = self.calculate_velocity() * delta_time
+
         # every time the direction is not updated the player gets slower
         if self.direction_update:
             self.direction_update = False
             self.speed_factor = 1
         else:
-            self.speed_factor -= (delta_time * 4) / TIME_TO_STOP_PLAYER
+            self.speed_factor -= (delta_time * 4) / config.TIME_TO_STOP_PLAYER
             # prevents the speed_factor from becoming negative
             if self.speed_factor <= 0:
                 self.speed_factor = 0
-
-        if self.target.spawn_target:
-            self.root.change(game.Respawn)
-            self.target.spawn_target = False
-            self.hit_occurred = False
 
     def calculate_velocity(self):
         """
@@ -107,9 +119,6 @@ class Player:
         :rtype: int
         """
         if self.start_pos:
-            return 0
-
-        if self.hit_occurred:
             return 0
 
         if self.direction == 1:
@@ -142,7 +151,7 @@ class Player:
 
     def draw(self):
         """
-        Draw the paddle
+        Draw the player
         :return: None
         """
 
@@ -151,7 +160,7 @@ class Player:
 
     def reset(self):
         """
-        Reset the paddle
+        Reset the player
         :return: None
         """
 
@@ -162,7 +171,7 @@ class Player:
 
     def init(self):
         """
-        Initializes the paddle object and its position
+        Initializes the player object and its position
         :return: None
         """
 
@@ -175,7 +184,7 @@ class Player:
 
     def move_left(self, event):
         """
-        Move paddle left
+        Move player left
         :return: None
         """
 
@@ -188,9 +197,13 @@ class Player:
         self.direction = -1
         self.direction_update = True
 
+        # Checks only if the trial is valid if trials are recorded
+        if self.root.data.trial_recording:
+            self.is_trial_valid()
+
     def move_right(self, event):
         """
-        Move paddle right
+        Move player right
         :return: None
         """
 
@@ -203,14 +216,67 @@ class Player:
         self.direction = 1
         self.direction_update = True
 
+        # Checks only if the trial is valid if trials are recorded
+        if self.root.data.trial_recording:
+            self.is_trial_valid()
+
     def collision_with_target(self):
         """
         (1) Detects if target is hit
         (2) Initiates the handling of the hit
         :return: None
         """
-        hit_from_right = self.target.pos[0] <= self.pos[2] <= self.target.pos[2]
-        hit_from_left = self.target.pos[2] >= self.pos[0] >= self.target.pos[0]
+        hit_from_right = self.target.pos[0] <= self.pos[2]+(self.velocity_x_axis * self.speed_factor) <= self.target.pos[2]
+        hit_from_left = self.target.pos[2] >= self.pos[0]+(self.velocity_x_axis * self.speed_factor) >= self.target.pos[0]
         if hit_from_left or hit_from_right:
-            self.hit_occurred = True
-            self.target.respawn()
+            self.velocity_x_axis = 0
+            self.root.change(game.Hit)
+
+    def start_trial(self):
+        """
+        Saves the timestamp by the start of a trial
+        :return: None
+        """
+        self.start_time_trial = time.time()
+
+    def is_trial_valid(self):
+        """
+        1. Checks if a trial is still valid during his recording
+            a) At the start of a trial it checks if the player is moving in the direction of the player
+            b) During the recording it checks if the player is still moving in the right direction
+        2. Stops the trial recording if the trial is not valid anymore
+        :return: None
+        """
+        # Trial has not started
+        if self.last_direction_update == 0:
+            # Target is right and player moves to the right
+            if self.pos[0] < self.target.pos[0] and self.direction == 1:
+                print("right")
+                self.trial_label = trial_handler.Labels.RIGHT
+                self.start_trial()
+                self.last_direction_update = self.direction
+            # Target is left and player moves to the left
+            elif self.pos[0] > self.target.pos[0] and self.direction == -1:
+                print("left")
+                self.trial_label = trial_handler.Labels.LEFT
+                self.start_trial()
+                self.last_direction_update = self.direction
+        # Player is still moving in the same direction --> Trial is valid
+        elif self.last_direction_update == self.direction:
+            self.last_direction_update = self.direction
+        # Player do not move in the right direction --> Trial is invalid
+        else:
+            print("Stopped Trial")
+            self.stop_trial()
+
+    def stop_trial(self):
+        """
+        Stops the recording of a trial and stores valid trials
+        :return: None
+        """
+        stop_time_trial = time.time()
+        if (stop_time_trial - self.start_time_trial) > config.MIN_DURATION_OF_TRIAL and self.last_direction_update != 0:
+            trial_handler.mark_trial(self.start_time_trial, stop_time_trial, self.trial_label)
+            print("Valid trial is stored")
+            print("Start-Time: ", self.start_time_trial, "End-Time: ", stop_time_trial, "Label: ", self.trial_label)
+        self.last_direction_update = 0
