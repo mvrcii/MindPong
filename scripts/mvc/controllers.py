@@ -24,7 +24,6 @@ class ConfigController(Controller):
 
         self.valid_form = True
         self.calibration_timer = 0
-        self.CALIBRATION_TIME = 5
 
     def bind(self, view: ConfigView):
         self.view = view
@@ -117,9 +116,10 @@ class ConfigController(Controller):
         :return: None
         """
         self.__set_comment()
-        print(count_event_types, count_trials)
+        from scripts.data.extraction.trial_handler import count_trials, count_event_types
         meta_data = MetaData(sid=self.data.subject_id, age=self.data.subject_age, sex=self.data.subject_sex,
                              comment=self.data.comment, amount_events=count_event_types, amount_trials=count_trials)
+        print(meta_data.__str__())
         file_name = "session-%s-%s" % (self.data.subject_id, datetime.now().strftime("%d%m%Y-%H%M%S"))
 
         save_session(meta_data.turn_into_np_array(), file_name)
@@ -315,5 +315,4 @@ class GameController(Controller):
     def show_end_screen(self):
         """Stops the game and shows the end screen"""
         self.view.game.change(End)
-
 
