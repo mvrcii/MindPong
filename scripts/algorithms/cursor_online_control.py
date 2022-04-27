@@ -9,6 +9,7 @@ from spectrum import arburg, arma2psd
 
 from scripts.algorithms.cca_test import QueueManager
 from scripts.utils.event_listener import post_event
+import scripts.config as config
 
 
 class PSD_METHOD(enum.Enum):
@@ -19,12 +20,9 @@ class PSD_METHOD(enum.Enum):
 
 
 # Global variables
-ringbuffer_hcon = None
-FMIN = 8.0
-FMAX = 12.0
-THRESHOLD = 1
-SAMPLING_FREQ = 125
-WEIGHT = 2
+FMIN: float
+FMAX: float
+SAMPLING_FREQ: int
 USED_METHOD = PSD_METHOD.multitaper
 
 
@@ -208,7 +206,8 @@ def manage_ringbuffer(window_size, offset_in_percentage:float):
     return ringbuffer_hcon
 
 
-def perform_algorithm(sliding_window, used_ch_names, sample_rate, queue_manager:QueueManager, offset_in_percentage=0.2):
+def perform_algorithm(sliding_window, used_ch_names, sample_rate, queue_manager:QueueManager, offset_in_percentage=0.2,
+                      f_min = 8.0, f_max= 12.0, threshold = 1.0):
     """
     Converts a sliding window into the corresponding horizontal movement
     Contains following steps:
@@ -226,8 +225,10 @@ def perform_algorithm(sliding_window, used_ch_names, sample_rate, queue_manager:
     for i in range(len(sliding_window)):
         sliding_window[i] = norm_data(sliding_window[i])
 
-    global SAMPLING_FREQ
+    global SAMPLING_FREQ, FMIN, FMAX
     SAMPLING_FREQ = sample_rate
+    FMIN = f_min
+    FMAX = f_max
 
     # 1. Spatial filtering
     samples_c3a, samples_c4a = calculate_spatial_filtering(sliding_window, used_ch_names)
@@ -253,7 +254,7 @@ def perform_algorithm(sliding_window, used_ch_names, sample_rate, queue_manager:
     area_c4 = integrate_psd_values(psd_c4a, f_c4a, USED_METHOD)
 
     # 4. Derive cursor control samples
-    hcon = (area_c4*WEIGHT) - area_c3
+    hcon = (area_c4*config.WEIGHT) - area_c3
 
     # normalize to zero mean and unit variance to derive the cursor control samples
     ringbuffer = manage_ringbuffer((len(sliding_window[0]) + 1)/sample_rate, offset_in_percentage)
@@ -265,8 +266,6 @@ def perform_algorithm(sliding_window, used_ch_names, sample_rate, queue_manager:
     standard_deviation = np.std(values)
     normalized_hcon = (hcon - mean) / standard_deviation if standard_deviation else 0
 
-    global THRESHOLD
-    threshold = THRESHOLD
 
     # converts the returned hcon to the corresponding label
     if normalized_hcon > threshold-0.2:     # left

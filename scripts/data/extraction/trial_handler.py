@@ -16,12 +16,12 @@ class Labels(Enum):
     EYES_OPEN = 2
     EYES_CLOSED = 3
 
-number_channels = len(BoardShim.get_eeg_channels(brainflow.board_shim.BoardIds.CYTON_DAISY_BOARD))
+NUMBER_CHANNELS = len(BoardShim.get_eeg_channels(brainflow.board_shim.BoardIds.CYTON_DAISY_BOARD))
 
 # time which is needed for one sample in s, T = 1/f = 1/125 = 0.008
-time_for_one_sample = 1 / BoardShim.get_sampling_rate(brainflow.board_shim.BoardIds.CYTON_DAISY_BOARD)
+TIME_FOR_ONE_SAMPLE = 1 / BoardShim.get_sampling_rate(brainflow.board_shim.BoardIds.CYTON_DAISY_BOARD)
 
-raw_data = [[] for _ in range(number_channels)]
+raw_data = [[] for _ in range(NUMBER_CHANNELS)]
 event_type = []
 event_pos = []
 event_duration = []
@@ -61,8 +61,8 @@ def mark_trial(start: float, end: float, label: Labels):
     """
 
     global start_time, count_trials, count_event_types
-    pos = round((start - start_time) / time_for_one_sample)
-    duration = round((end - start) / time_for_one_sample)
+    pos = round((start - start_time) / TIME_FOR_ONE_SAMPLE)
+    duration = round((end - start) / TIME_FOR_ONE_SAMPLE)
     event_duration.append(duration)
     if label not in event_type:
         count_event_types += 1
@@ -83,7 +83,7 @@ def create_raw_data_array() -> np.ndarray:
 
     global raw_data
     data = np.array(raw_data)
-    raw_data = [[] for _ in range(number_channels)]
+    raw_data = [[] for _ in range(NUMBER_CHANNELS)]
     return data
 
 
