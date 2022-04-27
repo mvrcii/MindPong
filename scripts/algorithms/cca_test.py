@@ -144,8 +144,6 @@ def sort_incoming_channels(sliding_window, used_ch_names):
     #                 'C3', 'Cz', 'C4', 'P3', '?', 'P4', 'T3', '?', '?', 'F3', 'F4', '?', '?', '?', '?', 'T4'
     ch_names_weight = [1,    1,    1,    1,    0,    1,    1,   0,   0,   1,    1,    0,   0,   0,   0,    1]
 
-
-
     filtered_sliding_window = list()
     filtered_channel_names = list()
     for i in range(len(used_ch_names)):
@@ -170,11 +168,6 @@ def test_algorithm_with_dataset():
     preloaded_data, preloaded_labels, used_ch_names = load_bcic_dataset(ch_names_weight)
     connect_queues()
     test_algorithm(preloaded_data, preloaded_labels, used_ch_names)
-
-
-def test_algorithm_with_livedata(sliding_window, used_ch_names, sampling_rate, ts_step):
-    sliding_window, used_ch_names = sort_incoming_channels(sliding_window, used_ch_names)
-    return cursor_online_control.perform_algorithm(sliding_window, used_ch_names, sampling_rate, queue_manager, offset_in_percentage=ts_step)
 
 
 if __name__ == '__main__':
