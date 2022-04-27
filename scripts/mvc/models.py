@@ -338,6 +338,10 @@ class MetaData:
         return self.__time
 
     def __str__(self):
+        """
+        Converts the attributes of the MetaData object to a string to print them suitable
+        :return: MetaData object as string
+        """
         return (
             f'======META DATA======\nRecording date: {self.__date.strftime("%d/%m/%y")} \nStart of session: {self.time.strftime("%H:%M:%S")} \n______Subject______\nID: {self.__subject_ID} \nSex: {self.__subject_sex} \nAge: {self.__subject_age} \n______Recording_____\nSampling Rate: {self.__sampling_rate} \nHeadset: {self.__headset} \nChannel Mapping: {self.__channel_mapping} \nRecording Type: {self.__recording_type} \n_______Trials______\nAmount of Trials: {self.__amount_trials} \nAmount of different events: {self.__amount_different_events} \n_______Comment_____\n {self.__comment} \n=====================')
 
