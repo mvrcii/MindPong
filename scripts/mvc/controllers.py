@@ -129,9 +129,8 @@ class ConfigController(Controller):
 
     def __discard_session(self):
         """Discards the current session."""
-        self.master.destroy_game_window()
         self.view.reset_view()
-        pass
+        self.master.destroy_game_window()
 
     def validate_form(self):
         """Validates the whole form by calling all the individual validation methods

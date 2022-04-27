@@ -40,7 +40,7 @@ class ConfigView(View):
         self.__build_trial_section(control_frame, "Trial", row=2, column=0)
         self.__build_comment_section(control_frame, "Comment", row=3, column=0)
         self.__build_button_section(control_frame, row=4, column=0)
-        self.__build_progress_bar_section(control_frame, row=4, column=0)
+        self.__build_progress_bar_section(control_frame)
 
         # Second Column
         self.__build_graph_section(control_frame, "Graph", row=0, column=1)
@@ -91,10 +91,12 @@ class ConfigView(View):
     def hide_progress_bar(self):
         """Hides the progress bar"""
         self.progress_bar.grid_forget()
+        self.progress_bar_frame.grid_forget()
 
     def show_progress_bar(self, row, column):
         """Hides the progress bar"""
-        self.progress_bar.grid(padx=10, pady=5, row=row, column=column, sticky="nsew")
+        self.progress_bar.grid(padx=10, pady=5, row=0, column=0, columnspan=2, sticky="ew")
+        self.progress_bar_frame.grid(padx=10, pady=5, row=row, column=column, sticky='nsew')
 
     # First Column Sections
     def __build_subject_section(self, frame, label, row, column):
@@ -207,10 +209,15 @@ class ConfigView(View):
         self.__create_button(button_frame, "Discard Session", row=0, column=0)
         button_frame.grid(row=row, column=column, sticky="nsew")
 
-    def __build_progress_bar_section(self, control_frame, row, column):
-        self.progress_bar = ttk.Progressbar(control_frame, orient="horizontal", mode="determinate")
-        self.progress_bar.grid(row=row, column=column, padx=10, pady=5, sticky="nsew")
-        self.progress_bar.grid_forget()
+    def __build_progress_bar_section(self, frame):
+        """Frame where the progressbar is placed in.
+
+        :param any frame: the parent container to place the children in.
+        :return: None
+        """
+        self.progress_bar_frame = ttk.LabelFrame(frame, text="Calibration Timer")
+        self.progress_bar = ttk.Progressbar(self.progress_bar_frame, orient="horizontal", mode="determinate")
+        self.progress_bar_frame.grid_columnconfigure(0, weight=1)
 
     # Helper functions
     def __create_entry(self, frame, label, row, column, text_var):
