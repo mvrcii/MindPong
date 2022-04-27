@@ -10,16 +10,28 @@ import serial.tools.list_ports
 import brainflow
 from brainflow.board_shim import BoardShim, BrainFlowInputParams, BrainFlowError
 
-import scripts.data.visualisation.liveplot
-from scripts.algorithms import cca_test
+import scripts.config
 from scripts.mvc.models import MetaData
 from scripts.data.extraction import trial_handler
+import scripts.config as config
+
+
+class QueueManager:
+    def __init__(self):
+        self.queue_label = queue.Queue(100)
+        self.queue_clabel = queue.Queue(100)
+
+        self.queue_c3 = queue.Queue(100)
+        self.queue_c4 = queue.Queue(100)
+
+        self.queue_c3_pow = queue.Queue(100)
+        self.queue_c4_pow = queue.Queue(100)
+
+        self.queue_hcon = queue.Queue(100)
+        self.queue_hcon_norm = queue.Queue(100)
+
 
 SAMPLING_RATE = BoardShim.get_sampling_rate(brainflow.board_shim.BoardIds.CYTON_DAISY_BOARD)
-queue_clabel = queue.Queue(100)
-queue_hcon = queue.Queue(100)
-queue_c3 = queue.Queue(100)
-queue_c4 = queue.Queue(100)
 
 # time which is needed for one sample in s, T = 1/f = 1/125 = 0.008
 time_for_one_sample = 1 / SAMPLING_RATE
@@ -41,6 +53,7 @@ stream_available = False  # indicates if stream is available
 board: BoardShim
 window_buffer = [RingBuffer(capacity=sliding_window_samples, dtype=float) for _ in range(number_channels)]
 data_model = None
+queue_manager = QueueManager()
 
 
 def init(data_mdl):
@@ -63,7 +76,6 @@ def init(data_mdl):
     
     connect_queues()
     """
-
 
     if params.serial_port is not None:
         # BoardShim.enable_dev_board_logger()
@@ -114,7 +126,7 @@ def handle_samples():
     """
     global first_window, window_buffer, allow_window_creation, first_data
     count_samples = 0
-    while stream_available:
+    while stream_available and data_model.session_recording:
         data = board.get_board_data(1)[board.get_eeg_channels(
             brainflow.board_shim.BoardIds.CYTON_DAISY_BOARD)]  # get all data and remove it from internal buffer
         if len(data[0]) > 0:
@@ -143,6 +155,33 @@ def handle_samples():
                     count_samples = 0
 
 
+def sort_channels(sliding_window, used_ch_names):
+    # small laplacian
+    #                 'C3', 'Cz', 'C4', 'P3', 'Pz', 'P4', 'O1', 'O2', 'FC5', 'FC1', 'FC2', 'FC6', 'CP5', 'CP1', 'CP2', 'CP6'
+    ch_names_weight = [1,    0,    1,    0,    0,    0,    0,    0,     1,     1,     1,     1,     1,     1,     1,     1]
+
+    # large laplacian
+    #                 'C3', 'Cz', 'C4', 'P3', '?', 'P4', 'T3', '?', '?', 'F3', 'F4', '?', '?', '?', '?', 'T4'
+    ch_names_weight = [1,    1,    1,    1,    0,    1,    1,   0,   0,   1,    1,    0,   0,   0,   0,    1]
+
+    filtered_sliding_window = list()
+    filtered_channel_names = list()
+    for i in range(len(used_ch_names)):
+        if ch_names_weight[i] != 0:
+            if used_ch_names[i] == 'C3':
+                filtered_channel_names.insert(0, used_ch_names[i])
+                filtered_sliding_window.insert(0, sliding_window[i])
+            elif used_ch_names[i] == 'C4':
+                filtered_channel_names.insert(1, used_ch_names[i])
+                filtered_sliding_window.insert(1, sliding_window[i])
+            else:
+                filtered_channel_names.append(used_ch_names[i])
+                filtered_sliding_window.append(sliding_window[i])
+
+    filtered_sliding_window = np.asarray(filtered_sliding_window)
+    return filtered_sliding_window, filtered_channel_names
+
+
 def send_window():
     """
     Create sliding window and send it to the algorithm
@@ -153,16 +192,12 @@ def send_window():
     window = np.zeros((number_channels, sliding_window_samples), dtype=float)
     for i in range(len(window)):
         window[i] = np.array(window_buffer[i])
+    # sort channels for laplacian calculation
+    window = sort_channels(window, scripts.config.BCI_CHANNELS)
     # push window to cursor control algorithm
     # TODO: change offset_duration to percentage? Else change calculation in coc algorithm
-    calculated_label = cca_test.test_algorithm_with_livedata(window, MetaData.bci_channels, SAMPLING_RATE, queue_hcon,
-                                                             queue_c3, queue_c4,
-                                                             offset_duration / sliding_window_duration)
-    try:
-        global queue_clabel
-        queue_clabel.put(calculated_label)
-    except:
-        print('Error: Value could not be loaded into the ringbuffer!!!')
+    from scripts.algorithms.cursor_online_control import perform_algorithm
+    perform_algorithm(window, MetaData.bci_channels, SAMPLING_RATE, queue_manager, offset_in_percentage=offset_duration / sliding_window_duration)
 
 
 def stop_stream():
@@ -178,15 +213,6 @@ def stop_stream():
     board.release_session()
 
 
-def connect_queues():
-    global queue_clabel, queue_hcon, queue_c3, queue_c4
-    scripts.data.visualisation.liveplot.add_queue(('QUEUE_CLABEL', '#76FF03', queue_clabel))
-    scripts.data.visualisation.liveplot.add_queue(('QUEUE_HCON', '#D500F9', queue_hcon))
-    scripts.data.visualisation.liveplot.add_queue(('QUEUE_C3', '#F39C12', queue_c3))
-    scripts.data.visualisation.liveplot.add_queue(('QUEUE_C4', '#E74C3C', queue_c4))
-
-
 if __name__ == '__main__':
     print('read_data main started ...')
     threading.Thread(target=init, daemon=True).start()
-    scripts.data.visualisation.liveplot.start_liveplot()

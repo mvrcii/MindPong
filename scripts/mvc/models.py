@@ -28,6 +28,7 @@ class ConfigData(object):
         self.__comment = comment
         self.__trial_recording = trial_recording
         self.__valid_subject_sex_values = ['M', 'F', 'D']
+        self.__session_recording = True
 
     @property
     def subject_id(self):
@@ -76,6 +77,10 @@ class ConfigData(object):
     @property
     def valid_subject_sex_values(self):
         return self.__valid_subject_sex_values
+
+    @property
+    def session_recording(self):
+        return self.__session_recording
 
     @subject_id.setter
     def subject_id(self, value):
@@ -221,6 +226,15 @@ class ConfigData(object):
         :return: None
         """
         self.__trial_recording = value
+
+    @session_recording.setter
+    def session_recording(self, value: bool):
+        """
+        Setter for the session recording variable
+        :param bool value: the new value for the session recording
+        :return: None
+        """
+        self.__session_recording = value
 
     # Currently without persistence of the Config data
     # Variables in the Model will always be overridden when the start button is pressed
