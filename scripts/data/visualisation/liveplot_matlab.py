@@ -5,7 +5,7 @@ import matplotlib
 import matplotlib.pyplot as plt
 import numpy as np
 
-SIZE = 200
+AXES_SIZE = 200
 # global data
 plt.style.use('ggplot')
 # necessary!!! to make sure the backend is the correct one
@@ -18,20 +18,26 @@ plots = dict()
 
 class PlotData:
     """
-    Stores plot relevant data.
+    Stores plot relevant data for a queue:
+        - q         = queue
+        - ax        = subplot
+        - x_data    = x-values
+        - y_data    = y-values
+        - line      = 2D-line (=> plot)
+        - name      = name of the plot
     """
     def __init__(self, q: queue.Queue, ax, plot_label):
         self.q = q
         self.ax = ax
-        self.x_data = list(range(SIZE))
-        self.y_data = np.zeros(SIZE)
+        self.x_data = list(range(AXES_SIZE))
+        self.y_data = np.zeros(AXES_SIZE)
         self.line, = ax.plot(self.x_data, self.y_data)
         self.name = plot_label
 
 
 def live_plotter(plot_data: PlotData):
     """
-    Updated the plot line and the x-axes label and automatically adjusts the boundaries.
+    Updates the plot line and the x-axes label and automatically adjusts the boundaries.
     :param plot_data: requires a PlotData object
     :return PlotData.line: 2D-Line
     """
@@ -41,7 +47,7 @@ def live_plotter(plot_data: PlotData):
     if np.min(plot_data.y_data) <= plot_data.line.axes.get_ylim()[0] or np.max(plot_data.y_data) >= plot_data.line.axes.get_ylim()[1]:
         plot_data.ax.set_ylim([np.min(plot_data.y_data) - np.std(plot_data.y_data), np.max(plot_data.y_data) + np.std(plot_data.y_data)])
 
-    # ascending x-values only the label a changes the x-range remains the same
+    # ascending x-values only the label a changes, the x-range remains the same
     plot_data.line.axes.set_xticklabels(plot_data.x_data)
     # return line, so we can update it again in the next iteration
     return plot_data.line
@@ -63,7 +69,7 @@ def perform_live_plot(pause_time):
                 continue
             content_y = list()
             # read all new values from the queue
-            while not plot_data.q.empty() or len(content_y) > SIZE:
+            while not plot_data.q.empty() or len(content_y) > AXES_SIZE:
                 content_y.append(plot_data.q.get(True))
             content_y = np.asarray(content_y)
             bound = plot_data.x_data[-1] + 1
