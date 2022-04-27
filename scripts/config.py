@@ -19,6 +19,8 @@ CALIBRATION_TIME = 5  # in seconds
 NOTCH_FILTER_FREQ: float = 50
 NOTCH_FILTER = True
 
+# Read Data
+SESSION_RECORDING = True
 # Algorithm
 # channel configuration of the headset we use
 # BCI_CHANNELS = ['C3', 'Cz', 'C4', 'P3', 'Pz', 'P4', 'O1', 'O2', 'FC5', 'FC1', 'FC2', 'FC6', 'CP5', 'CP1', 'CP2',
