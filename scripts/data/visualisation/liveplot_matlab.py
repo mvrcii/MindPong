@@ -25,6 +25,8 @@ class PlotData:
         - y_data    = y-values
         - line      = 2D-line (=> plot)
         - name      = name of the plot
+
+    Used to update each plot in liveplot cycle
     """
     def __init__(self, q: queue.Queue, ax, plot_label):
         self.q = q
