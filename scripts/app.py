@@ -29,7 +29,17 @@ class App(tk.Tk):
         self.game_window = None
         self.config_window = ConfigWindow(self)
 
+        self.__update_controllers()
         self.update()
+
+    def __update_controllers(self):
+        """
+        Update Loop to update the controllers
+        :return: None
+        """
+        self.config_window.config_controller.update()
+        # self.game_window.game_controller.update()
+        self.after(1, self.__update_controllers)
 
     def create_game_window(self):
         self.game_window = GameWindow(self)

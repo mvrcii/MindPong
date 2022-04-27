@@ -11,6 +11,7 @@ import brainflow
 from brainflow.board_shim import BoardShim, BrainFlowInputParams, BrainFlowError
 
 import scripts.config
+from scripts.data.visualisation.liveplot_matlab import connect_queue
 from scripts.mvc.models import MetaData
 from scripts.data.extraction import trial_handler
 
@@ -55,6 +56,13 @@ data_model = None
 queue_manager = QueueManager()
 
 
+def connect_queues():
+    connect_queue(queue_manager.queue_c3, 'raw', 211)
+    connect_queue(queue_manager.queue_c4, 'raw', 211)
+    connect_queue(queue_manager.queue_c3_pow, 'pow', 212)
+    connect_queue(queue_manager.queue_c4_pow, 'pow', 212)
+
+
 def init(data_mdl):
     """
     --- starting point ---
@@ -75,6 +83,7 @@ def init(data_mdl):
     
     connect_queues()
     """
+    connect_queues()
 
     if params.serial_port is not None:
         # BoardShim.enable_dev_board_logger()

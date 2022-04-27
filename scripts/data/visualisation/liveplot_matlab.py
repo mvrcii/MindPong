@@ -1,6 +1,4 @@
 import queue
-import threading
-import time
 import matplotlib
 import matplotlib.pyplot as plt
 import numpy as np
@@ -11,8 +9,7 @@ plt.style.use('ggplot')
 # necessary!!! to make sure the backend is the correct one
 matplotlib.use('TkAgg')
 queues = list()
-fig = plt.figure(tight_layout=True, figsize=(8, 8))
-queue_manager = None
+fig = None
 plots = dict()
 
 
@@ -108,17 +105,11 @@ def connect_queue(queue: queue.Queue, plot_label, subplot_index):
     queues.append(PlotData(queue, ax, plot_label))
 
 
-def start_live_plot(qm, pause_time):
+def start_live_plot(figure):
     """
     Initializes plot window.
-    :param qm: collection of all queues
-    :param pause_time: refresh rate of the plot
     """
-    global fig, queue_manager
-    queue_manager = qm
+    global fig
+    fig = figure
     # this is the call to matplotlib that allows dynamic plotting
     plt.ion()
-    # show plot window
-    plt.show()
-    # start liveplot
-    perform_live_plot(pause_time)
