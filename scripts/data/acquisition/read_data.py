@@ -167,7 +167,7 @@ def sort_channels(sliding_window, used_ch_names):
     filtered_sliding_window = list()
     filtered_channel_names = list()
     for i in range(len(used_ch_names)):
-        if config.CH_NAMES_WEIGH[i] != 0:
+        if config.CH_NAMES_WEIGHT[i] != 0:
             if used_ch_names[i] == 'C3':
                 filtered_channel_names.insert(0, used_ch_names[i])
                 filtered_sliding_window.insert(0, sliding_window[i])
