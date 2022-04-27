@@ -100,7 +100,7 @@ def test_algorithm(chan_data, label_data, used_ch_names):
                 queue_manager.queue_c4.put(channel_1[sample], True)
             except queue.Full:
                 print('Queue is full')
-            time.sleep(0.0008)
+            # time.sleep(0.00008)
 
         # try:
         #     queue_manager.queue_label.put_nowait(label[i])
@@ -172,9 +172,9 @@ def test_algorithm_with_dataset():
     test_algorithm(preloaded_data, preloaded_labels, used_ch_names)
 
 
-def test_algorithm_with_livedata(sliding_window, used_ch_names, sampling_rate, queue_hcon, queue_c3, queue_c4, ts_step):
+def test_algorithm_with_livedata(sliding_window, used_ch_names, sampling_rate, ts_step):
     sliding_window, used_ch_names = sort_incoming_channels(sliding_window, used_ch_names)
-    return cursor_online_control.perform_algorithm(sliding_window, used_ch_names, sampling_rate, queue_hcon, queue_c3, queue_c4, offset_in_percentage=ts_step)
+    return cursor_online_control.perform_algorithm(sliding_window, used_ch_names, sampling_rate, queue_manager, offset_in_percentage=ts_step)
 
 
 if __name__ == '__main__':

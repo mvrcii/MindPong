@@ -1,4 +1,3 @@
-import queue
 import threading
 import platform
 
@@ -10,16 +9,11 @@ import serial.tools.list_ports
 import brainflow
 from brainflow.board_shim import BoardShim, BrainFlowInputParams, BrainFlowError
 
-import scripts.data.visualisation.liveplot
 from scripts.algorithms import cca_test
 from scripts.mvc.models import MetaData
 from scripts.data.extraction import trial_handler
 
 SAMPLING_RATE = BoardShim.get_sampling_rate(brainflow.board_shim.BoardIds.CYTON_DAISY_BOARD)
-queue_clabel = queue.Queue(100)
-queue_hcon = queue.Queue(100)
-queue_c3 = queue.Queue(100)
-queue_c4 = queue.Queue(100)
 
 # time which is needed for one sample in s, T = 1/f = 1/125 = 0.008
 time_for_one_sample = 1 / SAMPLING_RATE
@@ -63,7 +57,6 @@ def init(data_mdl):
     
     connect_queues()
     """
-
 
     if params.serial_port is not None:
         # BoardShim.enable_dev_board_logger()
@@ -155,14 +148,7 @@ def send_window():
         window[i] = np.array(window_buffer[i])
     # push window to cursor control algorithm
     # TODO: change offset_duration to percentage? Else change calculation in coc algorithm
-    calculated_label = cca_test.test_algorithm_with_livedata(window, MetaData.bci_channels, SAMPLING_RATE, queue_hcon,
-                                                             queue_c3, queue_c4,
-                                                             offset_duration / sliding_window_duration)
-    try:
-        global queue_clabel
-        queue_clabel.put(calculated_label)
-    except:
-        print('Error: Value could not be loaded into the ringbuffer!!!')
+    cca_test.test_algorithm_with_livedata(window, MetaData.bci_channels, SAMPLING_RATE, offset_duration / sliding_window_duration)
 
 
 def stop_stream():
@@ -178,15 +164,6 @@ def stop_stream():
     board.release_session()
 
 
-def connect_queues():
-    global queue_clabel, queue_hcon, queue_c3, queue_c4
-    scripts.data.visualisation.liveplot.add_queue(('QUEUE_CLABEL', '#76FF03', queue_clabel))
-    scripts.data.visualisation.liveplot.add_queue(('QUEUE_HCON', '#D500F9', queue_hcon))
-    scripts.data.visualisation.liveplot.add_queue(('QUEUE_C3', '#F39C12', queue_c3))
-    scripts.data.visualisation.liveplot.add_queue(('QUEUE_C4', '#E74C3C', queue_c4))
-
-
 if __name__ == '__main__':
     print('read_data main started ...')
     threading.Thread(target=init, daemon=True).start()
-    scripts.data.visualisation.liveplot.start_liveplot()

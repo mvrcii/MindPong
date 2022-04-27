@@ -7,7 +7,7 @@ from scipy import signal
 from numpy_ringbuffer import RingBuffer
 from spectrum import arburg, arma2psd
 
-from algorithms.cca_test import QueueManager
+from cca_test import QueueManager
 from scripts.utils.event_listener import post_event
 
 
@@ -278,11 +278,10 @@ def perform_algorithm(sliding_window, used_ch_names, sample_rate, queue_manager:
     else:
         calculated_label = -1
 
-    try:
+    if not queue_manager.queue_hcon.full():
         queue_manager.queue_hcon.put(hcon)
+    if not queue_manager.queue_c3_pow.full() and not queue_manager.queue_c4_pow.full() :
         queue_manager.queue_c3_pow.put(area_c3)
         queue_manager.queue_c4_pow.put(area_c4)
-    except:
-        print('Fehler: hcon kann nicht reingeldaden werden')
 
     return calculated_label
