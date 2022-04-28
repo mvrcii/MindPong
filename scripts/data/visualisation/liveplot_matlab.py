@@ -32,8 +32,6 @@ class PlotData:
         self.ax = ax
         self.x_data = list(range(AXES_SIZE))
         self.y_data = np.zeros(AXES_SIZE)
-        # fill y data with NaN values => invisible values
-        self.y_data[0:AXES_SIZE] = np.nan
         self.line, = ax.plot(self.x_data, self.y_data)
         self.name = plot_label
 
@@ -47,9 +45,8 @@ def live_plotter(plot_data: PlotData):
     # after the figure, axis, and line are created, we only need to update the y-data
     plot_data.line.set_ydata(plot_data.y_data)
     # adjust limits if new data goes beyond bounds
-    y_values = plot_data.y_data[~np.isnan(plot_data.y_data)]
-    if np.min(y_values) <= plot_data.line.axes.get_ylim()[0] or np.max(y_values) >= plot_data.line.axes.get_ylim()[1]:
-        plot_data.ax.set_ylim([np.min(y_values) - np.std(y_values), np.max(y_values) + np.std(y_values)])
+    if np.min(plot_data.y_data) <= plot_data.line.axes.get_ylim()[0] or np.max(plot_data.y_data) >= plot_data.line.axes.get_ylim()[1]:
+        plot_data.ax.set_ylim([np.min(plot_data.y_data) - np.std(plot_data.y_data), np.max(plot_data.y_data) + np.std(plot_data.y_data)])
 
     # ascending x-values only the label a changes, the x-range remains the same
     plot_data.line.axes.set_xticklabels(plot_data.x_data)
@@ -60,6 +57,7 @@ def live_plotter(plot_data: PlotData):
 def perform_live_plot():
     """
     Periodically plots new values from each queue in queues.
+    :param pause_time: refresh rate of the plot
     """
     global fig, queues
     if fig:
@@ -103,7 +101,6 @@ def connect_queue(queue: queue.Queue, plot_label, subplot_index):
     else:
         ax = fig.add_subplot(subplot_index)
         ax.set_xlabel('Time')
-        ax.set_xlim(0, AXES_SIZE)
         ax.set_ylabel(plot_label)
         plots[plot_label] = ax
     queues.append(PlotData(queue, ax, plot_label))
