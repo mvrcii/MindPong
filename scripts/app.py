@@ -48,6 +48,7 @@ class App(tk.Tk):
         # Starting the thread to read data
         self.thread = Thread(target=read_data.init, args=[self.data_model], daemon=True)
         self.thread.start()
+        self.__data_model.session_recording = True
 
     def destroy_game_window(self):
         self.game_window.destroy()

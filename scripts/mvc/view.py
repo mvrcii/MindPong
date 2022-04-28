@@ -70,6 +70,8 @@ class ConfigView(View):
     def reset_view(self):
         """Sets the view """
         self.enable_inputs()
+        self.disable_plot_checkbutton()
+        self.show_plot(False)
         self.hide_button("Stop Session")
         self.hide_button("Save Session")
         self.hide_button("Discard Session")
@@ -174,7 +176,7 @@ class ConfigView(View):
         """
         checkbutton_frame = ttk.LabelFrame(frame, text=label)
         # Checkbutton to toggle the plot
-        self.__create_checkbutton(checkbutton_frame, "Plot", row=0, column=0, command=self.__toggle_plot)
+        self.__create_checkbutton(checkbutton_frame, "Plot", row=0, column=0)
         # Checkbutton to toggle the recording of trials
         self.__create_checkbutton(checkbutton_frame, "Trial Recording", row=1, column=0)
         # Checkbutton for dark/light mode (not persisted in the data model)
@@ -189,7 +191,6 @@ class ConfigView(View):
         canvas = FigureCanvasTkAgg(self.figure, self.plot_frame)
         canvas.draw()
         canvas.get_tk_widget().grid(row=0, column=0, sticky="nsew")
-        # self.plot_frame.grid(padx=10, pady=5, row=0, column=3, rowspan=4, sticky='nsew')
 
     # Helper functions
     def __create_entry(self, frame, label, row, column, text_var):
@@ -281,9 +282,11 @@ class ConfigView(View):
         else:
             self.master.call("set_theme", "light")
 
-    def __toggle_plot(self):
-        """Toggles the plot."""
-        if self.check_button_vars["Plot"].get():
+    def show_plot(self, visible):
+        """Shows the plot depending on the given parameter
+
+        :param bool visible: the boolean that decides if the plot is shown"""
+        if visible:
             self.plot_frame.grid(rowspan=4, padx=10, pady=5, row=0, column=2, sticky="nsew")
         else:
             self.plot_frame.grid_forget()
@@ -304,6 +307,14 @@ class ConfigView(View):
         self.spin_boxes["window_offset"].configure(state=state)
         self.spin_boxes["trial_min_duration"].configure(state=state)
         self.check_buttons["Trial Recording"].configure(state=state)
+
+    def enable_plot_checkbutton(self):
+        """Enables the checkbutton to toggle the plot"""
+        self.check_buttons["Plot"].configure(state='enabled')
+
+    def disable_plot_checkbutton(self):
+        """Disables the checkbutton to toggle the plot"""
+        self.check_buttons["Plot"].configure(state='disabled')
 
     def __clear_comment_box(self):
         """Clears the comment box field"""

@@ -35,6 +35,7 @@ class ConfigController(Controller):
         self.view.buttons["Save Session"].configure(command=self.__save_session)
         self.view.buttons["Discard Session"].configure(command=self.__discard_session)
         self.view.check_buttons["Trial Recording"].configure(command=self.__set_trial_recording)
+        self.view.check_buttons["Plot"].configure(command=self.__toggle_plot)
 
     def update(self):
         # Update the plot if plot is shown
@@ -53,6 +54,7 @@ class ConfigController(Controller):
         self.view.spin_boxes["window_offset"].set(self.data.window_offset)
         self.view.spin_boxes["trial_min_duration"].set(self.data.trial_min_duration)
         self.view.check_button_vars["Trial Recording"].set(self.data.trial_recording)
+        self.view.disable_plot_checkbutton()
 
     @staticmethod
     def __set_entry_text(entry, value):
@@ -72,12 +74,19 @@ class ConfigController(Controller):
 
             self.master.create_game_window()
             self.__start_liveplot()
-
+            self.view.enable_plot_checkbutton()
             self.view.hide_button("Start Session")
             self.view.show_button("Stop Session")
 
     def __start_liveplot(self):
         start_live_plot(self.view.figure)
+
+    def __toggle_plot(self):
+        """Toggles the plot."""
+        if self.view.check_button_vars["Plot"].get() and self.data.session_recording:
+            self.view.show_plot(True)
+        else:
+            self.view.show_plot(False)
 
     def __stop_session(self):
         """Stops the current session and changes the view according to the amount of recorded trials.

@@ -28,7 +28,7 @@ class ConfigData(object):
         self.__comment = comment
         self.__trial_recording = trial_recording
         self.__valid_subject_sex_values = ['M', 'F', 'D']
-        self.__session_recording = True
+        self.__session_recording = False
 
     @property
     def subject_id(self):
