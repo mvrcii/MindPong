@@ -39,6 +39,10 @@ class ConfigController(Controller):
         self.view.buttons["Save Session"].configure(command=self.__save_session)
         self.view.buttons["Discard Session"].configure(command=self.__discard_session)
         self.view.check_buttons["Trial Recording"].configure(command=self.__set_trial_recording)
+        self.view.check_buttons["Plot"].configure(command=self.__toggle_plot)
+
+    def update(self):
+        perform_live_plot()
 
     def __init_config_view_values(self):
         """Initially configures the view with the model data"""
@@ -56,7 +60,11 @@ class ConfigController(Controller):
 
     def update(self):
         self.__update_calibration()
-        perform_live_plot()
+
+        # Update the plot if plot is shown and the session is recording
+        if self.view.check_button_vars["Plot"].get() and self.data.session_recording:
+            print("updating plot")
+            perform_live_plot()
 
     @staticmethod
     def __set_entry_text(entry, value):
@@ -94,8 +102,18 @@ class ConfigController(Controller):
                 self.master.game_window.game_controller.start_game()
 
     def __start_liveplot(self):
+        """Binds the plot figure to the liveplot script and shows the plot if the toggle is activated"""
         start_live_plot(self.view.figure)
-        self.view.show_plot(row=0, column=2)
+
+        if self.view.check_button_vars["Plot"].get():
+            self.view.show_plot(True)
+
+    def __toggle_plot(self):
+        """Toggles the visibility of the plot"""
+        if self.view.check_button_vars["Plot"].get() and self.data.session_recording:
+            self.view.show_plot(True)
+        else:
+            self.view.show_plot(False)
 
     def __stop_session(self):
         """Stops the current session and changes the view according to the amount of recorded trials."""

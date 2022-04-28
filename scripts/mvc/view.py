@@ -27,9 +27,7 @@ class ConfigView(View):
         self.combo_boxes = {}
         self.check_buttons = {}
         self.check_button_vars = {}
-        self.comment_box = None
-        self.figure = None
-        self.canvas = None
+        self.comment_box, self.figure, self.plot_frame = None, None, None
         self.grid(row=0, column=0, sticky='nsew')
 
     def create_view(self):
@@ -47,8 +45,7 @@ class ConfigView(View):
         self.__build_progress_bar_section(control_frame)
 
         # Second Column
-        self.__build_graph_section(control_frame, "Graph", row=0, column=1)
-        self.__build_switch_section(control_frame, row=3, column=1)
+        self.__build_checkbutton_section(control_frame, "General", row=0, column=1)
 
         # Third Column
         self.__build_plot(control_frame)
@@ -74,6 +71,7 @@ class ConfigView(View):
     def reset_view(self):
         """Sets the view """
         self.enable_inputs()
+        self.show_plot(False)
         self.hide_button("Stop Session")
         self.hide_button("Save Session")
         self.hide_button("Discard Session")
@@ -165,39 +163,6 @@ class ConfigView(View):
         self.comment_box.grid(row=3, column=0, pady=10, padx=10)
         comment_box_frame.grid(padx=10, pady=5, row=row, column=column, sticky='nsew')
 
-    # Second Column Sections
-    def __build_graph_section(self, frame, label, row, column):
-        """Frame where the checkboxes to toggle the graphs are placed in (C3, C4, C3a, C4a, Label).
-
-        :param any frame: the parent container to place the children in.
-        :param str label: the label which is used in the label frame.
-        :param int row: the row number in the parent container.
-        :param int column: the column number in the parent container.
-        :return: None
-        """
-        graph_frame = ttk.LabelFrame(frame, text=label)
-        self.__create_checkbutton(graph_frame, "C3", row=0, column=0, command=None)
-        self.__create_checkbutton(graph_frame, "C4", row=1, column=0, command=None)
-        self.__create_checkbutton(graph_frame, "C3a", row=2, column=0, command=None)
-        self.__create_checkbutton(graph_frame, "C4a", row=3, column=0, command=None)
-        self.__create_checkbutton(graph_frame, "Label", row=4, column=0, command=None)
-        graph_frame.grid(padx=10, pady=5, row=row, column=column, rowspan=2, sticky='nsew')
-
-    def __build_switch_section(self, frame, row, column):
-        """Frame where the checkboxes to toggle overall settings are placed in (Dark-mode, Trial recording).
-
-        :param any frame: the parent container to place the children in.
-        :param int row: the row number in the parent container.
-        :param int column: the column number in the parent container.
-        :return: None
-        """
-        switch_frame = ttk.Frame(frame)
-        # Switch to toggle the recording of trials
-        self.__create_checkbutton(switch_frame, "Trial Recording", row=0, column=0, command=None)
-        # Switch for dark/light mode (not persisted in the data model)
-        self.__create_checkbutton(switch_frame, "Dark-Mode", row=1, column=0, command=self.__toggle_dark_mode)
-        switch_frame.grid(row=row, column=column, rowspan=2, sticky='sew')
-
     def __build_button_section(self, frame, row, column):
         """Frame where the buttons are placed in (start session, stop session, save session).
 
@@ -213,6 +178,26 @@ class ConfigView(View):
         self.__create_button(button_frame, "Discard Session", row=0, column=0)
         button_frame.grid(row=row, column=column, sticky="nsew")
 
+    # Second Column Sections
+    def __build_checkbutton_section(self, frame, label, row, column):
+        """Frame where the checkboxes to toggle overall settings are placed in.
+
+        :param any frame: the parent container to place the children in.
+        :param str label: the label which is used in the label frame.
+        :param int row: the row number in the parent container.
+        :param int column: the column number in the parent container.
+        :return: None
+        """
+        checkbutton_frame = ttk.LabelFrame(frame, text=label)
+        # Checkbutton to toggle the plot
+        self.__create_checkbutton(checkbutton_frame, "Plot", row=0, column=0)
+        # Checkbutton to toggle the recording of trials
+        self.__create_checkbutton(checkbutton_frame, "Trial Recording", row=1, column=0)
+        # Checkbutton for dark/light mode (not persisted in the data model)
+        self.__create_checkbutton(checkbutton_frame, "Dark-Mode", row=2, column=0, command=self.__toggle_dark_mode)
+        checkbutton_frame.grid(padx=10, pady=5, row=row, column=column, rowspan=4, sticky='nsew')
+
+    # Third Column Sections
     def __build_progress_bar_section(self, frame):
         """Frame where the progressbar is placed in.
 
@@ -224,13 +209,12 @@ class ConfigView(View):
         self.progress_bar_frame.grid_columnconfigure(0, weight=1)
 
     def __build_plot(self, frame):
+        self.plot_frame = ttk.LabelFrame(frame, text="Plot")
         from matplotlib.figure import Figure
         self.figure = Figure(figsize=(10, 6), dpi=100)
-        self.canvas = FigureCanvasTkAgg(self.figure, frame)
-        self.canvas.draw()
-
-    def show_plot(self, row, column):
-        self.canvas.get_tk_widget().grid(rowspan=5, row=row, column=column, sticky="nsew")
+        canvas = FigureCanvasTkAgg(self.figure, self.plot_frame)
+        canvas.draw()
+        canvas.get_tk_widget().grid(row=0, column=0, sticky="nsew")
 
     # Helper functions
     def __create_entry(self, frame, label, row, column, text_var):
@@ -278,7 +262,7 @@ class ConfigView(View):
         self.combo_boxes[label].grid(row=0, column=0, padx=5, pady=5, sticky='ew')
         label_frame.grid(padx=10, pady=5, row=row, column=column, sticky='nsew')
 
-    def __create_checkbutton(self, frame, label, row, column, command):
+    def __create_checkbutton(self, frame, label, row, column, command=None):
         """Creates a checkbutton with the given parameters.
 
         By default, the on value is True and the off value is False.
@@ -321,6 +305,15 @@ class ConfigView(View):
             self.master.call("set_theme", "dark")
         else:
             self.master.call("set_theme", "light")
+
+    def show_plot(self, visible):
+        """Shows the plot depending on the given parameter
+
+        :param bool visible: the boolean that decides if the plot is shown"""
+        if visible:
+            self.plot_frame.grid(rowspan=4, padx=10, pady=5, row=0, column=2, sticky="nsew")
+        else:
+            self.plot_frame.grid_forget()
 
     def __set_input_state(self, state):
         """Sets all the input fields of ConfigView to a given state
