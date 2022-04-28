@@ -278,9 +278,13 @@ def perform_algorithm(sliding_window, used_ch_names, sample_rate, queue_manager:
         calculated_label = -1
 
     if not queue_manager.queue_hcon.full():
+        # print(queue_manager.queue_hcon_norm.queue)
+        queue_manager.queue_hcon_norm.put(normalized_hcon)
         queue_manager.queue_hcon.put(hcon)
-    if not queue_manager.queue_c3_pow.full() and not queue_manager.queue_c4_pow.full() :
+    if not queue_manager.queue_c3_pow.full() and not queue_manager.queue_c4_pow.full():
         queue_manager.queue_c3_pow.put(area_c3)
         queue_manager.queue_c4_pow.put(area_c4)
+    if not queue_manager.queue_clabel.full():
+        queue_manager.queue_clabel.put(calculated_label, True)
 
     return calculated_label
