@@ -53,7 +53,6 @@ class App(tk.Tk):
         self.game_window.destroy()
         self.game_window = None
         self.__data_model.session_recording = False
-        time.sleep(0.5)
         self.thread.join()
 
     @property
