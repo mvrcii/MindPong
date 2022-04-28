@@ -3,7 +3,7 @@ from tkinter.messagebox import askyesno, showinfo
 
 from scripts.mvc.view import View, ConfigView, GameView
 from scripts.pong.game import End
-from scripts.data.extraction.trial_handler import save_session, count_trials, count_event_types
+from scripts.data.extraction.trial_handler import save_session
 from scripts.mvc.models import MetaData
 from datetime import datetime
 from scripts.data.visualisation.liveplot_matlab import start_live_plot, perform_live_plot
@@ -38,8 +38,9 @@ class ConfigController(Controller):
         self.view.check_buttons["Plot"].configure(command=self.__toggle_plot)
 
     def update(self):
-        # Update the plot if plot is shown
-        if self.view.check_button_vars["Plot"].get():
+        # Update the plot if plot is shown and the session is recording
+        if self.view.check_button_vars["Plot"].get() and self.data.session_recording:
+            print("updating plot")
             perform_live_plot()
 
     def __init_config_view_values(self):
@@ -54,7 +55,6 @@ class ConfigController(Controller):
         self.view.spin_boxes["window_offset"].set(self.data.window_offset)
         self.view.spin_boxes["trial_min_duration"].set(self.data.trial_min_duration)
         self.view.check_button_vars["Trial Recording"].set(self.data.trial_recording)
-        self.view.disable_plot_checkbutton()
 
     @staticmethod
     def __set_entry_text(entry, value):
@@ -74,15 +74,18 @@ class ConfigController(Controller):
 
             self.master.create_game_window()
             self.__start_liveplot()
-            self.view.enable_plot_checkbutton()
             self.view.hide_button("Start Session")
             self.view.show_button("Stop Session")
 
     def __start_liveplot(self):
+        """Binds the plot figure to the liveplot script and shows the plot if the toggle is activated"""
         start_live_plot(self.view.figure)
 
+        if self.view.check_button_vars["Plot"].get():
+            self.view.show_plot(True)
+
     def __toggle_plot(self):
-        """Toggles the plot."""
+        """Toggles the visibility of the plot"""
         if self.view.check_button_vars["Plot"].get() and self.data.session_recording:
             self.view.show_plot(True)
         else:

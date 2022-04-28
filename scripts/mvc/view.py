@@ -70,7 +70,6 @@ class ConfigView(View):
     def reset_view(self):
         """Sets the view """
         self.enable_inputs()
-        self.disable_plot_checkbutton()
         self.show_plot(False)
         self.hide_button("Stop Session")
         self.hide_button("Save Session")
@@ -307,14 +306,6 @@ class ConfigView(View):
         self.spin_boxes["window_offset"].configure(state=state)
         self.spin_boxes["trial_min_duration"].configure(state=state)
         self.check_buttons["Trial Recording"].configure(state=state)
-
-    def enable_plot_checkbutton(self):
-        """Enables the checkbutton to toggle the plot"""
-        self.check_buttons["Plot"].configure(state='enabled')
-
-    def disable_plot_checkbutton(self):
-        """Disables the checkbutton to toggle the plot"""
-        self.check_buttons["Plot"].configure(state='disabled')
 
     def __clear_comment_box(self):
         """Clears the comment box field"""
