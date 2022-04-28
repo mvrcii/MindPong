@@ -13,9 +13,8 @@ MIN_DURATION_OF_TRIAL = 1
 OBJECT_SIZE = 14
 
 
-# TODO bei nicht verwendung entfernen
 # Calibration
-CALIBRATION_TIME = 30  # in seconds
+CALIBRATION_TIME = 1  # in seconds
 
 # Loader
 NOTCH_FILTER_FREQ: float = 50

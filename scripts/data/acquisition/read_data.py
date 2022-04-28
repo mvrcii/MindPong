@@ -73,8 +73,9 @@ def init(data_mdl):
     """
     params = BrainFlowInputParams()
     params.serial_port = search_port()
-    global data_model
+    global data_model, first_window
     data_model = data_mdl
+    first_window = True
 
     global SLIDING_WINDOW_DURATION, SLIDING_WINDOW_SAMPLES, OFFSET_DURATION, OFFSET_SAMPLES, TIME_FOR_ONE_SAMPLE, window_buffer, NUMBER_CHANNELS
     SLIDING_WINDOW_DURATION = data_model.window_size/1000
@@ -217,10 +218,8 @@ def stop_stream():
     Stops the data stream and the releases session
     :return: None
     """
-
     global stream_available
     stream_available = False
-    # time.sleep(0.3) , needed for multithreading
     board.stop_stream()
     board.release_session()
 
