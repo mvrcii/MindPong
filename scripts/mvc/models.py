@@ -237,7 +237,7 @@ class ConfigData(object):
         self.__session_recording = value
 
     # Currently without persistence of the Config data
-    # Variables in the Model will always be overridden when the start button is pressed
+    # Variables in the model will always be overridden when the start button is pressed
     def load(self):
         """
         Load the config from a file
