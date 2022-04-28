@@ -101,7 +101,8 @@ def init(data_mdl):
 
 def search_port():
     """
-    Search for the name of the used usb port
+    Search for the name of the used usb port and return it
+    Returns None if no usb port was found
     :return: str port_name: name of the used serial port
     """
 
