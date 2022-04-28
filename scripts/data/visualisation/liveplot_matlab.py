@@ -27,13 +27,14 @@ class PlotData:
 
     Used to update each plot in liveplot cycle
     """
-    def __init__(self, q: queue.Queue, ax, plot_label):
+    def __init__(self, q: queue.Queue, ax, plot_label, colour):
         self.q = q
         self.ax = ax
         self.x_data = list(range(AXES_SIZE))
-        self.y_data = np.zeros(AXES_SIZE)
-        self.line, = ax.plot(self.x_data, self.y_data)
-        self.name = plot_label
+        self.y_data = np.zeros(AXES_SIZE) if plot_label is not 'label' else np.full(AXES_SIZE, -1)
+        self.line, = ax.plot(self.x_data, self.y_data, color=colour)
+        self.color = colour
+        self.title = plot_label
 
 
 def live_plotter(plot_data: PlotData):
@@ -48,8 +49,6 @@ def live_plotter(plot_data: PlotData):
     if np.min(plot_data.y_data) <= plot_data.line.axes.get_ylim()[0] or np.max(plot_data.y_data) >= plot_data.line.axes.get_ylim()[1]:
         plot_data.ax.set_ylim([np.min(plot_data.y_data) - np.std(plot_data.y_data), np.max(plot_data.y_data) + np.std(plot_data.y_data)])
 
-    # ascending x-values only the label a changes, the x-range remains the same
-    plot_data.line.axes.set_xticklabels(plot_data.x_data)
     # return line, so we can update it again in the next iteration
     return plot_data.line
 
@@ -87,28 +86,39 @@ def perform_live_plot():
         fig.canvas.draw()
 
 
-def connect_queue(queue: queue.Queue, plot_label, subplot_index):
+def connect_queue(queue: queue.Queue, plot_label, row: int, color: str,column: int, position: int, y_labels: list = None):
     """
     Creates a PlotData object for the queue and assigns the queue to a subplot.
+    :param y_labels:
+    :param position:
+    :param column:
+    :param row:
     :param queue: queue which should be plotted
     :param plot_label: class name
-    :param subplot_index: position of th subplot
     """
-    while not fig:
-        time.sleep(0.05)
-    if plot_label in plots:
-        ax = plots.get(plot_label)
-    else:
-        ax = fig.add_subplot(subplot_index)
-        ax.set_xlabel('Time')
-        ax.set_ylabel(plot_label)
-        plots[plot_label] = ax
-    queues.append(PlotData(queue, ax, plot_label))
+    if len(queues) < 5:
+        while not fig:
+            time.sleep(0.05)
+        if plot_label in plots:
+            ax = plots.get(plot_label)
+        else:
+            ax = fig.add_subplot(row, column, position)
+            ax.set_title(plot_label)
+            ax.axes.xaxis.set_ticklabels([])
+            if y_labels:
+                ax.set_ylim(-1.1, 1.1)
+                ax.set_yticks([-1, 0, 1])
+                ax.set_yticklabels(y_labels)
+            plots[plot_label] = ax
+        queues.append(PlotData(queue, ax, plot_label, color))
 
 
 def start_live_plot(figure):
     """
     Initializes plot window.
     """
-    global fig
+    global fig, queues, plots
     fig = figure
+    fig.clf()
+    queues = list()
+    plots = dict()

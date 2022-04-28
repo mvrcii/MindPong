@@ -131,10 +131,10 @@ def connect_queues():
     # scripts.data.visualisation.liveplot.add_queue(('QUEUE_CLABEL', '#F1C40F', queue_manager.queue_c3_pow))
     # scripts.data.visualisation.liveplot.add_queue(('QUEUE_LABEL', '#16A085', queue_manager.queue_c4_pow))
     # scripts.data.visualisation.liveplot.add_queue(('QUEUE_HCON', '#9B59B6', queue_hcon))
-    connect_queue(queue_manager.queue_c3, 'raw', 211)
-    connect_queue(queue_manager.queue_c4, 'raw', 211)
-    connect_queue(queue_manager.queue_c3_pow, 'pow', 212)
-    connect_queue(queue_manager.queue_c4_pow, 'pow', 212)
+    connect_queue(queue_manager.queue_c3, 'raw', row=2, column=1, position=1)
+    connect_queue(queue_manager.queue_c4, 'raw', row=2, column=1, position=1)
+    connect_queue(queue_manager.queue_c3_pow, 'pow',row=2, column=1, position=2)
+    connect_queue(queue_manager.queue_c4_pow, 'pow', row=2, column=1, position=2)
 
 def sort_incoming_channels(sliding_window, used_ch_names):
 

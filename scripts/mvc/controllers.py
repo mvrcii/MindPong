@@ -63,7 +63,6 @@ class ConfigController(Controller):
 
         # Update the plot if plot is shown and the session is recording
         if self.view.check_button_vars["Plot"].get() and self.data.session_recording:
-            print("updating plot")
             perform_live_plot()
 
     @staticmethod
@@ -83,7 +82,6 @@ class ConfigController(Controller):
             self.view.hide_button("Start Session")
             self.__start_calibration()
             self.master.create_game_window()
-            self.__start_liveplot()
 
     def __start_calibration(self):
         self.view.show_progress_bar(row=4, column=0)
@@ -101,7 +99,7 @@ class ConfigController(Controller):
                 self.view.show_button("Stop Session")
                 self.master.game_window.game_controller.start_game()
 
-    def __start_liveplot(self):
+    def start_liveplot(self):
         """Binds the plot figure to the liveplot script and shows the plot if the toggle is activated"""
         start_live_plot(self.view.figure)
 

@@ -43,6 +43,7 @@ class App(tk.Tk):
         """Creates the second window (game window) and starts the associated read data thread"""
         self.game_window = GameWindow(self)
         # Starting the thread to read data
+        self.config_window.config_controller.start_liveplot()
         self.thread = Thread(target=read_data.init, args=[self.data_model], daemon=True)
         self.thread.start()
         self.__data_model.session_recording = True
