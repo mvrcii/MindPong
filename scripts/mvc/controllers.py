@@ -6,6 +6,7 @@ from scripts.pong.game import End
 from scripts.data.extraction.trial_handler import save_session, count_trials, count_event_types
 from scripts.mvc.models import MetaData
 from datetime import datetime
+from scripts.data.visualisation.liveplot_matlab import start_live_plot, perform_live_plot
 
 
 class Controller(ABC):
@@ -35,6 +36,9 @@ class ConfigController(Controller):
         self.view.buttons["Discard Session"].configure(command=self.__discard_session)
         self.view.check_buttons["Trial Recording"].configure(command=self.__set_trial_recording)
 
+    def update(self):
+        perform_live_plot()
+
     def __init_config_view_values(self):
         self.__set_entry_text(self.view.entries["ID"], self.data.subject_id)
         self.__set_entry_text(self.view.entries["Age"], self.data.subject_age)
@@ -63,10 +67,17 @@ class ConfigController(Controller):
         # Create second top level window
         if self.valid_form:
             self.view.disable_inputs()
+
             self.master.create_game_window()
+            self.__start_liveplot()
+
             # ToDo: Start the liveplot here
             self.view.hide_button("Start Session")
             self.view.show_button("Stop Session")
+
+    def __start_liveplot(self):
+        start_live_plot(self.view.figure)
+        self.view.show_plot(row=0, column=2)
 
     def __stop_session(self):
         """Stops the current session and changes the view according to the amount of recorded trials.
