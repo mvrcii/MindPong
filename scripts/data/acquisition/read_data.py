@@ -102,7 +102,7 @@ def init(data_mdl):
 def search_port():
     """
     Search for the name of the used usb port
-    :return: str port_name: name of the used serial port None: None
+    :return: str port_name: name of the used serial port
     """
 
     print('Search...')
@@ -126,9 +126,7 @@ def search_port():
 
 
 def handle_samples():
-    """
-    Reads EEG data from port, sends it to trial_handler and writes into in the window_buffer
-    """
+    """Reads EEG data from port, sends it to trial_handler and writes into in the window_buffer"""
     global first_window, window_buffer, allow_window_creation, first_data
     count_samples = 0
     while stream_available and data_model.session_recording:
@@ -188,10 +186,7 @@ def sort_channels(sliding_window, used_ch_names):
 
 
 def send_window():
-    """
-    Create sliding window and send it to the algorithm
-    """
-
+    """Create sliding window and send it to the algorithm"""
     global window_buffer, number_channels
     window = np.zeros((number_channels, sliding_window_samples), dtype=float)
     for i in range(len(window)):
@@ -206,10 +201,7 @@ def send_window():
 
 
 def stop_stream():
-    """
-    Stops the data stream and the releases session
-    """
-
+    """Stops the data stream and the releases session"""
     global stream_available
     stream_available = False
     # time.sleep(0.3) , needed for multithreading

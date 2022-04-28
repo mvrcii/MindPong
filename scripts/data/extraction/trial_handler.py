@@ -7,9 +7,7 @@ from brainflow import BoardShim
 
 
 class Labels(Enum):
-    """
-    An Enum Class for different trial labels for event types
-    """
+    """An Enum Class for different trial labels for event types"""
     INVALID = 99
     LEFT = 0
     RIGHT = 1
@@ -37,7 +35,6 @@ def send_raw_data(data, start: time.time() = None):
     :param data[] data: raw data from the data acquisition
     :param time.time() start: time stamp of the start of the session
     """
-
     if start is not None:
         global start_time
         start_time = start
@@ -56,7 +53,6 @@ def mark_trial(start: float, end: float, label: Labels):
     :param time.time() end: time stamp of the end of the trial
     :param Labels label: event_type of the trial
     """
-
     global start_time, count_trials, count_event_types
     pos = round((start - start_time) / time_for_one_sample)
     duration = round((end - start) / time_for_one_sample)

@@ -149,17 +149,13 @@ class Player:
                 return -1
 
     def draw(self):
-        """
-        Draw the player
-        """
+        """Draw the player"""
 
         self.canvas.move(self.id, self.velocity_x_axis * self.speed_factor, 0)
         self.pos = self.canvas.coords(self.id)
 
     def reset(self):
-        """
-        Reset the player
-        """
+        """Reset the player"""
 
         self.canvas.delete(self.id)
         self.start_pos = True
@@ -167,9 +163,7 @@ class Player:
         self.init()
 
     def init(self):
-        """
-        Initializes the player object and its position
-        """
+        """Initializes the player object and its position"""
 
         self.id = self.canvas.create_rectangle(0, 0, self.width, self.height, fill=self.color)
         # Move to initial position
@@ -179,9 +173,7 @@ class Player:
         self.target.spawn_new_target(self.pos)
 
     def move_left(self, event=None):
-        """
-        Move player left
-        """
+        """Move player left"""
 
         # Prevent player movement while the game state is not playing
         if self.root.state.name is not game.Playing.name:
@@ -197,9 +189,7 @@ class Player:
             self.is_trial_valid()
 
     def move_right(self, event=None):
-        """
-        Move player right
-        """
+        """Move player right"""
 
         # Prevent player movement while the game state is not playing
         if self.root.state.name is not game.Playing.name:
@@ -226,9 +216,7 @@ class Player:
             self.root.change(game.Hit)
 
     def start_trial(self):
-        """
-        Saves the timestamp by the start of a trial
-        """
+        """Saves the timestamp by the start of a trial"""
         self.start_time_trial = time.time()
 
     def is_trial_valid(self):
@@ -259,9 +247,7 @@ class Player:
             self.stop_trial()
 
     def stop_trial(self):
-        """
-        Stops the recording of a trial and stores valid trials
-        """
+        """Stops the recording of a trial and stores valid trials"""
         stop_time_trial = time.time()
         if (stop_time_trial - self.start_time_trial) > config.MIN_DURATION_OF_TRIAL and self.last_direction_update != 0:
             trial_handler.mark_trial(self.start_time_trial, stop_time_trial, self.trial_label)
