@@ -168,6 +168,7 @@ def handle_samples():
                 elif not first_window and count_samples == OFFSET_SAMPLES:
                     send_window()
                     count_samples = 0
+    stop_stream()
 
 
 def sort_channels(sliding_window, used_ch_names):

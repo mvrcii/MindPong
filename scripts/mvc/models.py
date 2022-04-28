@@ -28,7 +28,7 @@ class ConfigData(object):
         self.__comment = comment
         self.__trial_recording = trial_recording
         self.__valid_subject_sex_values = ['M', 'F', 'D']
-        self.__session_recording = True
+        self.__session_recording = False
 
     @property
     def subject_id(self):
@@ -237,7 +237,7 @@ class ConfigData(object):
         self.__session_recording = value
 
     # Currently without persistence of the Config data
-    # Variables in the Model will always be overridden when the start button is pressed
+    # Variables in the model will always be overridden when the start button is pressed
     def load(self):
         """
         Load the config from a file

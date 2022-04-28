@@ -1,9 +1,11 @@
+import time
 from abc import ABC, abstractmethod
 from tkinter.messagebox import askyesno, showinfo
 
+from scripts.config import CALIBRATION_TIME
 from scripts.mvc.view import View, ConfigView, GameView
 from scripts.pong.game import End
-from scripts.data.extraction.trial_handler import save_session, count_trials, count_event_types
+from scripts.data.extraction.trial_handler import save_session
 from scripts.mvc.models import MetaData
 from datetime import datetime
 from scripts.data.visualisation.liveplot_matlab import start_live_plot, perform_live_plot
@@ -20,7 +22,9 @@ class ConfigController(Controller):
         self.master = master
         self.view = None
         self.data = None
+
         self.valid_form = True
+        self.calibration_timer = 0
 
     def bind(self, view: ConfigView):
         self.view = view
@@ -35,11 +39,13 @@ class ConfigController(Controller):
         self.view.buttons["Save Session"].configure(command=self.__save_session)
         self.view.buttons["Discard Session"].configure(command=self.__discard_session)
         self.view.check_buttons["Trial Recording"].configure(command=self.__set_trial_recording)
+        self.view.check_buttons["Plot"].configure(command=self.__toggle_plot)
 
     def update(self):
         perform_live_plot()
 
     def __init_config_view_values(self):
+        """Initially configures the view with the model data"""
         self.__set_entry_text(self.view.entries["ID"], self.data.subject_id)
         self.__set_entry_text(self.view.entries["Age"], self.data.subject_age)
         self.view.combo_boxes["Sex"]['values'] = self.data.valid_subject_sex_values
@@ -52,38 +58,65 @@ class ConfigController(Controller):
         self.view.spin_boxes["trial_min_duration"].set(self.data.trial_min_duration)
         self.view.check_button_vars["Trial Recording"].set(self.data.trial_recording)
 
+    def update(self):
+        self.__update_calibration()
+
+        # Update the plot if plot is shown and the session is recording
+        if self.view.check_button_vars["Plot"].get() and self.data.session_recording:
+            print("updating plot")
+            perform_live_plot()
+
     @staticmethod
     def __set_entry_text(entry, value):
+        """Helper method to set the text of an entry field"""
         entry.delete(0, "end")
         entry.insert(0, value)
 
     def __start_session(self):
         """Starts the session, if the input fields are valid, by disabling the input fields, starting the game
-        window and the liveplot.
-
-        :return: None
-        """
+        window and the liveplot."""
         self.validate_form()
-        # Create second top level window
+
+        # Create second top level window if the form was valid
         if self.valid_form:
             self.view.disable_inputs()
-
+            self.view.hide_button("Start Session")
+            self.__start_calibration()
             self.master.create_game_window()
             self.__start_liveplot()
 
-            # ToDo: Start the liveplot here
-            self.view.hide_button("Start Session")
-            self.view.show_button("Stop Session")
+    def __start_calibration(self):
+        self.view.show_progress_bar(row=4, column=0)
+        self.calibration_timer = time.time()
+
+    def __update_calibration(self):
+        """Updates the calibration timer and starts the game afterwards"""
+        if self.calibration_timer > 0:
+            percentage = round((time.time() - self.calibration_timer) / CALIBRATION_TIME * 100, 2)
+            self.view.set_progress_bar_value(percentage)
+
+            if percentage >= 100:
+                self.calibration_timer = 0
+                self.view.hide_progress_bar()
+                self.view.show_button("Stop Session")
+                self.master.game_window.game_controller.start_game()
 
     def __start_liveplot(self):
+        """Binds the plot figure to the liveplot script and shows the plot if the toggle is activated"""
         start_live_plot(self.view.figure)
-        self.view.show_plot(row=0, column=2)
+
+        if self.view.check_button_vars["Plot"].get():
+            self.view.show_plot(True)
+
+    def __toggle_plot(self):
+        """Toggles the visibility of the plot"""
+        if self.view.check_button_vars["Plot"].get() and self.data.session_recording:
+            self.view.show_plot(True)
+        else:
+            self.view.show_plot(False)
 
     def __stop_session(self):
-        """Stops the current session and changes the view according to the amount of recorded trials.
-
-        :return: None
-        """
+        """Stops the current session and changes the view according to the amount of recorded trials."""
         answer = askyesno(title="Confirmation", message="Are you sure that you want to stop the session?")
         if answer:
             self.master.game_window.game_controller.show_end_screen()
@@ -120,13 +153,9 @@ class ConfigController(Controller):
         self.view.reset_view()
 
     def __discard_session(self):
-        """Discards the current session.
-
-        :return: None
-        """
-        self.master.destroy_game_window()
+        """Discards the current session."""
         self.view.reset_view()
-        pass
+        self.master.destroy_game_window()
 
     def validate_form(self):
         """Validates the whole form by calling all the individual validation methods
@@ -297,15 +326,18 @@ class GameController(Controller):
     def __init__(self, master=None) -> None:
         self.master = master
         self.view = None
-        self.data = None
-        self.frames = {}
 
     def bind(self, view: GameView):
         self.view = view
-        self.data = self.master.data_model
-        self.view.bind_data(self.data)
+        self.view.bind_data(self.master.data_model)
         self.view.create_view()
 
+    def start_game(self):
+        """Starts the game view in the second window"""
+        self.master.title("Game")
+        self.view.start_game()
+
     def show_end_screen(self):
+        """Stops the game and shows the end screen"""
         self.view.game.change(End)
 
