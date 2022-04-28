@@ -182,7 +182,7 @@ class Player:
         self.pos = self.canvas.coords(self.id)
         self.target.spawn_new_target(self.pos)
 
-    def move_left(self, event):
+    def move_left(self, event=None):
         """
         Move player left
         :return: None
@@ -201,7 +201,7 @@ class Player:
         if self.root.data.trial_recording:
             self.is_trial_valid()
 
-    def move_right(self, event):
+    def move_right(self, event=None):
         """
         Move player right
         :return: None

@@ -11,6 +11,7 @@ import brainflow
 from brainflow.board_shim import BoardShim, BrainFlowInputParams, BrainFlowError
 
 import scripts.config
+from scripts.data.visualisation.liveplot_matlab import connect_queue
 from scripts.mvc.models import MetaData
 from scripts.data.extraction import trial_handler
 import scripts.config as config
@@ -20,9 +21,6 @@ class QueueManager:
     def __init__(self):
         self.queue_label = queue.Queue(100)
         self.queue_clabel = queue.Queue(100)
-
-        self.queue_c3 = queue.Queue(100)
-        self.queue_c4 = queue.Queue(100)
 
         self.queue_c3_pow = queue.Queue(100)
         self.queue_c4_pow = queue.Queue(100)
@@ -56,6 +54,16 @@ data_model = None
 queue_manager = QueueManager()
 
 
+def connect_queues():
+    connect_queue(queue_manager.queue_c3_pow, 'pow', 311)
+    connect_queue(queue_manager.queue_c4_pow, 'pow', 311)
+    connect_queue(queue_manager.queue_hcon, 'hcon', 312)
+    connect_queue(queue_manager.queue_hcon_norm, 'hcon', 312)
+    connect_queue(queue_manager.queue_clabel, 'label', 313)
+
+
+
+
 def init(data_mdl):
     """
     --- starting point ---
@@ -76,6 +84,7 @@ def init(data_mdl):
     
     connect_queues()
     """
+    connect_queues()
 
     if params.serial_port is not None:
         # BoardShim.enable_dev_board_logger()
@@ -193,11 +202,11 @@ def send_window():
     for i in range(len(window)):
         window[i] = np.array(window_buffer[i])
     # sort channels for laplacian calculation
-    window = sort_channels(window, scripts.config.BCI_CHANNELS)
+    window, used_channels = sort_channels(window, scripts.config.BCI_CHANNELS)
     # push window to cursor control algorithm
     # TODO: change offset_duration to percentage? Else change calculation in coc algorithm
     from scripts.algorithms.cursor_online_control import perform_algorithm
-    perform_algorithm(window, MetaData.bci_channels, SAMPLING_RATE, queue_manager, offset_in_percentage=offset_duration / sliding_window_duration)
+    perform_algorithm(window, used_channels, SAMPLING_RATE, queue_manager, offset_in_percentage=offset_duration / sliding_window_duration)
 
 
 def stop_stream():

@@ -8,6 +8,7 @@ from scripts.pong.game import End
 from scripts.data.extraction.trial_handler import save_session
 from scripts.mvc.models import MetaData
 from datetime import datetime
+from scripts.data.visualisation.liveplot_matlab import start_live_plot, perform_live_plot
 
 
 class Controller(ABC):
@@ -55,6 +56,7 @@ class ConfigController(Controller):
 
     def update(self):
         self.__update_calibration()
+        perform_live_plot()
 
     @staticmethod
     def __set_entry_text(entry, value):
@@ -73,6 +75,7 @@ class ConfigController(Controller):
             self.view.hide_button("Start Session")
             self.__start_calibration()
             self.master.create_game_window()
+            self.__start_liveplot()
 
     def __start_calibration(self):
         self.view.show_progress_bar(row=4, column=0)
@@ -89,6 +92,10 @@ class ConfigController(Controller):
                 self.view.hide_progress_bar()
                 self.view.show_button("Stop Session")
                 self.master.game_window.game_controller.start_game()
+
+    def __start_liveplot(self):
+        start_live_plot(self.view.figure)
+        self.view.show_plot(row=0, column=2)
 
     def __stop_session(self):
         """Stops the current session and changes the view according to the amount of recorded trials."""

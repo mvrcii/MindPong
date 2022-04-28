@@ -4,6 +4,8 @@ from tkinter import END
 from tkinter.scrolledtext import ScrolledText
 from abc import abstractmethod
 
+from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
+
 from scripts.pong.game import Game
 
 
@@ -26,6 +28,8 @@ class ConfigView(View):
         self.check_buttons = {}
         self.check_button_vars = {}
         self.comment_box = None
+        self.figure = None
+        self.canvas = None
         self.grid(row=0, column=0, sticky='nsew')
 
     def create_view(self):
@@ -45,6 +49,9 @@ class ConfigView(View):
         # Second Column
         self.__build_graph_section(control_frame, "Graph", row=0, column=1)
         self.__build_switch_section(control_frame, row=3, column=1)
+
+        # Third Column
+        self.__build_plot(control_frame)
 
     def hide_button(self, label):
         """Hides the button with the given label
@@ -215,6 +222,15 @@ class ConfigView(View):
         self.progress_bar_frame = ttk.LabelFrame(frame, text="Calibration Timer")
         self.progress_bar = ttk.Progressbar(self.progress_bar_frame, orient="horizontal", mode="determinate")
         self.progress_bar_frame.grid_columnconfigure(0, weight=1)
+
+    def __build_plot(self, frame):
+        from matplotlib.figure import Figure
+        self.figure = Figure(figsize=(10, 6), dpi=100)
+        self.canvas = FigureCanvasTkAgg(self.figure, frame)
+        self.canvas.draw()
+
+    def show_plot(self, row, column):
+        self.canvas.get_tk_widget().grid(rowspan=5, row=row, column=column, sticky="nsew")
 
     # Helper functions
     def __create_entry(self, frame, label, row, column, text_var):
