@@ -41,8 +41,7 @@ sliding_window_samples = int(sliding_window_duration / time_for_one_sample)
 offset_duration = 0.2  # size of offset in s between two consecutive sliding windows
 offset_samples = int(offset_duration / time_for_one_sample)  # size of offset in amount of samples, *8ms for time
 
-number_channels = len(BoardShim.get_eeg_channels(
-    brainflow.board_shim.BoardIds.CYTON_DAISY_BOARD))
+number_channels = len(BoardShim.get_eeg_channels(brainflow.board_shim.BoardIds.CYTON_DAISY_BOARD))
 
 allow_window_creation = True
 first_window = True
@@ -60,8 +59,6 @@ def connect_queues():
     connect_queue(queue_manager.queue_hcon, 'hcon', 312)
     connect_queue(queue_manager.queue_hcon_norm, 'hcon', 312)
     connect_queue(queue_manager.queue_clabel, 'label', 313)
-
-
 
 
 def init(data_mdl):
@@ -105,8 +102,7 @@ def init(data_mdl):
 def search_port():
     """
     Search for the name of the used usb port
-    :return: port_name: name of the used serial port None: None
-    :rtype: str, None
+    :return: str port_name: name of the used serial port None: None
     """
 
     print('Search...')
@@ -167,11 +163,11 @@ def handle_samples():
 def sort_channels(sliding_window, used_ch_names):
     # small laplacian
     #                 'C3', 'Cz', 'C4', 'P3', 'Pz', 'P4', 'O1', 'O2', 'FC5', 'FC1', 'FC2', 'FC6', 'CP5', 'CP1', 'CP2', 'CP6'
-    ch_names_weight = [1,    0,    1,    0,    0,    0,    0,    0,     1,     1,     1,     1,     1,     1,     1,     1]
+    ch_names_weight = [1, 0, 1, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1]
 
     # large laplacian
     #                 'C3', 'Cz', 'C4', 'P3', '?', 'P4', 'T3', '?', '?', 'F3', 'F4', '?', '?', '?', '?', 'T4'
-    ch_names_weight = [1,    1,    1,    1,    0,    1,    1,   0,   0,   1,    1,    0,   0,   0,   0,    1]
+    ch_names_weight = [1, 1, 1, 1, 0, 1, 1, 0, 0, 1, 1, 0, 0, 0, 0, 1]
 
     filtered_sliding_window = list()
     filtered_channel_names = list()
@@ -194,7 +190,6 @@ def sort_channels(sliding_window, used_ch_names):
 def send_window():
     """
     Create sliding window and send it to the algorithm
-    :return: None
     """
 
     global window_buffer, number_channels
@@ -206,13 +201,13 @@ def send_window():
     # push window to cursor control algorithm
     # TODO: change offset_duration to percentage? Else change calculation in coc algorithm
     from scripts.algorithms.cursor_online_control import perform_algorithm
-    perform_algorithm(window, used_channels, SAMPLING_RATE, queue_manager, offset_in_percentage=offset_duration / sliding_window_duration)
+    perform_algorithm(window, used_channels, SAMPLING_RATE, queue_manager,
+                      offset_in_percentage=offset_duration / sliding_window_duration)
 
 
 def stop_stream():
     """
     Stops the data stream and the releases session
-    :return: None
     """
 
     global stream_available
