@@ -12,6 +12,8 @@ USED_STRATEGY_CLASS = strategy.KeyStrategy
 MIN_DURATION_OF_TRIAL = 1
 OBJECT_SIZE = 14
 
+
+# TODO bei nicht verwendung entfernen
 # Calibration
 CALIBRATION_WAIT_TIMER = 3
 BLACK_WINDOW_TIMER = 3

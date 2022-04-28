@@ -20,6 +20,7 @@ class PSD_METHOD(enum.Enum):
 
 
 # Global variables
+ringbuffer_hcon = None
 FMIN: float
 FMAX: float
 SAMPLING_FREQ: int
