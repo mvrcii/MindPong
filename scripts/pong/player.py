@@ -15,11 +15,11 @@ class Player:
     ----------
     :method update(self, delta_time): Update velocity according to the time
     :method calculate_velocity(self): Calculate velocity
-    :method draw(self): Draw the paddle
-    :method reset(self): Reset the paddle
-    :method init(self): Initializes the paddle object and its position
-    :method move_left(self, evt): Move paddle left
-    :method move_right(self, evt): Move paddle right
+    :method draw(self): Draw the plyer
+    :method reset(self): Reset the player
+    :method init(self): Initializes the player object and its position
+    :method move_left(self, evt): Moves player left
+    :method move_right(self, evt): Moves player right
     :method collision_with_target(self): checks collision with target
     :method start_trial(self): sets the timestamp of the start of a trial
     :method is_trial_valid(self): checks if the trial is still valid (player moves to target)
@@ -251,13 +251,11 @@ class Player:
         if self.last_direction_update == 0:
             # Target is right and player moves to the right
             if self.pos[0] < self.target.pos[0] and self.direction == 1:
-                print("right")
                 self.trial_label = trial_handler.Labels.RIGHT
                 self.start_trial()
                 self.last_direction_update = self.direction
             # Target is left and player moves to the left
             elif self.pos[0] > self.target.pos[0] and self.direction == -1:
-                print("left")
                 self.trial_label = trial_handler.Labels.LEFT
                 self.start_trial()
                 self.last_direction_update = self.direction
@@ -278,5 +276,5 @@ class Player:
         if (stop_time_trial - self.start_time_trial) > config.MIN_DURATION_OF_TRIAL and self.last_direction_update != 0:
             trial_handler.mark_trial(self.start_time_trial, stop_time_trial, self.trial_label)
             print("Valid trial is stored")
-            print("Start-Time: ", self.start_time_trial, "End-Time: ", stop_time_trial, "Label: ", self.trial_label)
+
         self.last_direction_update = 0

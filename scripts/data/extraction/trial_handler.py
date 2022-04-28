@@ -13,8 +13,7 @@ class Labels(Enum):
     INVALID = 99
     LEFT = 0
     RIGHT = 1
-    EYES_OPEN = 2
-    EYES_CLOSED = 3
+    CALIBRATION = 2
 
 number_channels = len(BoardShim.get_eeg_channels(brainflow.board_shim.BoardIds.CYTON_DAISY_BOARD))
 
@@ -69,6 +68,7 @@ def mark_trial(start: float, end: float, label: Labels):
     event_type.append(label)
     event_pos.append(pos)
     count_trials += 1
+    print("Start-Time: ", start, "End-Time: ", end, "Label: ", label.name)
     print("Finished storing")
     for i in raw_data:
         print(i[pos:pos+duration])

@@ -3,6 +3,7 @@ from abc import ABC, abstractmethod
 from tkinter.messagebox import askyesno, showinfo
 
 from scripts.config import CALIBRATION_TIME
+from scripts.data.extraction import trial_handler
 from scripts.mvc.view import View, ConfigView, GameView
 from scripts.pong.game import End
 from scripts.data.extraction.trial_handler import save_session
@@ -88,6 +89,9 @@ class ConfigController(Controller):
             self.view.set_progress_bar_value(percentage)
 
             if percentage >= 100:
+                if self.data.trial_recording:
+                    # Saves a trial that includes the calibration when the trial recording is switched on
+                    trial_handler.mark_trial(self.calibration_timer, time.time(), trial_handler.Labels.CALIBRATION)
                 self.calibration_timer = 0
                 self.view.hide_progress_bar()
                 self.view.show_button("Stop Session")
