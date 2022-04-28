@@ -11,7 +11,7 @@ import brainflow
 from brainflow.board_shim import BoardShim, BrainFlowInputParams, BrainFlowError
 
 from scripts.data.visualisation.liveplot_matlab import connect_queue
-from scripts.mvc.models import MetaData
+from scripts.mvc.models import ConfigData
 from scripts.data.extraction import trial_handler
 import scripts.config as config
 
@@ -49,7 +49,7 @@ first_data = True
 stream_available = False  # indicates if stream is available
 board: BoardShim
 window_buffer: RingBuffer
-data_model = None
+data_model: ConfigData
 queue_manager = QueueManager()
 
 

@@ -129,6 +129,7 @@ def perform_multitaper(samples: np.ndarray, jobs=-1):
     :return: psd_abs: power spectral density (PSD) of the samples
              freqs: the corresponding frequencies
     """
+    print("F_MAX used: ", FMAX, "F_MIN used: ", FMIN)
     _bandwidth = FMAX - FMIN if FMAX - FMIN > 0 else 1
     psds, freqs = mne.time_frequency.psd_array_multitaper(samples, sfreq=SAMPLING_FREQ, n_jobs=jobs, bandwidth=_bandwidth, fmin=FMIN, fmax=FMAX, verbose=False)
     psds_abs = np.abs(psds)

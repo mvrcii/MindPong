@@ -63,7 +63,6 @@ class ConfigController(Controller):
 
         # Update the plot if plot is shown and the session is recording
         if self.view.check_button_vars["Plot"].get() and self.data.session_recording:
-            print("updating plot")
             perform_live_plot()
 
     @staticmethod
