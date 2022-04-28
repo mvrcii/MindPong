@@ -1,3 +1,4 @@
+import time
 import tkinter as tk
 from threading import Thread
 
@@ -28,6 +29,7 @@ class App(tk.Tk):
         # Initialize the windows
         self.game_window = None
         self.config_window = ConfigWindow(self)
+        self.thread = None
 
         self.__update_controllers()
         self.update()
@@ -44,14 +46,15 @@ class App(tk.Tk):
     def create_game_window(self):
         self.game_window = GameWindow(self)
         # Starting the thread to read data
-        thread = Thread(target=read_data.init, args=[self.data_model], daemon=True)
-        thread.start()
+        self.thread = Thread(target=read_data.init, args=[self.data_model], daemon=True)
+        self.thread.start()
 
     def destroy_game_window(self):
         self.game_window.destroy()
         self.game_window = None
-        # ToDo: Destroy/Stop Thread
-        # ToDo: Clear the data in read_data or close and start a new read_data thread
+        self.__data_model.session_recording = False
+        time.sleep(0.5)
+        self.thread.join()
 
     @property
     def data_model(self):

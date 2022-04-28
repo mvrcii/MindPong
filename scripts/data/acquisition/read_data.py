@@ -14,6 +14,7 @@ import scripts.config
 from scripts.data.visualisation.liveplot_matlab import connect_queue
 from scripts.mvc.models import MetaData
 from scripts.data.extraction import trial_handler
+import scripts.config as config
 
 
 class QueueManager:
@@ -134,7 +135,7 @@ def handle_samples():
     """
     global first_window, window_buffer, allow_window_creation, first_data
     count_samples = 0
-    while stream_available:
+    while stream_available and data_model.session_recording:
         data = board.get_board_data(1)[board.get_eeg_channels(
             brainflow.board_shim.BoardIds.CYTON_DAISY_BOARD)]  # get all data and remove it from internal buffer
         if len(data[0]) > 0:

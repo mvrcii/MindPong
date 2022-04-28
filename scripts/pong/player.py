@@ -79,7 +79,7 @@ class Player:
         self.last_direction_update = 0
         self.trial_label = trial_handler.Labels.INVALID
 
-        self.request(strategy).__str__(self)
+        self.request(strategy).control(self)
 
         self.init()
 
