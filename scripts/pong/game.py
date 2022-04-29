@@ -169,9 +169,6 @@ class Game(tk.Frame):
 
         self.bind("<space>", lambda event: self.change(Playing) if self.state.name is Idle.name else self.change(Idle))
 
-        # ToDo mro: Connect the session saving with the GUI here
-        self.bind('e', lambda event: self.change(End))
-
         self.update()
 
     def update(self):
