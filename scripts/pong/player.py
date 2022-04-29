@@ -4,6 +4,7 @@ import scripts.pong.game as game
 import scripts.config as config
 
 import scripts.data.extraction.trial_handler as trial_handler
+from scripts.mvc.models import ConfigData
 
 
 # Define player properties and functions
@@ -61,6 +62,7 @@ class Player:
 
         self.root = root
         self.canvas = canvas
+        self.config_data = self.root.config_data
         self.canvas_width = canvas.winfo_reqwidth()
         self.canvas_height = canvas.winfo_reqheight()
         self.color = color
@@ -249,7 +251,7 @@ class Player:
     def stop_trial(self):
         """Stops the recording of a trial and stores valid trials"""
         stop_time_trial = time.time()
-        if (stop_time_trial - self.start_time_trial) > config.MIN_DURATION_OF_TRIAL and self.last_direction_update != 0:
+        if (stop_time_trial - self.start_time_trial) > self.config_data.trial_min_duration/1000 and self.last_direction_update != 0:
             trial_handler.mark_trial(self.start_time_trial, stop_time_trial, self.trial_label)
             print("Valid trial is stored")
         self.last_direction_update = 0

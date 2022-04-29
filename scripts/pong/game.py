@@ -6,6 +6,7 @@ import time
 import scripts.pong.player as player
 import scripts.pong.target as target
 import scripts.config as config
+from scripts.mvc.models import ConfigData
 
 
 class GameState(object):
@@ -127,6 +128,8 @@ class Game(tk.Frame):
         """
 
         tk.Frame.__init__(self, parent)
+
+        self.config_data = controller.data
 
         # override window dimensions
         global WINDOW_WIDTH, WINDOW_HEIGHT

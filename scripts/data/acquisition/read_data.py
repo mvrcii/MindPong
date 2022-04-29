@@ -10,9 +10,8 @@ import serial.tools.list_ports
 import brainflow
 from brainflow.board_shim import BoardShim, BrainFlowInputParams, BrainFlowError
 
-import scripts.config
 from scripts.data.visualisation.liveplot_matlab import connect_queue
-from scripts.mvc.models import MetaData
+from scripts.mvc.models import ConfigData
 from scripts.data.extraction import trial_handler
 import scripts.config as config
 
@@ -32,24 +31,25 @@ class QueueManager:
 SAMPLING_RATE = BoardShim.get_sampling_rate(brainflow.board_shim.BoardIds.CYTON_DAISY_BOARD)
 
 # time which is needed for one sample in s, T = 1/f = 1/125 = 0.008
-time_for_one_sample = 1 / SAMPLING_RATE
+TIME_FOR_ONE_SAMPLE = 1 / SAMPLING_RATE
 
-sliding_window_duration = 1  # size of sliding window in s
+SLIDING_WINDOW_DURATION: float  # size of sliding window in s
 # size of sliding window in amount of samples, *8ms for time
-sliding_window_samples = int(sliding_window_duration / time_for_one_sample)
+SLIDING_WINDOW_SAMPLES: int
 
-offset_duration = 0.2  # size of offset in s between two consecutive sliding windows
-offset_samples = int(offset_duration / time_for_one_sample)  # size of offset in amount of samples, *8ms for time
+OFFSET_DURATION: float  # size of offset in s between two consecutive sliding windows
+OFFSET_SAMPLES: int  # size of offset in amount of samples, *8ms for time
 
-number_channels = len(BoardShim.get_eeg_channels(brainflow.board_shim.BoardIds.CYTON_DAISY_BOARD))
+NUMBER_CHANNELS = len(BoardShim.get_eeg_channels(
+    brainflow.board_shim.BoardIds.CYTON_DAISY_BOARD))
 
 allow_window_creation = True
 first_window = True
 first_data = True
 stream_available = False  # indicates if stream is available
 board: BoardShim
-window_buffer = [RingBuffer(capacity=sliding_window_samples, dtype=float) for _ in range(number_channels)]
-data_model = None
+window_buffer: RingBuffer
+data_model: ConfigData
 queue_manager = QueueManager()
 
 
@@ -71,8 +71,16 @@ def init(data_mdl):
     """
     params = BrainFlowInputParams()
     params.serial_port = search_port()
-    global data_model
+    global data_model, first_window
     data_model = data_mdl
+    first_window = True
+
+    global SLIDING_WINDOW_DURATION, SLIDING_WINDOW_SAMPLES, OFFSET_DURATION, OFFSET_SAMPLES, TIME_FOR_ONE_SAMPLE, window_buffer, NUMBER_CHANNELS
+    SLIDING_WINDOW_DURATION = data_model.window_size/1000
+    SLIDING_WINDOW_SAMPLES = int(SLIDING_WINDOW_DURATION / TIME_FOR_ONE_SAMPLE)
+    OFFSET_DURATION = data_model.window_offset/1000
+    OFFSET_SAMPLES = int(OFFSET_DURATION / TIME_FOR_ONE_SAMPLE)
+    window_buffer = [RingBuffer(capacity=SLIDING_WINDOW_SAMPLES, dtype=float) for _ in range(NUMBER_CHANNELS)]
 
     """"
     while not scripts.data.visualisation.liveplot.is_window_ready:
@@ -135,7 +143,7 @@ def handle_samples():
             brainflow.board_shim.BoardIds.CYTON_DAISY_BOARD)]  # get all data and remove it from internal buffer
         if len(data[0]) > 0:
             # filter data
-            for channel in range(number_channels):
+            for channel in range(NUMBER_CHANNELS):
                 brainflow.DataFilter.perform_bandstop(data[channel], SAMPLING_RATE, 0.0, 50.0, 5,
                                                       brainflow.FilterTypes.BUTTERWORTH.value, 0)
 
@@ -150,29 +158,22 @@ def handle_samples():
                 for i in range(len(data)):
                     window_buffer[i].extend(data[i])
                 count_samples += 1
-                if first_window and count_samples == sliding_window_samples:
+                if first_window and count_samples == SLIDING_WINDOW_SAMPLES:
                     first_window = False
                     send_window()
                     count_samples = 0
-                elif not first_window and count_samples == offset_samples:
+                elif not first_window and count_samples == OFFSET_SAMPLES:
                     send_window()
                     count_samples = 0
     stop_stream()
 
 
 def sort_channels(sliding_window, used_ch_names):
-    # small laplacian
-    #                 'C3', 'Cz', 'C4', 'P3', 'Pz', 'P4', 'O1', 'O2', 'FC5', 'FC1', 'FC2', 'FC6', 'CP5', 'CP1', 'CP2', 'CP6'
-    ch_names_weight = [1, 0, 1, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1]
-
-    # large laplacian
-    #                 'C3', 'Cz', 'C4', 'P3', '?', 'P4', 'T3', '?', '?', 'F3', 'F4', '?', '?', '?', '?', 'T4'
-    ch_names_weight = [1, 1, 1, 1, 0, 1, 1, 0, 0, 1, 1, 0, 0, 0, 0, 1]
 
     filtered_sliding_window = list()
     filtered_channel_names = list()
     for i in range(len(used_ch_names)):
-        if ch_names_weight[i] != 0:
+        if config.CH_NAMES_WEIGHT[i] != 0:
             if used_ch_names[i] == 'C3':
                 filtered_channel_names.insert(0, used_ch_names[i])
                 filtered_sliding_window.insert(0, sliding_window[i])
@@ -189,24 +190,25 @@ def sort_channels(sliding_window, used_ch_names):
 
 def send_window():
     """Create sliding window and send it to the algorithm"""
-    global window_buffer, number_channels
-    window = np.zeros((number_channels, sliding_window_samples), dtype=float)
+    global window_buffer, NUMBER_CHANNELS
+    window = np.zeros((NUMBER_CHANNELS, SLIDING_WINDOW_SAMPLES), dtype=float)
     for i in range(len(window)):
         window[i] = np.array(window_buffer[i])
     # sort channels for laplacian calculation
-    window, used_channels = sort_channels(window, scripts.config.BCI_CHANNELS)
+    window, used_channels = sort_channels(window, config.BCI_CHANNELS)
     # push window to cursor control algorithm
-    # TODO: change offset_duration to percentage? Else change calculation in coc algorithm
+    # TODO: change OFFSET_DURATION to percentage? Else change calculation in coc algorithm
     from scripts.algorithms.cursor_online_control import perform_algorithm
+    global data_model
     perform_algorithm(window, used_channels, SAMPLING_RATE, queue_manager,
-                      offset_in_percentage=offset_duration / sliding_window_duration)
+                      offset_in_percentage=OFFSET_DURATION / SLIDING_WINDOW_DURATION, f_min=data_model.f_min,
+                      f_max=data_model.f_max, threshold=data_model.threshold)
 
 
 def stop_stream():
     """Stops the data stream and the releases session"""
     global stream_available
     stream_available = False
-    # time.sleep(0.3) , needed for multithreading
     board.stop_stream()
     board.release_session()
 

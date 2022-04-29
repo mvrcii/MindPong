@@ -9,6 +9,7 @@ from spectrum import arburg, arma2psd
 
 from scripts.algorithms.cca_test import QueueManager
 from scripts.utils.event_listener import post_event
+import scripts.config as config
 
 
 class PSD_METHOD(enum.Enum):
@@ -20,11 +21,9 @@ class PSD_METHOD(enum.Enum):
 
 # Global variables
 ringbuffer_hcon = None
-FMIN = 8.0
-FMAX = 12.0
-THRESHOLD = 1
-SAMPLING_FREQ = 125
-WEIGHT = 2
+F_MIN: float
+F_MAX: float
+SAMPLING_FREQ: int
 USED_METHOD = PSD_METHOD.multitaper
 
 
@@ -130,8 +129,8 @@ def perform_multitaper(samples: np.ndarray, jobs=-1):
     :return: psd_abs: power spectral density (PSD) of the samples
              freqs: the corresponding frequencies
     """
-    _bandwidth = FMAX - FMIN if FMAX - FMIN > 0 else 1
-    psds, freqs = mne.time_frequency.psd_array_multitaper(samples, sfreq=SAMPLING_FREQ, n_jobs=jobs, bandwidth=_bandwidth, fmin=FMIN, fmax=FMAX, verbose=False)
+    _bandwidth = F_MAX - F_MIN if F_MAX - F_MIN > 0 else 1
+    psds, freqs = mne.time_frequency.psd_array_multitaper(samples, sfreq=SAMPLING_FREQ, n_jobs=jobs, bandwidth=_bandwidth, fmin=F_MIN, fmax=F_MAX, verbose=False)
     psds_abs = np.abs(psds)
 
     return psds_abs, freqs
@@ -170,7 +169,7 @@ def perform_burg(sample: np.array):
 
 def integrate_psd_values(samples: np.ndarray, frequency_list: np.ndarray, used_filter):
     """
-    Integrates over the calculated PSD values in between the specified frequencies (FMIN, FMAX)
+    Integrates over the calculated PSD values in between the specified frequencies (F_MIN, F_MAX)
     :param samples: F(C3), F(C4)
     :param frequency_list: list of the included frequencies
     :return: sum of all PSDs in the given frequency range
@@ -181,7 +180,7 @@ def integrate_psd_values(samples: np.ndarray, frequency_list: np.ndarray, used_f
 
     if used_filter == PSD_METHOD.fft or used_filter == PSD_METHOD.burg or used_filter == PSD_METHOD.periodogram:
         for i in range(len(frequency_list)):
-            if FMAX >= frequency_list[i] >= FMIN:
+            if F_MAX >= frequency_list[i] >= F_MIN:
                 psds_in_band_power.append(samples[i])
                 requested_frequency_range.append(frequency_list[i])
 
@@ -208,7 +207,8 @@ def manage_ringbuffer(window_size, offset_in_percentage:float):
     return ringbuffer_hcon
 
 
-def perform_algorithm(sliding_window, used_ch_names, sample_rate, queue_manager:QueueManager, offset_in_percentage=0.2):
+def perform_algorithm(sliding_window, used_ch_names, sample_rate, queue_manager:QueueManager, offset_in_percentage=0.2,
+                      f_min = 8.0, f_max= 12.0, threshold = 1.0):
     """
     Converts a sliding window into the corresponding horizontal movement
     Contains following steps:
@@ -226,8 +226,10 @@ def perform_algorithm(sliding_window, used_ch_names, sample_rate, queue_manager:
     for i in range(len(sliding_window)):
         sliding_window[i] = norm_data(sliding_window[i])
 
-    global SAMPLING_FREQ
+    global SAMPLING_FREQ, F_MIN, F_MAX
     SAMPLING_FREQ = sample_rate
+    F_MIN = f_min
+    F_MAX = f_max
 
     # 1. Spatial filtering
     samples_c3a, samples_c4a = calculate_spatial_filtering(sliding_window, used_ch_names)
@@ -253,7 +255,7 @@ def perform_algorithm(sliding_window, used_ch_names, sample_rate, queue_manager:
     area_c4 = integrate_psd_values(psd_c4a, f_c4a, USED_METHOD)
 
     # 4. Derive cursor control samples
-    hcon = (area_c4*WEIGHT) - area_c3
+    hcon = (area_c4*config.WEIGHT) - area_c3
 
     # normalize to zero mean and unit variance to derive the cursor control samples
     ringbuffer = manage_ringbuffer((len(sliding_window[0]) + 1)/sample_rate, offset_in_percentage)
@@ -265,8 +267,6 @@ def perform_algorithm(sliding_window, used_ch_names, sample_rate, queue_manager:
     standard_deviation = np.std(values)
     normalized_hcon = (hcon - mean) / standard_deviation if standard_deviation else 0
 
-    global THRESHOLD
-    threshold = THRESHOLD
 
     # converts the returned hcon to the corresponding label
     if normalized_hcon > threshold-0.2:     # left
