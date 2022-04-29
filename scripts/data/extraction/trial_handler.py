@@ -7,14 +7,11 @@ from brainflow import BoardShim
 
 
 class Labels(Enum):
-    """
-    An Enum Class for different trial labels for event types
-    """
+    """An Enum Class for different trial labels for event types"""
     INVALID = 99
     LEFT = 0
     RIGHT = 1
-    EYES_OPEN = 2
-    EYES_CLOSED = 3
+    CALIBRATION = 2
 
 number_channels = len(BoardShim.get_eeg_channels(brainflow.board_shim.BoardIds.CYTON_DAISY_BOARD))
 
@@ -37,9 +34,7 @@ def send_raw_data(data, start: time.time() = None):
     (2) Sent data get saved in raw_data
     :param data[] data: raw data from the data acquisition
     :param time.time() start: time stamp of the start of the session
-    :return: None
     """
-
     if start is not None:
         global start_time
         start_time = start
@@ -57,9 +52,7 @@ def mark_trial(start: float, end: float, label: Labels):
     :param time.time() start: time stamp of the start of the trial
     :param time.time() end: time stamp of the end of the trial
     :param Labels label: event_type of the trial
-    :return: None
     """
-
     global start_time, count_trials, count_event_types
     pos = round((start - start_time) / time_for_one_sample)
     duration = round((end - start) / time_for_one_sample)
@@ -69,6 +62,7 @@ def mark_trial(start: float, end: float, label: Labels):
     event_type.append(label)
     event_pos.append(pos)
     count_trials += 1
+    print("Start-Time: ", start, "End-Time: ", end, "Label: ", label.name)
     print("Finished storing")
     for i in raw_data:
         print(i[pos:pos+duration])
@@ -77,8 +71,7 @@ def mark_trial(start: float, end: float, label: Labels):
 def create_raw_data_array() -> np.ndarray:
     """
     Converts the buffer with the trials to a np.ndarray and clears the buffer
-    :return: data: row data
-    :rtype: np.ndarray
+    :return: np.ndarray data: row data
     """
 
     global raw_data
@@ -90,8 +83,7 @@ def create_raw_data_array() -> np.ndarray:
 def create_event_type_array() -> np.ndarray:
     """
     Converts the buffer with the event types to a np.ndarray and clears the buffer
-    :return: et: event types
-    :rtype: np.ndarray
+    :return: np.ndarray et: event types
     """
 
     global event_type
@@ -103,8 +95,7 @@ def create_event_type_array() -> np.ndarray:
 def create_position_array() -> np.ndarray:
     """
     Converts the buffer with the positions of the events to a np.ndarray and clears the buffer
-    :return: pos: position of the events
-    :rtype: np.ndarray
+    :return: np.ndarray pos: position of the events
     """
 
     global event_pos
@@ -116,8 +107,7 @@ def create_position_array() -> np.ndarray:
 def create_duration_array() -> np.ndarray:
     """
     Converts the buffer with the durations of the events to a np.ndarray and clears the buffer
-    :return: duration: duration of the events
-    :rtype: np.ndarray
+    :return: np.ndarray duration: duration of the events
     """
 
     global event_duration
@@ -131,12 +121,10 @@ def save_session(metadata: np.ndarray, npz_name: str):
     Save the metadata, the raw data, the event types and the position of the events of one session in a npz-file
     :param np.ndarray metadata: metadata of the session in a np.ndarray
     :param str npz_name: name of the npz-file, not the path name!
-    :return: None
     """
 
     from os.path import dirname, abspath, join
     file_path = join(dirname(dirname(abspath(__file__))), "session", npz_name)
-
     np.savez(file_path, meta=metadata, raw_data=create_raw_data_array(), event_type=create_event_type_array(),
              event_pos=create_position_array(), event_duration=create_duration_array())
     global count_trials, count_event_types

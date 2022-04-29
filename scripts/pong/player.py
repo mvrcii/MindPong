@@ -15,11 +15,11 @@ class Player:
     ----------
     :method update(self, delta_time): Update velocity according to the time
     :method calculate_velocity(self): Calculate velocity
-    :method draw(self): Draw the paddle
-    :method reset(self): Reset the paddle
-    :method init(self): Initializes the paddle object and its position
-    :method move_left(self, evt): Move paddle left
-    :method move_right(self, evt): Move paddle right
+    :method draw(self): Draw the plyer
+    :method reset(self): Reset the player
+    :method init(self): Initializes the player object and its position
+    :method move_left(self, evt): Moves player left
+    :method move_right(self, evt): Moves player right
     :method collision_with_target(self): checks collision with target
     :method start_trial(self): sets the timestamp of the start of a trial
     :method is_trial_valid(self): checks if the trial is still valid (player moves to target)
@@ -96,7 +96,6 @@ class Player:
         """
         Update the delta time (time between now and the time at the last update)
         :param delta_time: delta time for velocity x-axis
-        :return: None
         """
         self.velocity_x_axis = self.calculate_velocity() * delta_time
 
@@ -150,19 +149,13 @@ class Player:
                 return -1
 
     def draw(self):
-        """
-        Draw the player
-        :return: None
-        """
+        """Draw the player"""
 
         self.canvas.move(self.id, self.velocity_x_axis * self.speed_factor, 0)
         self.pos = self.canvas.coords(self.id)
 
     def reset(self):
-        """
-        Reset the player
-        :return: None
-        """
+        """Reset the player"""
 
         self.canvas.delete(self.id)
         self.start_pos = True
@@ -170,10 +163,7 @@ class Player:
         self.init()
 
     def init(self):
-        """
-        Initializes the player object and its position
-        :return: None
-        """
+        """Initializes the player object and its position"""
 
         self.id = self.canvas.create_rectangle(0, 0, self.width, self.height, fill=self.color)
         # Move to initial position
@@ -183,10 +173,7 @@ class Player:
         self.target.spawn_new_target(self.pos)
 
     def move_left(self, event=None):
-        """
-        Move player left
-        :return: None
-        """
+        """Move player left"""
 
         # Prevent player movement while the game state is not playing
         if self.root.state.name is not game.Playing.name:
@@ -202,10 +189,7 @@ class Player:
             self.is_trial_valid()
 
     def move_right(self, event=None):
-        """
-        Move player right
-        :return: None
-        """
+        """Move player right"""
 
         # Prevent player movement while the game state is not playing
         if self.root.state.name is not game.Playing.name:
@@ -224,7 +208,6 @@ class Player:
         """
         (1) Detects if target is hit
         (2) Initiates the handling of the hit
-        :return: None
         """
         hit_from_right = self.target.pos[0] <= self.pos[2]+(self.velocity_x_axis * self.speed_factor) <= self.target.pos[2]
         hit_from_left = self.target.pos[2] >= self.pos[0]+(self.velocity_x_axis * self.speed_factor) >= self.target.pos[0]
@@ -233,10 +216,7 @@ class Player:
             self.root.change(game.Hit)
 
     def start_trial(self):
-        """
-        Saves the timestamp by the start of a trial
-        :return: None
-        """
+        """Saves the timestamp by the start of a trial"""
         self.start_time_trial = time.time()
 
     def is_trial_valid(self):
@@ -245,19 +225,16 @@ class Player:
             a) At the start of a trial it checks if the player is moving in the direction of the player
             b) During the recording it checks if the player is still moving in the right direction
         2. Stops the trial recording if the trial is not valid anymore
-        :return: None
         """
         # Trial has not started
         if self.last_direction_update == 0:
             # Target is right and player moves to the right
             if self.pos[0] < self.target.pos[0] and self.direction == 1:
-                print("right")
                 self.trial_label = trial_handler.Labels.RIGHT
                 self.start_trial()
                 self.last_direction_update = self.direction
             # Target is left and player moves to the left
             elif self.pos[0] > self.target.pos[0] and self.direction == -1:
-                print("left")
                 self.trial_label = trial_handler.Labels.LEFT
                 self.start_trial()
                 self.last_direction_update = self.direction
@@ -270,13 +247,9 @@ class Player:
             self.stop_trial()
 
     def stop_trial(self):
-        """
-        Stops the recording of a trial and stores valid trials
-        :return: None
-        """
+        """Stops the recording of a trial and stores valid trials"""
         stop_time_trial = time.time()
         if (stop_time_trial - self.start_time_trial) > config.MIN_DURATION_OF_TRIAL and self.last_direction_update != 0:
             trial_handler.mark_trial(self.start_time_trial, stop_time_trial, self.trial_label)
             print("Valid trial is stored")
-            print("Start-Time: ", self.start_time_trial, "End-Time: ", stop_time_trial, "Label: ", self.trial_label)
         self.last_direction_update = 0
