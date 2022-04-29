@@ -335,7 +335,13 @@ class ConfigController(Controller):
         self.valid_form = False
 
     def __on_valid(self, label):
+        # ToDo: Im dark-mode branch ergänzen, sobald der boolean im Datenmodell vorhanden ist
+        # text_color = 'white'
+        # if self.data.dark_mode:
+        #   text_color = 'black'
+        # self.view.labels[label].config(foreground=text_color)
         self.view.labels[label].config(foreground='black')
+        pass
 
 
 class GameController(Controller):
