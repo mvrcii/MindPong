@@ -61,8 +61,6 @@ def connect_queues():
     connect_queue(queue_manager.queue_clabel, 'label', 313)
 
 
-
-
 def init(data_mdl):
     """
     --- starting point ---
@@ -111,9 +109,9 @@ def init(data_mdl):
 
 def search_port():
     """
-    Search for the name of the used usb port
-    :return: port_name: name of the used serial port None: None
-    :rtype: str, None
+    Search for the name of the used usb port and return it
+    Returns None if no usb port was found
+    :return: str port_name: name of the used serial port
     """
 
     print('Search...')
@@ -137,9 +135,7 @@ def search_port():
 
 
 def handle_samples():
-    """
-    Reads EEG data from port, sends it to trial_handler and writes into in the window_buffer
-    """
+    """Reads EEG data from port, sends it to trial_handler and writes into in the window_buffer"""
     global first_window, window_buffer, allow_window_creation, first_data
     count_samples = 0
     while stream_available and data_model.session_recording:
@@ -193,11 +189,7 @@ def sort_channels(sliding_window, used_ch_names):
 
 
 def send_window():
-    """
-    Create sliding window and send it to the algorithm
-    :return: None
-    """
-
+    """Create sliding window and send it to the algorithm"""
     global window_buffer, NUMBER_CHANNELS
     window = np.zeros((NUMBER_CHANNELS, SLIDING_WINDOW_SAMPLES), dtype=float)
     for i in range(len(window)):
@@ -214,10 +206,7 @@ def send_window():
 
 
 def stop_stream():
-    """
-    Stops the data stream and the releases session
-    :return: None
-    """
+    """Stops the data stream and the releases session"""
     global stream_available
     stream_available = False
     board.stop_stream()

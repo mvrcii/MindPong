@@ -35,7 +35,6 @@ class GameState(object):
         If the argument `state` is not listed in the allowed attribute, the state will not switch.
         Use this method and do not set the state attribute manually
         :param GameState state: the state to switch to
-        :return: None
         """
 
         if state.name in self.allowed:
@@ -173,15 +172,11 @@ class Game(tk.Frame):
 
         self.bind("<space>", lambda event: self.change(Playing) if self.state.name is Idle.name else self.change(Idle))
 
-        # ToDo mro: Connect the session saving with the GUI here
-        self.bind('e', lambda event: self.change(End))
-
         self.update()
 
     def update(self):
         """
         Calls the update methods of all objects and is responsible for the game loop and state handling
-        :return: None
         """
 
         curr_state = self.state.name
@@ -283,8 +278,7 @@ class Game(tk.Frame):
     def handle_time(self):
         """
         Handles the time and returns a delta for correction
-        :return: delta: delta for correction
-        :rtype: int
+        :return: int delta: delta for correction
         """
 
         # Time control
@@ -307,7 +301,6 @@ class Game(tk.Frame):
     def clear(self):
         """
         Clears the canvas background. Very important function to avoid flickering and artifacts
-        :return: None
         """
 
         self.canvas.configure(bg="white")
@@ -315,7 +308,6 @@ class Game(tk.Frame):
     def change(self, state):
         """
         Changes the internal state to state if possible
-        :return: None
         """
 
         self.state.switch(state)
@@ -323,7 +315,6 @@ class Game(tk.Frame):
     def init_labels(self):
         """
         Init Labels
-        :return: None
         """
 
         self.score_label = self.canvas.create_text(self.width / 2, self.height * 0.43,
