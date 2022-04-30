@@ -16,6 +16,8 @@ from scripts.data.extraction import trial_handler
 import scripts.config as config
 
 
+live_Data=False
+
 class QueueManager:
     def __init__(self):
         self.queue_label = queue.Queue(100)
@@ -69,42 +71,47 @@ def init(data_mdl):
     (2) search for the serial port
     (3) starts the data acquisition
     """
-    params = BrainFlowInputParams()
-    params.serial_port = search_port()
-    global data_model, first_window
-    data_model = data_mdl
-    first_window = True
+    if live_Data:
+        params = BrainFlowInputParams()
+        params.serial_port = search_port()
+        global data_model, first_window
+        data_model = data_mdl
+        first_window = True
 
-    global SLIDING_WINDOW_DURATION, SLIDING_WINDOW_SAMPLES, OFFSET_DURATION, OFFSET_SAMPLES, TIME_FOR_ONE_SAMPLE, window_buffer, NUMBER_CHANNELS
-    SLIDING_WINDOW_DURATION = data_model.window_size/1000
-    SLIDING_WINDOW_SAMPLES = int(SLIDING_WINDOW_DURATION / TIME_FOR_ONE_SAMPLE)
-    OFFSET_DURATION = data_model.window_offset/1000
-    OFFSET_SAMPLES = int(OFFSET_DURATION / TIME_FOR_ONE_SAMPLE)
-    window_buffer = [RingBuffer(capacity=SLIDING_WINDOW_SAMPLES, dtype=float) for _ in range(NUMBER_CHANNELS)]
+        global SLIDING_WINDOW_DURATION, SLIDING_WINDOW_SAMPLES, OFFSET_DURATION, OFFSET_SAMPLES, TIME_FOR_ONE_SAMPLE, window_buffer, NUMBER_CHANNELS
+        SLIDING_WINDOW_DURATION = data_model.window_size/1000
+        SLIDING_WINDOW_SAMPLES = int(SLIDING_WINDOW_DURATION / TIME_FOR_ONE_SAMPLE)
+        OFFSET_DURATION = data_model.window_offset/1000
+        OFFSET_SAMPLES = int(OFFSET_DURATION / TIME_FOR_ONE_SAMPLE)
+        window_buffer = [RingBuffer(capacity=SLIDING_WINDOW_SAMPLES, dtype=float) for _ in range(NUMBER_CHANNELS)]
 
-    """"
-    while not scripts.data.visualisation.liveplot.is_window_ready:
-        # wait until plot window is initialized
-        time.sleep(0.05)
-    
+        """"
+        while not scripts.data.visualisation.liveplot.is_window_ready:
+            # wait until plot window is initialized
+            time.sleep(0.05)
+        
+        connect_queues()
+        """
+
+        if params.serial_port is not None:
+            # BoardShim.enable_dev_board_logger()
+            global board, stream_available
+            board = BoardShim(brainflow.board_shim.BoardIds.CYTON_DAISY_BOARD, params)
+            try:
+                board.prepare_session()
+                board.start_stream()
+                stream_available = True
+                handle_samples()
+            except BrainFlowError as err:
+                print(err.args[0])
+
+        else:
+            print('Port not found')
+
     connect_queues()
-    """
-    connect_queues()
+    from scripts.algorithms.cca_test import test_algorithm_with_dataset
+    test_algorithm_with_dataset(queue_manager)
 
-    if params.serial_port is not None:
-        # BoardShim.enable_dev_board_logger()
-        global board, stream_available
-        board = BoardShim(brainflow.board_shim.BoardIds.CYTON_DAISY_BOARD, params)
-        try:
-            board.prepare_session()
-            board.start_stream()
-            stream_available = True
-            handle_samples()
-        except BrainFlowError as err:
-            print(err.args[0])
-
-    else:
-        print('Port not found')
 
 
 def search_port():
