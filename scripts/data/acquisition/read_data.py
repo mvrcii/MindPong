@@ -1,15 +1,16 @@
 import queue
 import threading
 import platform
-
 import time
 import numpy as np
 from numpy_ringbuffer import RingBuffer
+
 import serial
 import serial.tools.list_ports
 import brainflow
 from brainflow.board_shim import BoardShim, BrainFlowInputParams, BrainFlowError
 
+from scripts.data.loader.game_dataset_loader import get_channel_rawdata
 from scripts.data.visualisation.liveplot_matlab import connect_queue
 from scripts.mvc.models import ConfigData
 from scripts.data.extraction import trial_handler
@@ -28,7 +29,12 @@ class QueueManager:
         self.queue_hcon_norm = queue.Queue(100)
 
 
-SAMPLING_RATE = BoardShim.get_sampling_rate(brainflow.board_shim.BoardIds.CYTON_DAISY_BOARD)
+# constants
+# recorded session
+live_Data = False
+session_file_name = 'session-1-01052022-091646.npz'
+
+SAMPLING_RATE = BoardShim.get_sampling_rate(brainflow.board_shim.BoardIds.CYTON_DAISY_BOARD) if live_Data else 125
 
 # time which is needed for one sample in s, T = 1/f = 1/125 = 0.008
 TIME_FOR_ONE_SAMPLE = 1 / SAMPLING_RATE
@@ -41,8 +47,9 @@ OFFSET_DURATION: float  # size of offset in s between two consecutive sliding wi
 OFFSET_SAMPLES: int  # size of offset in amount of samples, *8ms for time
 
 NUMBER_CHANNELS = len(BoardShim.get_eeg_channels(
-    brainflow.board_shim.BoardIds.CYTON_DAISY_BOARD))
+    brainflow.board_shim.BoardIds.CYTON_DAISY_BOARD)) if live_Data else len(['C3', 'Cz', 'C4', 'P3', 'P4', 'T3', 'F3', 'F4', 'T4'])
 
+# global variables
 allow_window_creation = True
 first_window = True
 first_data = True
@@ -69,42 +76,50 @@ def init(data_mdl):
     (2) search for the serial port
     (3) starts the data acquisition
     """
-    params = BrainFlowInputParams()
-    params.serial_port = search_port()
+    connect_queues()
     global data_model, first_window
     data_model = data_mdl
     first_window = True
 
     global SLIDING_WINDOW_DURATION, SLIDING_WINDOW_SAMPLES, OFFSET_DURATION, OFFSET_SAMPLES, TIME_FOR_ONE_SAMPLE, window_buffer, NUMBER_CHANNELS
-    SLIDING_WINDOW_DURATION = data_model.window_size/1000
+    SLIDING_WINDOW_DURATION = data_model.window_size / 1000
     SLIDING_WINDOW_SAMPLES = int(SLIDING_WINDOW_DURATION / TIME_FOR_ONE_SAMPLE)
-    OFFSET_DURATION = data_model.window_offset/1000
+    OFFSET_DURATION = data_model.window_offset / 1000
     OFFSET_SAMPLES = int(OFFSET_DURATION / TIME_FOR_ONE_SAMPLE)
     window_buffer = [RingBuffer(capacity=SLIDING_WINDOW_SAMPLES, dtype=float) for _ in range(NUMBER_CHANNELS)]
 
-    """"
-    while not scripts.data.visualisation.liveplot.is_window_ready:
-        # wait until plot window is initialized
-        time.sleep(0.05)
-    
-    connect_queues()
-    """
-    connect_queues()
+    if live_Data:
+        params = BrainFlowInputParams()
+        params.serial_port = search_port()
 
-    if params.serial_port is not None:
-        # BoardShim.enable_dev_board_logger()
-        global board, stream_available
-        board = BoardShim(brainflow.board_shim.BoardIds.CYTON_DAISY_BOARD, params)
-        try:
-            board.prepare_session()
-            board.start_stream()
-            stream_available = True
-            handle_samples()
-        except BrainFlowError as err:
-            print(err.args[0])
 
+        """"
+        while not scripts.data.visualisation.liveplot.is_window_ready:
+            # wait until plot window is initialized
+            time.sleep(0.05)
+        
+        connect_queues()
+        """
+
+        if params.serial_port is not None:
+            # BoardShim.enable_dev_board_logger()
+            global board, stream_available
+            board = BoardShim(brainflow.board_shim.BoardIds.CYTON_DAISY_BOARD, params)
+            try:
+                board.prepare_session()
+                board.start_stream()
+                stream_available = True
+                handle_samples()
+            except BrainFlowError as err:
+                print(err.args[0])
+
+        else:
+            print('Port not found')
     else:
-        print('Port not found')
+        path = '../scripts/data/session/' + session_file_name
+        chan_labels = ['C3', 'Cz', 'C4', 'P3', 'P4', 'T3', 'F3', 'F4', 'T4']
+        chan_data, label_data = get_channel_rawdata(session_path=path, ch_names=chan_labels)
+        handle_samples(chan_data, label_data, chan_labels)
 
 
 def search_port():
@@ -134,38 +149,48 @@ def search_port():
     return None
 
 
-def handle_samples():
+def handle_samples(chan_data=None, label_data=None, chan_labels=None):
     """Reads EEG data from port, sends it to trial_handler and writes into in the window_buffer"""
     global first_window, window_buffer, allow_window_creation, first_data
     count_samples = 0
-    while stream_available and data_model.session_recording:
-        data = board.get_board_data(1)[board.get_eeg_channels(
-            brainflow.board_shim.BoardIds.CYTON_DAISY_BOARD)]  # get all data and remove it from internal buffer
-        if len(data[0]) > 0:
-            # filter data
-            for channel in range(NUMBER_CHANNELS):
-                brainflow.DataFilter.perform_bandstop(data[channel], SAMPLING_RATE, 0.0, 50.0, 5,
+    index_test = 0
+    while (stream_available and data_model.session_recording) or len(chan_data[0]) > index_test:
+        if chan_data is not None:
+            data = np.ndarray((len(chan_data), 1))
+            for index, i in enumerate(chan_data[:, index_test]):
+                data[index, 0] = i
+            index_test += 1
+            time.sleep(0.008)
+        else:
+            data = board.get_board_data(1)[board.get_eeg_channels(
+                brainflow.board_shim.BoardIds.CYTON_DAISY_BOARD)]  # get all data and remove it from internal buffer
+            if len(data[0]) > 0:
+                # filter data
+                for channel in range(NUMBER_CHANNELS):
+                    brainflow.DataFilter.perform_bandstop(data[channel], SAMPLING_RATE, 0.0, 50.0, 5,
                                                       brainflow.FilterTypes.BUTTERWORTH.value, 0)
-
+            else:
+                continue
             # only sends trial_handler raw data if trial recording is wished
-            if data_model.trial_recording:
-                if first_data:
-                    trial_handler.send_raw_data(data, start=time.time())
-                    first_data = False
-                else:
-                    trial_handler.send_raw_data(data)
-            if allow_window_creation:
-                for i in range(len(data)):
-                    window_buffer[i].extend(data[i])
-                count_samples += 1
-                if first_window and count_samples == SLIDING_WINDOW_SAMPLES:
-                    first_window = False
-                    send_window()
-                    count_samples = 0
-                elif not first_window and count_samples == OFFSET_SAMPLES:
-                    send_window()
-                    count_samples = 0
-    stop_stream()
+        if data_model.trial_recording:
+            if first_data:
+                trial_handler.send_raw_data(data, start=time.time())
+                first_data = False
+            else:
+                trial_handler.send_raw_data(data)
+        if allow_window_creation:
+            for i in range(len(data)):
+                window_buffer[i].extend(data[i])
+            count_samples += 1
+            if first_window and count_samples == SLIDING_WINDOW_SAMPLES:
+                first_window = False
+                send_window()
+                count_samples = 0
+            elif not first_window and count_samples == OFFSET_SAMPLES:
+                send_window()
+                count_samples = 0
+    if live_Data:
+        stop_stream()
 
 
 def sort_channels(sliding_window, used_ch_names):
@@ -195,7 +220,10 @@ def send_window():
     for i in range(len(window)):
         window[i] = np.array(window_buffer[i])
     # sort channels for laplacian calculation
-    window, used_channels = sort_channels(window, config.BCI_CHANNELS)
+    if live_Data:
+        window, used_channels = sort_channels(window, config.BCI_CHANNELS)
+    else:
+        used_channels = ['C3', 'Cz', 'C4', 'P3', 'P4', 'T3', 'F3', 'F4', 'T4']
     # push window to cursor control algorithm
     # TODO: change OFFSET_DURATION to percentage? Else change calculation in coc algorithm
     from scripts.algorithms.cursor_online_control import perform_algorithm
