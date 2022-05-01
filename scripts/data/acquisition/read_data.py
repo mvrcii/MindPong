@@ -121,10 +121,6 @@ def init(data_mdl):
         chan_data, label_data = get_channel_rawdata(session_path=path, ch_names=chan_labels)
         handle_samples(chan_data, label_data, chan_labels)
 
-    # from scripts.algorithms.cca_test import test_algorithm_with_dataset
-    # test_algorithm_with_dataset(queue_manager)
-
-
 
 def search_port():
     """
@@ -224,8 +220,10 @@ def send_window():
     for i in range(len(window)):
         window[i] = np.array(window_buffer[i])
     # sort channels for laplacian calculation
-    # window, used_channels = sort_channels(window, config.BCI_CHANNELS)
-    used_channels = ['C3', 'Cz', 'C4', 'P3', 'P4', 'T3', 'F3', 'F4', 'T4']
+    if live_Data:
+        window, used_channels = sort_channels(window, config.BCI_CHANNELS)
+    else:
+        used_channels = ['C3', 'Cz', 'C4', 'P3', 'P4', 'T3', 'F3', 'F4', 'T4']
     # push window to cursor control algorithm
     # TODO: change OFFSET_DURATION to percentage? Else change calculation in coc algorithm
     from scripts.algorithms.cursor_online_control import perform_algorithm
