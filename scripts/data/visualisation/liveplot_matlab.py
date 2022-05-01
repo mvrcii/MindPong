@@ -1,13 +1,12 @@
 import queue
 import time
-
+from pathlib import Path
 import matplotlib
 import matplotlib.pyplot as plt
 import numpy as np
 
 AXES_SIZE = 200
 # global data
-plt.style.use('ggplot')
 # necessary!!! to make sure the backend is the correct one
 matplotlib.use('TkAgg')
 queues = list()
@@ -27,6 +26,7 @@ class PlotData:
 
     Used to update each plot in liveplot cycle
     """
+
     def __init__(self, q: queue.Queue, ax, plot_label, colour):
         self.q = q
         self.ax = ax
@@ -35,6 +35,14 @@ class PlotData:
         self.line, = ax.plot(self.x_data, self.y_data, color=colour)
         self.color = colour
         self.title = plot_label
+
+
+def set_stylesheets():
+    # See: https://www.programcreek.com/python/example/96675/matplotlib.style.use
+    pth = Path(__file__).resolve().parent
+    styles_dir = Path(pth / 'themes')
+    style_path = styles_dir / 'liveplot_light.mplstyle'
+    plt.style.use(str(style_path))
 
 
 def live_plotter(plot_data: PlotData):
@@ -119,6 +127,7 @@ def start_live_plot(figure):
     """
     global fig, queues, plots
     fig = figure
+    set_stylesheets()
     fig.clf()
     queues = list()
     plots = dict()
