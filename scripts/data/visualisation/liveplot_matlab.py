@@ -8,10 +8,15 @@ import numpy as np
 AXES_SIZE = 200
 # global data
 # necessary!!! to make sure the backend is the correct one
-matplotlib.use('TkAgg')
+
 queues = list()
 fig = None
 plots = dict()
+
+pth = Path(__file__).resolve().parent
+styles_dir = Path(pth / 'themes')
+style_path = styles_dir / 'liveplot_light.mplstyle'
+plt.style.use(str(style_path))
 
 
 class PlotData:
@@ -32,17 +37,12 @@ class PlotData:
         self.ax = ax
         self.x_data = list(range(AXES_SIZE))
         self.y_data = np.zeros(AXES_SIZE) if plot_label is not 'label' else np.full(AXES_SIZE, -1)
-        self.line, = ax.plot(self.x_data, self.y_data, color=colour)
+        if plot_label == 'label':
+            self.line, = ax.step(self.x_data, self.y_data, color=colour)
+        else:
+            self.line, = ax.plot(self.x_data, self.y_data, color=colour)
         self.color = colour
         self.title = plot_label
-
-
-def set_stylesheets():
-    # See: https://www.programcreek.com/python/example/96675/matplotlib.style.use
-    pth = Path(__file__).resolve().parent
-    styles_dir = Path(pth / 'themes')
-    style_path = styles_dir / 'liveplot_light.mplstyle'
-    plt.style.use(str(style_path))
 
 
 def live_plotter(plot_data: PlotData):
@@ -127,7 +127,6 @@ def start_live_plot(figure):
     """
     global fig, queues, plots
     fig = figure
-    set_stylesheets()
     fig.clf()
     queues = list()
     plots = dict()
