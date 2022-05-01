@@ -30,6 +30,10 @@ class QueueManager:
 
 
 # constants
+# recorded session
+live_Data = False
+session_file_name = 'session-1-01052022-091646.npz'
+
 SAMPLING_RATE = BoardShim.get_sampling_rate(brainflow.board_shim.BoardIds.CYTON_DAISY_BOARD) if live_Data else 125
 
 # time which is needed for one sample in s, T = 1/f = 1/125 = 0.008
@@ -54,9 +58,6 @@ board: BoardShim
 window_buffer: RingBuffer
 data_model: ConfigData
 queue_manager = QueueManager()
-# recorded session
-live_Data = False
-session_file_name = 'session-1-01052022-091646.npz'
 
 
 def connect_queues():
