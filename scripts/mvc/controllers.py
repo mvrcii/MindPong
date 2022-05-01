@@ -105,6 +105,7 @@ class ConfigController(Controller):
             self.__discard_session()
 
     def __connect_board(self):
+        """ Creates the connection to the board"""
         from scripts.data.acquisition.read_data import init, stream_available
         init(self.data)
         if stream_available:
