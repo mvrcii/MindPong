@@ -43,7 +43,7 @@ class App(tk.Tk):
         """Creates the second window (game window) and starts the associated read data thread"""
         self.game_window = GameWindow(self)
         # Starting the thread to read data
-        self.thread = Thread(target=read_data.init, args=[self.data_model], daemon=True)
+        self.thread = Thread(target=read_data.handle_samples(), args=[self.data_model], daemon=True)
         self.thread.start()
         self.__data_model.session_recording = True
 

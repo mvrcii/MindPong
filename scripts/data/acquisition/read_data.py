@@ -31,7 +31,7 @@ class QueueManager:
 
 # constants
 # recorded session
-live_Data = False
+live_Data = True
 session_file_name = 'session-1-01052022-091646.npz'
 
 SAMPLING_RATE = BoardShim.get_sampling_rate(brainflow.board_shim.BoardIds.CYTON_DAISY_BOARD) if live_Data else 125
@@ -76,7 +76,7 @@ def init(data_mdl):
     (2) search for the serial port
     (3) starts the data acquisition
     """
-    connect_queues()
+    #connect_queues()
     global data_model, first_window
     data_model = data_mdl
     first_window = True
@@ -109,11 +109,11 @@ def init(data_mdl):
                 board.prepare_session()
                 board.start_stream()
                 stream_available = True
-                handle_samples()
             except BrainFlowError as err:
                 print(err.args[0])
 
         else:
+            stream_available = False
             print('Port not found')
     else:
         path = '../scripts/data/session/' + session_file_name
