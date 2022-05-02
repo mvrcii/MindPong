@@ -31,7 +31,7 @@ class QueueManager:
 
 # constants
 # recorded session
-live_Data = False
+live_Data = True
 session_file_name = 'session-1-01052022-091646.npz'
 
 SAMPLING_RATE = BoardShim.get_sampling_rate(brainflow.board_shim.BoardIds.CYTON_DAISY_BOARD) if live_Data else 125

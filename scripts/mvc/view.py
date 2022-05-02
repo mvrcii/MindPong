@@ -6,7 +6,7 @@ from abc import abstractmethod
 
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 
-from scripts.pong.game import Game
+from scripts.pong.game import Game, Playing
 
 
 class View(tk.Frame):
@@ -373,6 +373,7 @@ class GameView(View):
         game.grid(row=0, column=0, sticky='nsew')
         game.focus_set()
         game.tkraise()
+        game.change(Playing)
         self.game = game
 
     def __start_calibration(self):

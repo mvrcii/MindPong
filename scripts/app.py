@@ -1,4 +1,3 @@
-import time
 import tkinter as tk
 from threading import Thread
 
@@ -76,10 +75,17 @@ class GameWindow(tk.Toplevel):
         super().__init__(master)
         self.master = master
 
+        import ctypes
+        try:
+            ctypes.windll.shcore.SetProcessDpiAwareness(2)
+        except:
+            ctypes.windll.user32.SetProcessDPIAware()
+
         # Window settings
         self.title("Game")
-        self.resizable(False, False)
-        self.attributes("-fullscreen", True)
+        self.minsize(1920, 1080)
+        #self.resizable(False, False)
+        #self.attributes("-fullscreen", True)
 
         self.game_controller = GameController(self.master)  # Create Controller
         self.game_view = GameView(self)  # Create View

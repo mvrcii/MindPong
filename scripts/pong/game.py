@@ -6,7 +6,6 @@ import time
 import scripts.pong.player as player
 import scripts.pong.target as target
 import scripts.config as config
-from scripts.mvc.models import ConfigData
 
 
 class GameState(object):
@@ -130,14 +129,13 @@ class Game(tk.Frame):
         tk.Frame.__init__(self, parent)
 
         self.config_data = controller.data
-
         # override window dimensions
         global WINDOW_WIDTH, WINDOW_HEIGHT
-        WINDOW_WIDTH = self.winfo_screenwidth()
-        WINDOW_HEIGHT = self.winfo_screenheight()
+        WINDOW_WIDTH = config.WINDOW_WIDTH
+        WINDOW_HEIGHT = config.WINDOW_HEIGHT
+
         self.width = WINDOW_WIDTH
         self.height = WINDOW_HEIGHT
-
         # State of the game - default is idle
         self.state = Idle()
 
@@ -169,8 +167,6 @@ class Game(tk.Frame):
 
         self.init_labels()
         self.canvas.pack()
-
-        self.bind("<space>", lambda event: self.change(Playing) if self.state.name is Idle.name else self.change(Idle))
 
         self.update()
 
