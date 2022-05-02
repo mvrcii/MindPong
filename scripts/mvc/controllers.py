@@ -106,9 +106,9 @@ class ConfigController(Controller):
 
     def __connect_board(self):
         """ Creates the connection to the board"""
-        from scripts.data.acquisition.read_data import init, stream_available
-        init(self.data)
-        if stream_available:
+        from scripts.data.acquisition.read_data import init
+
+        if init(self.data):
             self.view.hide_button("Connect Board")
             self.view.show_button("Start Session")
         else:

@@ -106,20 +106,22 @@ def init(data_mdl):
             global board, stream_available
             board = BoardShim(brainflow.board_shim.BoardIds.CYTON_DAISY_BOARD, params)
             try:
+                stream_available = True
                 board.prepare_session()
                 board.start_stream()
-                stream_available = True
+                return stream_available
             except BrainFlowError as err:
                 print(err.args[0])
 
         else:
-            stream_available = False
             print('Port not found')
+            return False
     else:
         path = '../scripts/data/session/' + session_file_name
         chan_labels = ['C3', 'Cz', 'C4', 'P3', 'P4', 'T3', 'F3', 'F4', 'T4']
         chan_data, label_data = get_channel_rawdata(session_path=path, ch_names=chan_labels)
         handle_samples(chan_data, label_data, chan_labels)
+        return True
 
 
 def search_port():
