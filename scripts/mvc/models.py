@@ -7,7 +7,7 @@ class ConfigData(object):
                  subject_id: int = 1,
                  subject_age: int = 1,
                  subject_sex: str = 'D',
-                 threshold: float = 0.5,
+                 threshold: float = 1.5,
                  f_min: float = 5,
                  f_max: float = 10,
                  window_size: int = 1000,
@@ -130,7 +130,7 @@ class ConfigData(object):
         :return: None
         """
         value = float(value)
-        if 0.0 <= value <= 1.0:
+        if 0.0 <= value <= 3.0:
             self.__threshold = value
         else:
             raise ValueError(f'Invalid threshold: {value}')

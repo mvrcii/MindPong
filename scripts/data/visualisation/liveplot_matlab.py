@@ -8,6 +8,7 @@ import numpy as np
 AXES_SIZE = 200
 # global data
 # necessary!!! to make sure the backend is the correct one
+matplotlib.use('TkAgg')
 
 queues = list()
 fig = None
@@ -36,7 +37,7 @@ class PlotData:
         self.q = q
         self.ax = ax
         self.x_data = list(range(AXES_SIZE))
-        self.y_data = np.zeros(AXES_SIZE) if plot_label is not 'label' else np.full(AXES_SIZE, -1)
+        self.y_data = np.zeros(AXES_SIZE) if plot_label != 'label' else np.full(AXES_SIZE, -1)
         if plot_label == 'label':
             self.line, = ax.step(self.x_data, self.y_data, color=colour)
         else:
@@ -56,6 +57,8 @@ def live_plotter(plot_data: PlotData):
     # adjust limits if new data goes beyond bounds
     if np.min(plot_data.y_data) <= plot_data.line.axes.get_ylim()[0] or np.max(plot_data.y_data) >= plot_data.line.axes.get_ylim()[1]:
         plot_data.ax.set_ylim([np.min(plot_data.y_data) - np.std(plot_data.y_data), np.max(plot_data.y_data) + np.std(plot_data.y_data)])
+    elif np.min(plot_data.y_data) >= plot_data.line.axes.get_ylim()[0] or np.max(plot_data.y_data) <= plot_data.line.axes.get_ylim()[1]:
+        plot_data.ax.set_ylim([np.min(plot_data.y_data) - np.std(plot_data.y_data), np.max(plot_data.y_data) + np.std(plot_data.y_data)])
 
     # return line, so we can update it again in the next iteration
     return plot_data.line
@@ -68,10 +71,12 @@ def perform_live_plot():
     """
     global fig, queues
     if fig:
+        has_changes = False
         for plot_data in queues:
             if plot_data.q.empty():
                 # skip if queue has no new values
                 continue
+            has_changes = True
             content_y = list()
             # read all new values from the queue
             while not plot_data.q.empty() or len(content_y) > AXES_SIZE:
@@ -90,8 +95,9 @@ def perform_live_plot():
             plot_data.y_data[-len(content_y):] = content_y
             # replot data
             plot_data.line = live_plotter(plot_data)
-        # draw canvas
-        fig.canvas.draw()
+        if has_changes:
+            # draw canvas
+            fig.canvas.draw()
 
 
 def connect_queue(queue: queue.Queue, plot_label, row: int, color: str,column: int, position: int, y_labels: list = None):
