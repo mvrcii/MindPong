@@ -27,7 +27,7 @@ class ConfigView(View):
         self.combo_boxes = {}
         self.check_buttons = {}
         self.check_button_vars = {}
-        self.comment_box, self.figure, self.plot_frame = None, None, None
+        self.comment_box, self.figure, self.plot_frame, self.button_frame = None, None, None, None
         self.grid(row=0, column=0, sticky='nsew')
 
     def create_view(self):
@@ -42,7 +42,6 @@ class ConfigView(View):
         self.__build_trial_section(control_frame, "Trial", row=2, column=0)
         self.__build_comment_section(control_frame, "Comment", row=3, column=0)
         self.__build_button_section(control_frame, row=4, column=0)
-        self.__build_progress_bar_section(control_frame)
 
         # Second Column
         self.__build_checkbutton_section(control_frame, "General", row=0, column=1)
@@ -75,6 +74,7 @@ class ConfigView(View):
         self.hide_button("Stop Session")
         self.hide_button("Save Session")
         self.hide_button("Discard Session")
+        self.hide_button("Abort")
         self.show_button("Start Session", row=0, column=0)
         self.__clear_comment_box()
 
@@ -92,13 +92,13 @@ class ConfigView(View):
 
     def hide_progress_bar(self):
         """Hides the progress bar"""
-        self.progress_bar.grid_forget()
         self.progress_bar_frame.grid_forget()
+        self.button_frame.grid_columnconfigure(1, weight=0)
 
     def show_progress_bar(self, row, column):
         """Hides the progress bar"""
-        self.progress_bar.grid(padx=10, pady=5, row=0, column=0, columnspan=2, sticky="ew")
-        self.progress_bar_frame.grid(padx=10, pady=5, row=row, column=column, sticky='nsew')
+        self.progress_bar_frame.grid(padx=10, pady=5, row=row, column=column, sticky="nsew")
+        self.button_frame.grid_columnconfigure(1, weight=1)
 
     # First Column Sections
     def __build_subject_section(self, frame, label, row, column):
@@ -164,7 +164,7 @@ class ConfigView(View):
         comment_box_frame.grid(padx=10, pady=5, row=row, column=column, sticky='nsew')
 
     def __build_button_section(self, frame, row, column):
-        """Frame where the buttons are placed in (start session, stop session, save session).
+        """Frame where the buttons and the progress bar are placed in.
 
         :param any frame: the parent container to place the children in.
         :param int row: the row number in the parent container.
@@ -172,10 +172,21 @@ class ConfigView(View):
         :return: None
         """
         button_frame = ttk.Frame(frame)
-        self.__create_button(button_frame, "Start Session", row=0, column=0)
-        self.__create_button(button_frame, "Stop Session", row=0, column=0)
-        self.__create_button(button_frame, "Save Session", row=0, column=0)
-        self.__create_button(button_frame, "Discard Session", row=0, column=0)
+        self.button_frame = button_frame
+
+        # Buttons
+        self.__create_button(button_frame, "Start Session")
+        self.__create_button(button_frame, "Stop Session")
+        self.__create_button(button_frame, "Save Session")
+        self.__create_button(button_frame, "Discard Session")
+        self.__create_button(button_frame, "Abort")
+
+        # Progress bar
+        self.progress_bar_frame = ttk.LabelFrame(button_frame, text="Calibration Timer")
+        self.progress_bar = ttk.Progressbar(self.progress_bar_frame, orient="horizontal", mode="determinate")
+        self.progress_bar.grid(padx=10, pady=5, row=0, column=0, columnspan=2, sticky="nsew")
+        self.progress_bar_frame.grid_columnconfigure(0, weight=1)
+
         button_frame.grid(row=row, column=column, sticky="nsew")
 
     # Second Column Sections
@@ -234,7 +245,7 @@ class ConfigView(View):
         self.entries[label].pack(padx=5, pady=5, expand=1, fill='x')
         label_frame.grid(padx=10, pady=5, row=row, column=column, sticky='nsew')
 
-    def __create_button(self, frame, label, row, column):
+    def __create_button(self, frame, label, row=0, column=0):
         """Creates a button with the given parameters.
 
         :param any frame: the parent container to place the children in.

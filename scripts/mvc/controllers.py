@@ -3,6 +3,7 @@ from abc import ABC, abstractmethod
 from tkinter.messagebox import askyesno, showinfo
 
 from scripts.config import CALIBRATION_TIME
+from scripts.data.extraction import trial_handler
 from scripts.mvc.view import View, ConfigView, GameView
 from scripts.pong.game import End
 from scripts.data.extraction.trial_handler import save_session
@@ -38,11 +39,9 @@ class ConfigController(Controller):
         self.view.buttons["Stop Session"].configure(command=self.__stop_session)
         self.view.buttons["Save Session"].configure(command=self.__save_session)
         self.view.buttons["Discard Session"].configure(command=self.__discard_session)
+        self.view.buttons["Abort"].configure(command=self.__abort_calibration)
         self.view.check_buttons["Trial Recording"].configure(command=self.__set_trial_recording)
         self.view.check_buttons["Plot"].configure(command=self.__toggle_plot)
-
-    def update(self):
-        perform_live_plot()
 
     def __init_config_view_values(self):
         """Initially configures the view with the model data"""
@@ -71,6 +70,39 @@ class ConfigController(Controller):
         entry.delete(0, "end")
         entry.insert(0, value)
 
+    def __start_calibration(self):
+        """Starts the calibration"""
+        self.view.show_button("Abort", row=0, column=0)
+        self.view.show_progress_bar(row=0, column=1)
+        self.calibration_timer = time.time()
+
+    def __update_calibration(self):
+        """Updates the calibration timer and starts the game afterwards"""
+        if self.calibration_timer > 0:
+            percentage = round((time.time() - self.calibration_timer) / CALIBRATION_TIME * 100, 2)
+            self.view.set_progress_bar_value(percentage)
+
+            if percentage >= 100:
+                if self.data.trial_recording:
+                    # Saves a trial that includes the calibration when the trial recording is switched on
+                    trial_handler.mark_trial(self.calibration_timer, time.time(), trial_handler.Labels.CALIBRATION)
+                self.__stop_calibration()
+                self.view.hide_button("Abort")
+                self.view.show_button("Stop Session")
+                self.master.game_window.game_controller.start_game()
+
+    def __stop_calibration(self):
+        """Stops the calibration"""
+        self.view.hide_progress_bar()
+        self.calibration_timer = 0
+
+    def __abort_calibration(self):
+        """Aborts the calibration and resets everything."""
+        answer = askyesno(title="Abort", message="Are you sure that you want to abort the calibration?")
+        if answer:
+            self.__stop_calibration()
+            self.__discard_session()
+
     def __start_session(self):
         """Starts the session, if the input fields are valid, by disabling the input fields, starting the game
         window and the liveplot."""
@@ -82,36 +114,7 @@ class ConfigController(Controller):
             self.view.hide_button("Start Session")
             self.__start_calibration()
             self.master.create_game_window()
-
-    def __start_calibration(self):
-        self.view.show_progress_bar(row=4, column=0)
-        self.calibration_timer = time.time()
-
-    def __update_calibration(self):
-        """Updates the calibration timer and starts the game afterwards"""
-        if self.calibration_timer > 0:
-            percentage = round((time.time() - self.calibration_timer) / CALIBRATION_TIME * 100, 2)
-            self.view.set_progress_bar_value(percentage)
-
-            if percentage >= 100:
-                self.calibration_timer = 0
-                self.view.hide_progress_bar()
-                self.view.show_button("Stop Session")
-                self.master.game_window.game_controller.start_game()
-
-    def start_liveplot(self):
-        """Binds the plot figure to the liveplot script and shows the plot if the toggle is activated"""
-        start_live_plot(self.view.figure)
-
-        if self.view.check_button_vars["Plot"].get():
-            self.view.show_plot(True)
-
-    def __toggle_plot(self):
-        """Toggles the visibility of the plot"""
-        if self.view.check_button_vars["Plot"].get() and self.data.session_recording:
-            self.view.show_plot(True)
-        else:
-            self.view.show_plot(False)
+            self.__start_liveplot()
 
     def __stop_session(self):
         """Stops the current session and changes the view according to the amount of recorded trials."""
@@ -120,6 +123,7 @@ class ConfigController(Controller):
             self.master.game_window.game_controller.show_end_screen()
             self.view.hide_button("Stop Session")
 
+            # Only allow saving if trial recording is turned on
             if self.data.trial_recording:
                 from scripts.data.extraction.trial_handler import count_trials
                 if count_trials > 0:
@@ -154,6 +158,20 @@ class ConfigController(Controller):
         """Discards the current session."""
         self.view.reset_view()
         self.master.destroy_game_window()
+
+    def __start_liveplot(self):
+        """Binds the plot figure to the liveplot script and shows the plot if the toggle is activated"""
+        start_live_plot(self.view.figure)
+
+        if self.view.check_button_vars["Plot"].get():
+            self.view.show_plot(True)
+
+    def __toggle_plot(self):
+        """Toggles the visibility of the plot"""
+        if self.view.check_button_vars["Plot"].get() and self.data.session_recording:
+            self.view.show_plot(True)
+        else:
+            self.view.show_plot(False)
 
     def validate_form(self):
         """Validates the whole form by calling all the individual validation methods
@@ -317,7 +335,13 @@ class ConfigController(Controller):
         self.valid_form = False
 
     def __on_valid(self, label):
+        # ToDo: Im dark-mode branch ergänzen, sobald der boolean im Datenmodell vorhanden ist
+        # text_color = 'white'
+        # if self.data.dark_mode:
+        #   text_color = 'black'
+        # self.view.labels[label].config(foreground=text_color)
         self.view.labels[label].config(foreground='black')
+        pass
 
 
 class GameController(Controller):

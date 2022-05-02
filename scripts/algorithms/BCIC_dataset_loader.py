@@ -1,4 +1,5 @@
 import os
+import pathlib
 import signal
 from typing import List
 import mne
