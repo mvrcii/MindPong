@@ -33,15 +33,16 @@ class PlotData:
     Used to update each plot in liveplot cycle
     """
 
-    def __init__(self, q: queue.Queue, ax, plot_label, colour):
+    def __init__(self, q: queue.Queue, ax, plot_label, colour, name):
         self.q = q
         self.ax = ax
+        self.designation = name
         self.x_data = list(range(AXES_SIZE))
         self.y_data = np.zeros(AXES_SIZE) if plot_label != 'label' else np.full(AXES_SIZE, -1)
         if plot_label == 'label':
-            self.line, = ax.step(self.x_data, self.y_data, color=colour)
+            self.line, = ax.step(self.x_data, self.y_data, color=colour,  label=self.designation)
         else:
-            self.line, = ax.plot(self.x_data, self.y_data, color=colour)
+            self.line, = ax.plot(self.x_data, self.y_data, color=colour, label=self.designation)
         self.color = colour
         self.title = plot_label
 
@@ -54,11 +55,22 @@ def live_plotter(plot_data: PlotData):
     """
     # after the figure, axis, and line are created, we only need to update the y-data
     plot_data.line.set_ydata(plot_data.y_data)
-    # adjust limits if new data goes beyond bounds
-    if np.min(plot_data.y_data) <= plot_data.line.axes.get_ylim()[0] or np.max(plot_data.y_data) >= plot_data.line.axes.get_ylim()[1]:
-        plot_data.ax.set_ylim([np.min(plot_data.y_data) - np.std(plot_data.y_data), np.max(plot_data.y_data) + np.std(plot_data.y_data)])
-    elif np.min(plot_data.y_data) >= plot_data.line.axes.get_ylim()[0] or np.max(plot_data.y_data) <= plot_data.line.axes.get_ylim()[1]:
-        plot_data.ax.set_ylim([np.min(plot_data.y_data) - np.std(plot_data.y_data), np.max(plot_data.y_data) + np.std(plot_data.y_data)])
+    # find corresponding plots
+    share_plot_object = None
+    for plotdata_object in queues:
+        if plotdata_object.title == plot_data.title and plotdata_object != plot_data:
+            share_plot_object = plotdata_object
+            break
+
+    if share_plot_object is not None:
+        min_value = min(np.min(plot_data.y_data), np.min(plotdata_object.y_data))
+        max_value = max( np.max(plot_data.y_data),  np.max(plotdata_object.y_data))
+
+        # adjust limits if new data goes beyond bounds
+        if min_value <= plot_data.line.axes.get_ylim()[0] or max_value >= plot_data.line.axes.get_ylim()[1]:
+            plot_data.ax.set_ylim([min_value - np.std(plot_data.y_data), max_value + np.std(plot_data.y_data)])
+        elif min_value >= plot_data.line.axes.get_ylim()[0] or max_value <= plot_data.line.axes.get_ylim()[1]:
+            plot_data.ax.set_ylim([min_value - np.std(plot_data.y_data), max_value + np.std(plot_data.y_data)])
 
     # return line, so we can update it again in the next iteration
     return plot_data.line
@@ -93,20 +105,23 @@ def perform_live_plot():
             plot_data.y_data = np.append(plot_data.y_data[len(content_y):], [0.0] * len(content_y))
             # overwrite the last elements with the new values
             plot_data.y_data[-len(content_y):] = content_y
-            # replot data
+            # replot data and legend
             plot_data.line = live_plotter(plot_data)
+            plot_data.ax.legend(loc='upper left')
         if has_changes:
             # draw canvas
             fig.canvas.draw()
 
 
-def connect_queue(queue: queue.Queue, plot_label, row: int, color: str,column: int, position: int, y_labels: list = None):
+def connect_queue(queue: queue.Queue, plot_label, row: int, color: str, name: str, column: int, position: int, y_labels:list = None):
     """
     Creates a PlotData object for the queue and assigns the queue to a subplot.
-    :param y_labels:
-    :param position:
-    :param column:
-    :param row:
+    :param color: color of the plotted line graph
+    :param name: name of the plotted line graph
+    :param y_labels: custom y lables
+    :param position: Position of the subplot, counting from right to left and from top to bottom.
+    :param column: arrangement of the subplot in the corresponding column
+    :param row: arrangement of the subplot in the corresponding row
     :param queue: queue which should be plotted
     :param plot_label: class name
     """
@@ -124,7 +139,7 @@ def connect_queue(queue: queue.Queue, plot_label, row: int, color: str,column: i
                 ax.set_yticks([-1, 0, 1])
                 ax.set_yticklabels(y_labels)
             plots[plot_label] = ax
-        queues.append(PlotData(queue, ax, plot_label, color))
+        queues.append(PlotData(queue, ax, plot_label, color, name))
 
 
 def start_live_plot(figure):

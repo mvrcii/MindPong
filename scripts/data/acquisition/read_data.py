@@ -70,11 +70,11 @@ queue_manager = QueueManager()
 
 def connect_queues():
     queue_manager.clear_all_queues()
-    connect_queue(queue_manager.queue_c3_pow, 'pow', color='#F44336', row=3, column=1, position=1)
-    connect_queue(queue_manager.queue_c4_pow, 'pow', color='#673AB7', row=3, column=1, position=1)
-    connect_queue(queue_manager.queue_hcon, 'hcon', color='#4CAF50', row=3, column=1, position=2)
-    connect_queue(queue_manager.queue_hcon_norm, 'hcon', color='#FFC107', row=3, column=1, position=2)
-    connect_queue(queue_manager.queue_clabel, 'label', color='#304FFE', row=3, column=1, position=3, y_labels=['n', 'l', 'r'])
+    connect_queue(queue_manager.queue_c3_pow, 'pow', color='#0096db', row=3, column=1, position=1, name='C3 pow')
+    connect_queue(queue_manager.queue_c4_pow, 'pow', color='#009d6b', row=3, column=1, position=1, name='C4 pow')
+    connect_queue(queue_manager.queue_hcon, 'hcon', color='#f17a2c', row=3, column=1, position=2, name='hcon')
+    connect_queue(queue_manager.queue_hcon_norm, 'hcon', color='#FFC107', row=3, column=1, position=2, name='hcon normalized')
+    connect_queue(queue_manager.queue_clabel, 'label', color='#96669e', row=3, column=1, position=3, y_labels=['n', 'l', 'r'],name='calculated label')
 
 
 def init(data_mdl):
