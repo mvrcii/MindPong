@@ -204,8 +204,6 @@ class ConfigView(View):
         self.__create_checkbutton(checkbutton_frame, "Plot", row=0, column=0)
         # Checkbutton to toggle the recording of trials
         self.__create_checkbutton(checkbutton_frame, "Trial Recording", row=1, column=0)
-        # Checkbutton for dark/light mode (not persisted in the data model)
-        self.__create_checkbutton(checkbutton_frame, "Dark-Mode", row=2, column=0, command=self.__toggle_dark_mode)
         checkbutton_frame.grid(padx=10, pady=5, row=row, column=column, rowspan=4, sticky='nsew')
 
     # Third Column Sections
@@ -309,13 +307,6 @@ class ConfigView(View):
         self.spin_boxes[label] = ttk.Spinbox(label_frame, state="readonly", from_=from_, to=to, increment=interval)
         self.spin_boxes[label].grid(row=0, column=0, padx=5, pady=5, sticky="ew")
         label_frame.grid(padx=10, pady=5, row=row, column=column, sticky='nsew')
-
-    def __toggle_dark_mode(self):
-        """Toggles the config view between dark and light mode."""
-        if self.check_button_vars["Dark-Mode"].get():
-            self.master.call("set_theme", "dark")
-        else:
-            self.master.call("set_theme", "light")
 
     def show_plot(self, visible):
         """Shows the plot depending on the given parameter
