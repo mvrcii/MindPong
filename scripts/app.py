@@ -81,8 +81,10 @@ class GameWindow(tk.Toplevel):
         if platform.system() == 'Windows':
             import ctypes
             try:
+                # for Windows 8 and higher
                 ctypes.windll.shcore.SetProcessDpiAwareness(2)
             except:
+                # for Windows 7 and lower
                 ctypes.windll.user32.SetProcessDPIAware()
 
         # Window settings
