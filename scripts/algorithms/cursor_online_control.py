@@ -5,7 +5,7 @@ import numpy as np
 from numpy import linspace
 from scipy import signal
 from numpy_ringbuffer import RingBuffer
-from spectrum import arburg, arma2psd
+# from spectrum import arburg, arma2psd
 from scripts.utils.event_listener import post_event
 from scripts.data.acquisition.read_data import QueueManager
 import scripts.config as config
