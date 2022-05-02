@@ -122,6 +122,8 @@ class ConfigController(Controller):
         if answer:
             self.master.game_window.game_controller.show_end_screen()
             self.view.hide_button("Stop Session")
+            self.view.show_plot(False)
+
 
             # Only allow saving if trial recording is turned on
             if self.data.trial_recording:
