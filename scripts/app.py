@@ -5,6 +5,7 @@ from scripts.mvc.controllers import ConfigController, GameController
 from scripts.mvc.models import ConfigData
 from scripts.mvc.view import ConfigView, GameView
 import scripts.data.acquisition.read_data as read_data
+import scripts.config as config
 
 from pathlib import Path
 
@@ -83,7 +84,7 @@ class GameWindow(tk.Toplevel):
 
         # Window settings
         self.title("Game")
-        self.minsize(1920, 1080)
+        self.minsize(config.WINDOW_WIDTH, config.WINDOW_HEIGHT)
         #self.resizable(False, False)
         #self.attributes("-fullscreen", True)
 
