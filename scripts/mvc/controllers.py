@@ -157,6 +157,8 @@ class ConfigController(Controller):
 
     def __discard_session(self):
         """Discards the current session."""
+        from scripts.data.extraction.trial_handler import reset_counters
+        reset_counters()
         self.view.reset_view()
         self.master.destroy_game_window()
 
