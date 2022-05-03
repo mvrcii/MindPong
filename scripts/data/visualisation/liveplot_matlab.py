@@ -91,7 +91,6 @@ def live_plotter(plot_data: PlotData):
 def perform_live_plot():
     """
     Periodically plots new values from each queue in queues.
-    :param pause_time: refresh rate of the plot
     """
     global fig, queues
     if fig:
