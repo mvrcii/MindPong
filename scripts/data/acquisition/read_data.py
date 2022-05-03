@@ -38,9 +38,8 @@ class QueueManager:
 
 
 # constants
-# recorded session
-live_Data = False
-session_file_name = 'session-1-01052022-161124.npz'
+live_Data = True  # boolean to replay a recorded session with session_file_name as file name
+session_file_name = 'session-1-01052022-091646.npz'
 
 SAMPLING_RATE = BoardShim.get_sampling_rate(brainflow.board_shim.BoardIds.CYTON_DAISY_BOARD) if live_Data else 125
 
