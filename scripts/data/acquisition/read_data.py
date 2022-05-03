@@ -118,7 +118,7 @@ def init(data_mdl):
         path = '../scripts/data/session/' + session_file_name
         chan_labels = ['C3', 'Cz', 'C4', 'P3', 'P4', 'T3', 'F3', 'F4', 'T4']
         chan_data, label_data = get_channel_rawdata(session_path=path, ch_names=chan_labels)
-        handle_samples(chan_data, label_data, chan_labels)
+        handle_samples(chan_data)
 
 
 def search_port():
