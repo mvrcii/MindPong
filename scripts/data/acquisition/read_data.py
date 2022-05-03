@@ -166,15 +166,15 @@ def handle_samples(chan_data=None):
     """
     global first_window, window_buffer, allow_window_creation, first_data
     count_samples = 0
-    index_test = 0
+    sample_index = 0
 
     while (stream_available and data_model.session_recording) or (
-            chan_data is not None and len(chan_data[0]) > index_test):
+            chan_data is not None and len(chan_data[0]) > sample_index):
         if chan_data is not None:
             data = np.ndarray((len(chan_data), 1))
-            for index, i in enumerate(chan_data[:, index_test]):
-                data[index, 0] = i
-            index_test += 1
+            for channel_index, samples in enumerate(chan_data[:, sample_index]):
+                data[channel_index, 0] = samples
+            sample_index += 1
             time.sleep(0.008)
         else:
             data = board.get_board_data(1)[board.get_eeg_channels(
@@ -194,8 +194,8 @@ def handle_samples(chan_data=None):
             else:
                 trial_handler.send_raw_data(data)
         if allow_window_creation:
-            for i in range(len(data)):
-                window_buffer[i].extend(data[i])
+            for samples in range(len(data)):
+                window_buffer[samples].extend(data[samples])
             count_samples += 1
             if first_window and count_samples == SLIDING_WINDOW_SAMPLES:
                 first_window = False
@@ -204,8 +204,7 @@ def handle_samples(chan_data=None):
             elif not first_window and count_samples == OFFSET_SAMPLES:
                 send_window()
                 count_samples = 0
-    if live_Data:
-        stop_stream()
+    stop_stream()
 
 
 def sort_channels(sliding_window, used_ch_names):
@@ -250,8 +249,9 @@ def stop_stream():
     """Stops the data stream and the releases session"""
     global stream_available
     stream_available = False
-    board.stop_stream()
-    board.release_session()
+    if live_Data:
+        board.stop_stream()
+        board.release_session()
 
 
 if __name__ == '__main__':
