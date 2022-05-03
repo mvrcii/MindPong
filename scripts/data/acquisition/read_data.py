@@ -11,7 +11,7 @@ import brainflow
 from brainflow.board_shim import BoardShim, BrainFlowInputParams, BrainFlowError
 
 from scripts.data.loader.game_dataset_loader import get_channel_rawdata
-from scripts.data.visualisation.liveplot_matlab import connect_queue
+from scripts.data.visualisation.liveplot_matlab import connect_queue, remove_all_plots
 from scripts.mvc.models import ConfigData
 from scripts.data.extraction import trial_handler
 import scripts.config as config
@@ -27,6 +27,14 @@ class QueueManager:
 
         self.queue_hcon = queue.Queue(100)
         self.queue_hcon_norm = queue.Queue(100)
+
+    def clear_all_queues(self):
+        self.queue_label.queue.clear()
+        self.queue_clabel.queue.clear()
+        self.queue_c3_pow.queue.clear()
+        self.queue_c4_pow.queue.clear()
+        self.queue_hcon.queue.clear()
+        self.queue_hcon_norm.queue.clear()
 
 
 # constants
@@ -60,11 +68,13 @@ queue_manager = QueueManager()
 
 
 def connect_queues():
-    connect_queue(queue_manager.queue_c3_pow, 'pow', 311)
-    connect_queue(queue_manager.queue_c4_pow, 'pow', 311)
-    connect_queue(queue_manager.queue_hcon, 'hcon', 312)
-    connect_queue(queue_manager.queue_hcon_norm, 'hcon', 312)
-    connect_queue(queue_manager.queue_clabel, 'label', 313)
+    queue_manager.clear_all_queues()
+    remove_all_plots()
+    connect_queue(queue_manager.queue_c3_pow, 'pow', color='#0096db', row=3, column=1, position=1, name='C3 pow')
+    connect_queue(queue_manager.queue_c4_pow, 'pow', color='#009d6b', row=3, column=1, position=1, name='C4 pow')
+    connect_queue(queue_manager.queue_hcon, 'hcon', color='#f17a2c', row=3, column=1, position=2, name='hcon')
+    connect_queue(queue_manager.queue_hcon_norm, 'hcon', color='#FFC107', row=3, column=1, position=2, name='hcon normalized')
+    connect_queue(queue_manager.queue_clabel, 'label', color='#96669e', row=3, column=1, position=3, y_labels=['n', 'l', 'r'],name='calculated label')
 
 
 def init(data_mdl):

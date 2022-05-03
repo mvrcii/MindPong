@@ -113,8 +113,8 @@ class ConfigController(Controller):
             self.view.disable_inputs()
             self.view.hide_button("Start Session")
             self.__start_calibration()
-            self.master.create_game_window()
             self.__start_liveplot()
+            self.master.create_game_window()
 
     def __stop_session(self):
         """Stops the current session and changes the view according to the amount of recorded trials."""

@@ -5,7 +5,7 @@ import numpy as np
 from numpy import linspace
 from scipy import signal
 from numpy_ringbuffer import RingBuffer
-from spectrum import arburg, arma2psd
+# from spectrum import arburg, arma2psd
 from scripts.utils.event_listener import post_event
 from scripts.data.acquisition.read_data import QueueManager
 import scripts.config as config
@@ -186,8 +186,6 @@ def integrate_psd_values(samples: np.ndarray, frequency_list: np.ndarray, used_f
         band_power = scipy.integrate.trapz(psds_in_band_power, requested_frequency_range) if len(requested_frequency_range) > 0 else 0
     else:
         band_power = scipy.integrate.trapz(samples, frequency_list)
-
-    # band_power = integrate.simps(psds_in_band_power, requested_frequency_range) if use_frequency_filter else integrate.simps(samples, frequency_list)
 
     return band_power
 
