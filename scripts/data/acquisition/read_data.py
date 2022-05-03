@@ -11,7 +11,7 @@ import brainflow
 from brainflow.board_shim import BoardShim, BrainFlowInputParams, BrainFlowError
 
 from scripts.data.loader.game_dataset_loader import get_channel_rawdata
-from scripts.data.visualisation.liveplot_matlab import connect_queue, remove_all_plots
+from scripts.data.visualisation.liveplot_matlab import connect_queue, remove_all_plots, initial_draw
 from scripts.mvc.models import ConfigData
 from scripts.data.extraction import trial_handler
 import scripts.config as config
@@ -75,6 +75,7 @@ def connect_queues():
     connect_queue(queue_manager.queue_hcon, 'hcon', color='#f17a2c', row=3, column=1, position=2, name='hcon')
     connect_queue(queue_manager.queue_hcon_norm, 'hcon', color='#FFC107', row=3, column=1, position=2, name='hcon normalized')
     connect_queue(queue_manager.queue_clabel, 'label', color='#96669e', row=3, column=1, position=3, y_labels=['n', 'l', 'r'],name='calculated label')
+    initial_draw()
 
 
 def init(data_mdl):
