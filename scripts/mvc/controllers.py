@@ -101,6 +101,8 @@ class ConfigController(Controller):
         answer = askyesno(title="Abort", message="Are you sure that you want to abort the calibration?")
         if answer:
             self.__stop_calibration()
+            from scripts.data.acquisition.read_data import stop_stream
+            stop_stream()
             self.__discard_session()
 
     def __start_session(self):
@@ -124,6 +126,8 @@ class ConfigController(Controller):
             self.view.hide_button("Stop Session")
             self.view.show_plot(False)
             self.data.draw_plot = False
+            from scripts.data.acquisition.read_data import stop_stream
+            stop_stream()
             # Only allow saving if trial recording is turned on
             if self.data.trial_recording:
                 from scripts.data.extraction.trial_handler import count_trials
