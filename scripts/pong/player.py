@@ -1,3 +1,4 @@
+import select
 import time
 
 import scripts.pong.game as game
@@ -216,6 +217,10 @@ class Player:
         if hit_from_left or hit_from_right:
             self.velocity_x_axis = 0
             self.root.change(game.Hit)
+            if hit_from_left:
+                self.canvas.moveto(self.id, self.target.pos[2], self.pos[1])
+            else:
+                self.canvas.moveto(self.id, self.target.pos[0]-self.width, self.pos[1])
 
     def start_trial(self):
         """Saves the timestamp by the start of a trial"""
