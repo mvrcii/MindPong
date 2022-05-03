@@ -5,15 +5,19 @@ import matplotlib
 import matplotlib.pyplot as plt
 import numpy as np
 
+# constants
 AXES_SIZE = 200
-# global data
-# necessary!!! to make sure the backend is the correct one
-matplotlib.use('TkAgg')
+MIN_Y_BORDER_SCALING = -1
+MAX_Y_BORDER_SCALING = 1
 
+# global data
 queues = list()
 fig = None
 plots = dict()
 
+# necessary!!! to make sure the backend is the correct one
+matplotlib.use('TkAgg')
+# set matplotlib theme
 pth = Path(__file__).resolve().parent
 styles_dir = Path(pth / 'themes')
 style_path = styles_dir / 'liveplot_light.mplstyle'
@@ -38,7 +42,9 @@ class PlotData:
         self.ax = ax
         self.designation = name
         self.x_data = list(range(AXES_SIZE))
+        # initialize label with -1 alias not defined
         self.y_data = np.zeros(AXES_SIZE) if plot_label != 'label' else np.full(AXES_SIZE, -1)
+        # use straight edges for label
         if plot_label == 'label':
             self.line, = ax.step(self.x_data, self.y_data, color=colour,  label=self.designation)
         else:
@@ -55,22 +61,28 @@ def live_plotter(plot_data: PlotData):
     """
     # after the figure, axis, and line are created, we only need to update the y-data
     plot_data.line.set_ydata(plot_data.y_data)
-    # find corresponding plots
+
+    # find coherent graph's in subplots
     share_plot_object = None
+    # check if there is another plot_data object in queue which has the same title
+    # it is assumed that there are only 2 graphs in a plot for the sake of clarity
     for plotdata_object in queues:
         if plotdata_object.title == plot_data.title and plotdata_object != plot_data:
             share_plot_object = plotdata_object
             break
 
     if share_plot_object is not None:
+        # determine the min and max from both graphs within one plot
         min_value = min(np.min(plot_data.y_data), np.min(plotdata_object.y_data))
-        max_value = max( np.max(plot_data.y_data),  np.max(plotdata_object.y_data))
+        max_value = max(np.max(plot_data.y_data),  np.max(plotdata_object.y_data))
 
-        # adjust limits if new data goes beyond bounds
+        # adjust limits if new data goes beyond bounds, borders are defined within
+        # MIN_Y_BORDER_SCALING and MAX_Y_BORDER_SCALING constants which means the scaling of the y-axis doesn't go
+        # above or below that range
         if min_value <= plot_data.line.axes.get_ylim()[0] or max_value >= plot_data.line.axes.get_ylim()[1]:
-            plot_data.ax.set_ylim([min_value - np.std(plot_data.y_data), max_value + np.std(plot_data.y_data)])
+            plot_data.ax.set_ylim([min(min_value - np.std(plot_data.y_data), MIN_Y_BORDER_SCALING), max(max_value + np.std(plot_data.y_data), MAX_Y_BORDER_SCALING)])
         elif min_value >= plot_data.line.axes.get_ylim()[0] or max_value <= plot_data.line.axes.get_ylim()[1]:
-            plot_data.ax.set_ylim([min_value - np.std(plot_data.y_data), max_value + np.std(plot_data.y_data)])
+            plot_data.ax.set_ylim([min(min_value - np.std(plot_data.y_data), MIN_Y_BORDER_SCALING), max(max_value + np.std(plot_data.y_data), MAX_Y_BORDER_SCALING)])
 
     # return line, so we can update it again in the next iteration
     return plot_data.line
@@ -107,10 +119,19 @@ def perform_live_plot():
             plot_data.y_data[-len(content_y):] = content_y
             # replot data and legend
             plot_data.line = live_plotter(plot_data)
+            # show legend with graph description
             plot_data.ax.legend(loc='upper left')
         if has_changes:
-            # draw canvas
+            # draw canvas only if values have changed
             fig.canvas.draw()
+
+
+def remove_all_plots():
+    global queues, plots, fig
+    if fig:
+        fig.clf()
+        queues = list()
+        plots = dict()
 
 
 def connect_queue(queue: queue.Queue, plot_label, row: int, color: str, name: str, column: int, position: int, y_labels:list = None):
@@ -125,21 +146,18 @@ def connect_queue(queue: queue.Queue, plot_label, row: int, color: str, name: st
     :param queue: queue which should be plotted
     :param plot_label: class name
     """
-    if len(queues) < 5:
-        while not fig:
-            time.sleep(0.05)
-        if plot_label in plots:
-            ax = plots.get(plot_label)
-        else:
-            ax = fig.add_subplot(row, column, position)
-            ax.set_title(plot_label)
-            ax.axes.xaxis.set_ticklabels([])
-            if y_labels:
-                ax.set_ylim(-1.1, 1.1)
-                ax.set_yticks([-1, 0, 1])
-                ax.set_yticklabels(y_labels)
-            plots[plot_label] = ax
-        queues.append(PlotData(queue, ax, plot_label, color, name))
+    if plot_label in plots:
+        ax = plots.get(plot_label)
+    else:
+        ax = fig.add_subplot(row, column, position)
+        ax.set_title(plot_label)
+        ax.axes.xaxis.set_ticklabels([])
+        if y_labels:
+            ax.set_ylim(-1.1, 1.1)
+            ax.set_yticks([-1, 0, 1])
+            ax.set_yticklabels(y_labels)
+        plots[plot_label] = ax
+    queues.append(PlotData(queue, ax, plot_label, color, name))
 
 
 def start_live_plot(figure):
@@ -148,6 +166,3 @@ def start_live_plot(figure):
     """
     global fig, queues, plots
     fig = figure
-    fig.clf()
-    queues = list()
-    plots = dict()

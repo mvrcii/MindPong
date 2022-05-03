@@ -11,7 +11,7 @@ import brainflow
 from brainflow.board_shim import BoardShim, BrainFlowInputParams, BrainFlowError
 
 from scripts.data.loader.game_dataset_loader import get_channel_rawdata
-from scripts.data.visualisation.liveplot_matlab import connect_queue
+from scripts.data.visualisation.liveplot_matlab import connect_queue, remove_all_plots
 from scripts.mvc.models import ConfigData
 from scripts.data.extraction import trial_handler
 import scripts.config as config
@@ -40,7 +40,7 @@ class QueueManager:
 # constants
 # recorded session
 live_Data = False
-session_file_name = 'session-1-01052022-091646.npz'
+session_file_name = 'session-1-01052022-161124.npz'
 
 SAMPLING_RATE = BoardShim.get_sampling_rate(brainflow.board_shim.BoardIds.CYTON_DAISY_BOARD) if live_Data else 125
 
@@ -70,6 +70,7 @@ queue_manager = QueueManager()
 
 def connect_queues():
     queue_manager.clear_all_queues()
+    remove_all_plots()
     connect_queue(queue_manager.queue_c3_pow, 'pow', color='#0096db', row=3, column=1, position=1, name='C3 pow')
     connect_queue(queue_manager.queue_c4_pow, 'pow', color='#009d6b', row=3, column=1, position=1, name='C4 pow')
     connect_queue(queue_manager.queue_hcon, 'hcon', color='#f17a2c', row=3, column=1, position=2, name='hcon')

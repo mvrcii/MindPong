@@ -187,8 +187,6 @@ def integrate_psd_values(samples: np.ndarray, frequency_list: np.ndarray, used_f
     else:
         band_power = scipy.integrate.trapz(samples, frequency_list)
 
-    # band_power = integrate.simps(psds_in_band_power, requested_frequency_range) if use_frequency_filter else integrate.simps(samples, frequency_list)
-
     return band_power
 
 
