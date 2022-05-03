@@ -46,7 +46,8 @@ OFFSET_DURATION: float  # size of offset in s between two consecutive sliding wi
 OFFSET_SAMPLES: int  # size of offset in amount of samples, *8ms for time
 
 NUMBER_CHANNELS = len(BoardShim.get_eeg_channels(
-    brainflow.board_shim.BoardIds.CYTON_DAISY_BOARD)) if live_Data else len(['C3', 'Cz', 'C4', 'P3', 'P4', 'T3', 'F3', 'F4', 'T4'])
+    brainflow.board_shim.BoardIds.CYTON_DAISY_BOARD)) if live_Data else len(
+    ['C3', 'Cz', 'C4', 'P3', 'P4', 'T3', 'F3', 'F4', 'T4'])
 
 # global variables
 allow_window_creation = True
@@ -90,7 +91,6 @@ def init(data_mdl):
     if live_Data:
         params = BrainFlowInputParams()
         params.serial_port = search_port()
-
 
         """"
         while not scripts.data.visualisation.liveplot.is_window_ready:
@@ -148,12 +148,17 @@ def search_port():
     return None
 
 
-def handle_samples(chan_data=None, label_data=None, chan_labels=None):
-    """Reads EEG data from port, sends it to trial_handler and writes into in the window_buffer"""
+def handle_samples(chan_data=None):
+    """
+    Reads EEG data from port, sends it to trial_handler and writes into in the window_buffer
+    :param float[] chan_data: raw data from recorded Sessions
+    """
     global first_window, window_buffer, allow_window_creation, first_data
     count_samples = 0
     index_test = 0
-    while (stream_available and data_model.session_recording) or len(chan_data[0]) > index_test:
+
+    while (stream_available and data_model.session_recording) or (
+            chan_data is not None and len(chan_data[0]) > index_test):
         if chan_data is not None:
             data = np.ndarray((len(chan_data), 1))
             for index, i in enumerate(chan_data[:, index_test]):
@@ -167,7 +172,7 @@ def handle_samples(chan_data=None, label_data=None, chan_labels=None):
                 # filter data
                 for channel in range(NUMBER_CHANNELS):
                     brainflow.DataFilter.perform_bandstop(data[channel], SAMPLING_RATE, 0.0, 50.0, 5,
-                                                      brainflow.FilterTypes.BUTTERWORTH.value, 0)
+                                                          brainflow.FilterTypes.BUTTERWORTH.value, 0)
             else:
                 continue
             # only sends trial_handler raw data if trial recording is wished
@@ -193,7 +198,7 @@ def handle_samples(chan_data=None, label_data=None, chan_labels=None):
 
 
 def sort_channels(sliding_window, used_ch_names):
-
+    """Filters and sorts the data channels for the algorithm"""
     filtered_sliding_window = list()
     filtered_channel_names = list()
     for i in range(len(used_ch_names)):
