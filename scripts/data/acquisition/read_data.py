@@ -81,9 +81,10 @@ def init(data_mdl):
     """
     --- starting point ---
     Initializing steps:
-    (1) initialize the board
-    (2) search for the serial port
+    (1) initialize the data model
+    (2) initialize variables that are set over the gui
     (3) starts the data acquisition
+    :param Any data_mdl: data model object
     """
     connect_queues()
     global data_model, first_window
@@ -96,6 +97,23 @@ def init(data_mdl):
     OFFSET_DURATION = data_model.window_offset / 1000
     OFFSET_SAMPLES = int(OFFSET_DURATION / TIME_FOR_ONE_SAMPLE)
     window_buffer = [RingBuffer(capacity=SLIDING_WINDOW_SAMPLES, dtype=float) for _ in range(NUMBER_CHANNELS)]
+
+    if live_Data:
+        handle_samples()
+    else:
+        path = '../scripts/data/session/' + session_file_name
+        chan_labels = ['C3', 'Cz', 'C4', 'P3', 'P4', 'T3', 'F3', 'F4', 'T4']
+        chan_data, label_data = get_channel_rawdata(session_path=path, ch_names=chan_labels)
+        handle_samples(chan_data, label_data, chan_labels)
+
+def init_board():
+    """
+    Initializing steps:
+    (1) Search for the serial port
+    (2) Board get initialized
+    (3) Data stream get started
+    :return: bool: says if the connection was successful
+    """
 
     if live_Data:
         params = BrainFlowInputParams()
@@ -125,12 +143,8 @@ def init(data_mdl):
         else:
             print('Port not found')
             return False
-    else:
-        path = '../scripts/data/session/' + session_file_name
-        chan_labels = ['C3', 'Cz', 'C4', 'P3', 'P4', 'T3', 'F3', 'F4', 'T4']
-        chan_data, label_data = get_channel_rawdata(session_path=path, ch_names=chan_labels)
-        handle_samples(chan_data, label_data, chan_labels)
-        return True
+    return True
+
 
 
 def search_port():
