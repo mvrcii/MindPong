@@ -7,7 +7,7 @@ class ConfigData(object):
                  subject_id: int = 1,
                  subject_age: int = 1,
                  subject_sex: str = 'D',
-                 threshold: float = 1.0,
+                 threshold: float = 1.5,
                  f_min: float = 8,
                  f_max: float = 12,
                  window_size: int = 1000,
@@ -29,6 +29,7 @@ class ConfigData(object):
         self.__trial_recording = trial_recording
         self.__valid_subject_sex_values = ['M', 'F', 'D']
         self.__session_recording = False
+        self.__draw_plot = False
 
     @property
     def subject_id(self):
@@ -82,6 +83,10 @@ class ConfigData(object):
     def session_recording(self):
         return self.__session_recording
 
+    @property
+    def draw_plot(self):
+        return self.__draw_plot
+
     @subject_id.setter
     def subject_id(self, value):
         """
@@ -130,7 +135,7 @@ class ConfigData(object):
         :return: None
         """
         value = float(value)
-        if 0.0 <= value <= 1.0:
+        if 0.0 <= value <= 3.0:
             self.__threshold = value
         else:
             raise ValueError(f'Invalid threshold: {value}')
@@ -235,6 +240,15 @@ class ConfigData(object):
         :return: None
         """
         self.__session_recording = value
+
+    @draw_plot.setter
+    def draw_plot(self, value: bool):
+        """
+        Setter for the draw plot variable
+        :param bool value: the new value for the draw plot variable
+        """
+        self.__draw_plot = value
+
 
     # Currently without persistence of the Config data
     # Variables in the model will always be overridden when the start button is pressed

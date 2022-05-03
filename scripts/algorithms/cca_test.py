@@ -71,7 +71,7 @@ def load_bcic_dataset(ch_weight):
     return chan_data, label_data, used_ch_names
 
 
-def test_algorithm(chan_data, label_data, used_ch_names, queue_manager):
+def test_algorithm(chan_data, label_data, used_ch_names):
     """
     - create overlapping sliding windows
     - Calls the cursor control algorithm
@@ -118,7 +118,6 @@ def test_algorithm(chan_data, label_data, used_ch_names, queue_manager):
 
             found_label = False
             num_valid_sliding_windows += 0.5
-        time.sleep(0.1)
 
     # calculate und plot accuracy
     num_valid_sliding_windows = int(num_valid_sliding_windows)
@@ -127,14 +126,54 @@ def test_algorithm(chan_data, label_data, used_ch_names, queue_manager):
     print(f'Accuracy = {accuracy}')
 
 
-def test_algorithm_with_dataset(queue_manager):
+def connect_queues():
+
+    # scripts.data.visualisation.liveplot.add_queue(('QUEUE_CLABEL', '#F1C40F', queue_manager.queue_c3_pow))
+    # scripts.data.visualisation.liveplot.add_queue(('QUEUE_LABEL', '#16A085', queue_manager.queue_c4_pow))
+    # scripts.data.visualisation.liveplot.add_queue(('QUEUE_HCON', '#9B59B6', queue_hcon))
+    connect_queue(queue_manager.queue_c3, 'raw', row=2, column=1, position=1)
+    connect_queue(queue_manager.queue_c4, 'raw', row=2, column=1, position=1)
+    connect_queue(queue_manager.queue_c3_pow, 'pow',row=2, column=1, position=2)
+    connect_queue(queue_manager.queue_c4_pow, 'pow', row=2, column=1, position=2)
+
+def sort_incoming_channels(sliding_window, used_ch_names):
+
+    #                 'C3', 'Cz', 'C4', 'P3', 'Pz', 'P4', 'O1', 'O2', 'FC5', 'FC1', 'FC2', 'FC6', 'CP5', 'CP1', 'CP2', 'CP6'
+    ch_names_weight = [1,    0,    1,    0,    0,    0,    0,    0,     1,     1,     1,     1,     1,     1,     1,     1]
+
+    #                 'C3', 'Cz', 'C4', 'P3', '?', 'P4', 'T3', '?', '?', 'F3', 'F4', '?', '?', '?', '?', 'T4'
+    ch_names_weight = [1,    1,    1,    1,    0,    1,    1,   0,   0,   1,    1,    0,   0,   0,   0,    1]
+
+    filtered_sliding_window = list()
+    filtered_channel_names = list()
+    for i in range(len(used_ch_names)):
+        if ch_names_weight[i] != 0:
+            if used_ch_names[i] == 'C3':
+                filtered_channel_names.insert(0, used_ch_names[i])
+                filtered_sliding_window.insert(0, sliding_window[i])
+            elif used_ch_names[i] == 'C4':
+                filtered_channel_names.insert(1, used_ch_names[i])
+                filtered_sliding_window.insert(1, sliding_window[i])
+            else:
+                filtered_channel_names.append(used_ch_names[i])
+                filtered_sliding_window.append(sliding_window[i])
+
+    filtered_sliding_window = np.asarray(filtered_sliding_window)
+    return filtered_sliding_window, filtered_channel_names
+
+
+def test_algorithm_with_dataset():
     #                 Fz  FC3  FC1  FCz  FC2  FC4  C5  C3  C1  Cz  C2  C4  C6  CP3  CP1  CPz  CP2  CP4  P1  Pz  P2  POz
     ch_names_weight = [0,  1,   1,   0,   1,   1,   0,  1,  0,  0,  0,  1,  0,  1,   1,   0,   1,   1,   0,  0,  0,  0]
     preloaded_data, preloaded_labels, used_ch_names = load_bcic_dataset(ch_names_weight)
-    test_algorithm(preloaded_data, preloaded_labels, used_ch_names, queue_manager)
+    connect_queues()
+    test_algorithm(preloaded_data, preloaded_labels, used_ch_names)
 
 
-
-
-
+if __name__ == '__main__':
+    print('CCA-test main started ...')
+    queue_manager = QueueManager()
+    threading.Thread(target=test_algorithm_with_dataset, daemon=True).start()
+    # scripts.data.visualisation.liveplot.start_liveplot()
+    start_live_plot(queue_manager, 0.00001)
 

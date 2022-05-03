@@ -1,3 +1,4 @@
+import select
 import time
 
 import scripts.pong.game as game
@@ -80,6 +81,7 @@ class Player:
         self.start_time_trial = time.time()
         self.last_direction_update = 0
         self.trial_label = trial_handler.Labels.INVALID
+        self.y_pos = self.canvas_height * 0.5 - self.height
 
         self.request(strategy).control(self)
 
@@ -169,7 +171,7 @@ class Player:
 
         self.id = self.canvas.create_rectangle(0, 0, self.width, self.height, fill=self.color)
         # Move to initial position
-        self.canvas.move(self.id, (self.canvas_width - self.width) / 2, self.canvas_height * 0.5 - self.height)
+        self.canvas.move(self.id, (self.canvas_width - self.width) / 2, self.y_pos)
         # Update position
         self.pos = self.canvas.coords(self.id)
         self.target.spawn_new_target(self.pos)
@@ -216,6 +218,10 @@ class Player:
         if hit_from_left or hit_from_right:
             self.velocity_x_axis = 0
             self.root.change(game.Hit)
+            if hit_from_left:
+                self.canvas.moveto(self.id, self.target.pos[2], self.y_pos)
+            else:
+                self.canvas.moveto(self.id, self.target.pos[0]-self.width, self.y_pos)
 
     def start_trial(self):
         """Saves the timestamp by the start of a trial"""

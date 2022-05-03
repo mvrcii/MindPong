@@ -5,7 +5,7 @@ import numpy as np
 from numpy import linspace
 from scipy import signal
 from numpy_ringbuffer import RingBuffer
-from spectrum import arburg, arma2psd
+# from spectrum import arburg, arma2psd
 from scripts.utils.event_listener import post_event
 from scripts.data.acquisition.read_data import QueueManager
 import scripts.config as config
@@ -187,8 +187,6 @@ def integrate_psd_values(samples: np.ndarray, frequency_list: np.ndarray, used_f
     else:
         band_power = scipy.integrate.trapz(samples, frequency_list)
 
-    # band_power = integrate.simps(psds_in_band_power, requested_frequency_range) if use_frequency_filter else integrate.simps(samples, frequency_list)
-
     return band_power
 
 
@@ -206,8 +204,7 @@ def manage_ringbuffer(window_size, offset_in_percentage:float):
     return ringbuffer_hcon
 
 
-def perform_algorithm(sliding_window, used_ch_names, sample_rate, queue_manager:QueueManager, offset_in_percentage=0.2,
-                      f_min = 8.0, f_max= 12.0, threshold = 1.0):
+def perform_algorithm(sliding_window, used_ch_names, sample_rate, queue_manager:QueueManager, data_mdl, offset_in_percentage=0.2):
     """
     Converts a sliding window into the corresponding horizontal movement
     Contains following steps:
@@ -227,8 +224,8 @@ def perform_algorithm(sliding_window, used_ch_names, sample_rate, queue_manager:
 
     global SAMPLING_FREQ, F_MIN, F_MAX
     SAMPLING_FREQ = sample_rate
-    F_MIN = f_min
-    F_MAX = f_max
+    F_MIN = data_mdl.f_min
+    F_MAX = data_mdl.f_max
 
     # 1. Spatial filtering
     samples_c3a, samples_c4a = calculate_spatial_filtering(sliding_window, used_ch_names)
@@ -266,25 +263,26 @@ def perform_algorithm(sliding_window, used_ch_names, sample_rate, queue_manager:
     standard_deviation = np.std(values)
     normalized_hcon = (hcon - mean) / standard_deviation if standard_deviation else 0
 
-
     # converts the returned hcon to the corresponding label
-    if normalized_hcon > threshold-0.2:     # left
+    if normalized_hcon > data_mdl.threshold-0.2:     # left
         calculated_label = 0
         post_event("move_left_direction")
-    elif normalized_hcon < -threshold:  # right
+    elif normalized_hcon < -data_mdl.threshold:  # right
         calculated_label = 1
         post_event("move_right_direction")
     else:
         calculated_label = -1
 
-    if not queue_manager.queue_hcon.full():
-        # print(queue_manager.queue_hcon_norm.queue)
-        queue_manager.queue_hcon_norm.put(normalized_hcon)
-        queue_manager.queue_hcon.put(hcon)
-    if not queue_manager.queue_c3_pow.full() and not queue_manager.queue_c4_pow.full():
-        queue_manager.queue_c3_pow.put(area_c3)
-        queue_manager.queue_c4_pow.put(area_c4)
-    if not queue_manager.queue_clabel.full():
-        queue_manager.queue_clabel.put(calculated_label, True)
+    # only fill queues if the plot gets drawn
+    if data_mdl.draw_plot:
+        if not queue_manager.queue_hcon.full():
+            # print(queue_manager.queue_hcon_norm.queue)
+            queue_manager.queue_hcon_norm.put(normalized_hcon)
+            queue_manager.queue_hcon.put(hcon)
+        if not queue_manager.queue_c3_pow.full() and not queue_manager.queue_c4_pow.full():
+            queue_manager.queue_c3_pow.put(area_c3)
+            queue_manager.queue_c4_pow.put(area_c4)
+        if not queue_manager.queue_clabel.full():
+            queue_manager.queue_clabel.put(calculated_label, True)
 
     return calculated_label
