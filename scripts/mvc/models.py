@@ -29,6 +29,7 @@ class ConfigData(object):
         self.__trial_recording = trial_recording
         self.__valid_subject_sex_values = ['M', 'F', 'D']
         self.__session_recording = False
+        self.__draw_plot = False
 
     @property
     def subject_id(self):
@@ -81,6 +82,10 @@ class ConfigData(object):
     @property
     def session_recording(self):
         return self.__session_recording
+
+    @property
+    def draw_plot(self):
+        return self.__draw_plot
 
     @subject_id.setter
     def subject_id(self, value):
@@ -235,6 +240,15 @@ class ConfigData(object):
         :return: None
         """
         self.__session_recording = value
+
+    @draw_plot.setter
+    def draw_plot(self, value: bool):
+        """
+        Setter for the draw plot variable
+        :param bool value: the new value for the draw plot variable
+        """
+        self.__draw_plot = value
+
 
     # Currently without persistence of the Config data
     # Variables in the model will always be overridden when the start button is pressed

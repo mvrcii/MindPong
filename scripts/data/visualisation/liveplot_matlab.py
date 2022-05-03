@@ -27,6 +27,7 @@ class PlotData:
 
     Used to update each plot in liveplot cycle
     """
+
     def __init__(self, q: queue.Queue, ax, plot_label):
         self.q = q
         self.ax = ax
@@ -45,8 +46,10 @@ def live_plotter(plot_data: PlotData):
     # after the figure, axis, and line are created, we only need to update the y-data
     plot_data.line.set_ydata(plot_data.y_data)
     # adjust limits if new data goes beyond bounds
-    if np.min(plot_data.y_data) <= plot_data.line.axes.get_ylim()[0] or np.max(plot_data.y_data) >= plot_data.line.axes.get_ylim()[1]:
-        plot_data.ax.set_ylim([np.min(plot_data.y_data) - np.std(plot_data.y_data), np.max(plot_data.y_data) + np.std(plot_data.y_data)])
+    if np.min(plot_data.y_data) <= plot_data.line.axes.get_ylim()[0] or np.max(plot_data.y_data) >= \
+            plot_data.line.axes.get_ylim()[1]:
+        plot_data.ax.set_ylim(
+            [np.min(plot_data.y_data) - np.std(plot_data.y_data), np.max(plot_data.y_data) + np.std(plot_data.y_data)])
 
     # ascending x-values only the label a changes, the x-range remains the same
     plot_data.line.axes.set_xticklabels(plot_data.x_data)
