@@ -11,7 +11,7 @@ import brainflow
 from brainflow.board_shim import BoardShim, BrainFlowInputParams, BrainFlowError
 
 from scripts.data.loader.game_dataset_loader import get_channel_rawdata
-from scripts.data.visualisation.liveplot_matlab import connect_queue
+from scripts.data.visualisation.liveplot_matlab import connect_queue, remove_all_plots
 from scripts.mvc.models import ConfigData
 from scripts.data.extraction import trial_handler
 import scripts.config as config
@@ -28,10 +28,17 @@ class QueueManager:
         self.queue_hcon = queue.Queue(100)
         self.queue_hcon_norm = queue.Queue(100)
 
+    def clear_all_queues(self):
+        self.queue_label.queue.clear()
+        self.queue_clabel.queue.clear()
+        self.queue_c3_pow.queue.clear()
+        self.queue_c4_pow.queue.clear()
+        self.queue_hcon.queue.clear()
+        self.queue_hcon_norm.queue.clear()
+
 
 # constants
-# recorded session
-live_Data = True
+live_Data = True  # boolean to replay a recorded session with session_file_name as file name
 session_file_name = 'session-1-01052022-091646.npz'
 
 SAMPLING_RATE = BoardShim.get_sampling_rate(brainflow.board_shim.BoardIds.CYTON_DAISY_BOARD) if live_Data else 125
@@ -61,11 +68,13 @@ queue_manager = QueueManager()
 
 
 def connect_queues():
-    connect_queue(queue_manager.queue_c3_pow, 'pow', 311)
-    connect_queue(queue_manager.queue_c4_pow, 'pow', 311)
-    connect_queue(queue_manager.queue_hcon, 'hcon', 312)
-    connect_queue(queue_manager.queue_hcon_norm, 'hcon', 312)
-    connect_queue(queue_manager.queue_clabel, 'label', 313)
+    queue_manager.clear_all_queues()
+    remove_all_plots()
+    connect_queue(queue_manager.queue_c3_pow, 'pow', color='#0096db', row=3, column=1, position=1, name='C3 pow')
+    connect_queue(queue_manager.queue_c4_pow, 'pow', color='#009d6b', row=3, column=1, position=1, name='C4 pow')
+    connect_queue(queue_manager.queue_hcon, 'hcon', color='#f17a2c', row=3, column=1, position=2, name='hcon')
+    connect_queue(queue_manager.queue_hcon_norm, 'hcon', color='#FFC107', row=3, column=1, position=2, name='hcon normalized')
+    connect_queue(queue_manager.queue_clabel, 'label', color='#96669e', row=3, column=1, position=3, y_labels=['n', 'l', 'r'],name='calculated label')
 
 
 def init(data_mdl):
@@ -76,7 +85,7 @@ def init(data_mdl):
     (2) search for the serial port
     (3) starts the data acquisition
     """
-    #connect_queues()
+    connect_queues()
     global data_model, first_window
     data_model = data_mdl
     first_window = True
@@ -229,10 +238,8 @@ def send_window():
     # push window to cursor control algorithm
     # TODO: change OFFSET_DURATION to percentage? Else change calculation in coc algorithm
     from scripts.algorithms.cursor_online_control import perform_algorithm
-    global data_model
     perform_algorithm(window, used_channels, SAMPLING_RATE, queue_manager,
-                      offset_in_percentage=OFFSET_DURATION / SLIDING_WINDOW_DURATION, f_min=data_model.f_min,
-                      f_max=data_model.f_max, threshold=data_model.threshold)
+                      offset_in_percentage=OFFSET_DURATION / SLIDING_WINDOW_DURATION, data_mdl=data_model)
 
 
 def stop_stream():

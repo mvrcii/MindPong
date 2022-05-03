@@ -1,11 +1,12 @@
-import time
 import tkinter as tk
 from threading import Thread
+import platform
 
 from scripts.mvc.controllers import ConfigController, GameController
 from scripts.mvc.models import ConfigData
 from scripts.mvc.view import ConfigView, GameView
 import scripts.data.acquisition.read_data as read_data
+import scripts.config as config
 
 from pathlib import Path
 
@@ -76,10 +77,20 @@ class GameWindow(tk.Toplevel):
         super().__init__(master)
         self.master = master
 
+        # for windows set that the size is correct displayed for different dpi screens
+        if platform.system() == 'Windows':
+            import ctypes
+            try:
+                # for Windows 8 and higher
+                ctypes.windll.shcore.SetProcessDpiAwareness(2)
+            except:
+                # for Windows 7 and lower
+                ctypes.windll.user32.SetProcessDPIAware()
+
         # Window settings
         self.title("Game")
+        self.minsize(config.WINDOW_WIDTH, config.WINDOW_HEIGHT)
         self.resizable(False, False)
-        self.attributes("-fullscreen", True)
 
         self.game_controller = GameController(self.master)  # Create Controller
         self.game_view = GameView(self)  # Create View

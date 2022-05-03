@@ -9,7 +9,7 @@ from scripts.pong.game import End
 from scripts.data.extraction.trial_handler import save_session
 from scripts.mvc.models import MetaData
 from datetime import datetime
-from scripts.data.visualisation.liveplot_matlab import start_live_plot, perform_live_plot
+from scripts.data.visualisation.liveplot_matlab import start_live_plot, perform_live_plot, queues
 
 
 class Controller(ABC):
@@ -102,6 +102,8 @@ class ConfigController(Controller):
         answer = askyesno(title="Abort", message="Are you sure that you want to abort the calibration?")
         if answer:
             self.__stop_calibration()
+            from scripts.data.acquisition.read_data import stop_stream
+            stop_stream()
             self.__discard_session()
 
     def __connect_board(self):
@@ -124,8 +126,8 @@ class ConfigController(Controller):
             self.view.disable_inputs()
             self.view.hide_button("Start Session")
             self.__start_calibration()
-            self.master.create_game_window()
             self.__start_liveplot()
+            self.master.create_game_window()
 
     def __stop_session(self):
         """Stops the current session and changes the view according to the amount of recorded trials."""
@@ -133,7 +135,10 @@ class ConfigController(Controller):
         if answer:
             self.master.game_window.game_controller.show_end_screen()
             self.view.hide_button("Stop Session")
-
+            self.view.show_plot(False)
+            self.data.draw_plot = False
+            from scripts.data.acquisition.read_data import stop_stream
+            stop_stream()
             # Only allow saving if trial recording is turned on
             if self.data.trial_recording:
                 from scripts.data.extraction.trial_handler import count_trials
@@ -167,6 +172,8 @@ class ConfigController(Controller):
 
     def __discard_session(self):
         """Discards the current session."""
+        from scripts.data.extraction.trial_handler import reset_counters
+        reset_counters()
         self.view.reset_view()
         self.master.destroy_game_window()
 
@@ -176,13 +183,17 @@ class ConfigController(Controller):
 
         if self.view.check_button_vars["Plot"].get():
             self.view.show_plot(True)
+            self.data.draw_plot = True
 
     def __toggle_plot(self):
         """Toggles the visibility of the plot"""
         if self.view.check_button_vars["Plot"].get() and self.data.session_recording:
             self.view.show_plot(True)
+            self.data.draw_plot = True
         else:
+
             self.view.show_plot(False)
+            self.data.draw_plot = False
 
     def validate_form(self):
         """Validates the whole form by calling all the individual validation methods
@@ -346,13 +357,7 @@ class ConfigController(Controller):
         self.valid_form = False
 
     def __on_valid(self, label):
-        # ToDo: Im dark-mode branch ergänzen, sobald der boolean im Datenmodell vorhanden ist
-        # text_color = 'white'
-        # if self.data.dark_mode:
-        #   text_color = 'black'
-        # self.view.labels[label].config(foreground=text_color)
         self.view.labels[label].config(foreground='black')
-        pass
 
 
 class GameController(Controller):
