@@ -163,5 +163,5 @@ def start_live_plot(figure):
     """
     Initializes plot window.
     """
-    global fig, queues, plots
+    global fig
     fig = figure

@@ -127,6 +127,11 @@ def save_session(metadata: np.ndarray, npz_name: str):
     file_path = join(dirname(dirname(abspath(__file__))), "session", npz_name)
     np.savez(file_path, meta=metadata, raw_data=create_raw_data_array(), event_type=create_event_type_array(),
              event_pos=create_position_array(), event_duration=create_duration_array())
+    reset_counters()
+
+
+def reset_counters():
+    """Set the counters count_trials and count_event_types to zero"""
     global count_trials, count_event_types
     count_trials = 0
     count_event_types = 0
