@@ -10,7 +10,7 @@ from scripts.utils.event_listener import post_event
 from scripts.data.acquisition.read_data import QueueManager
 import scripts.config as config
 
-
+# method for psd estimation
 class PSD_METHOD(enum.Enum):
     fft = 1
     multitaper = 2
@@ -36,6 +36,8 @@ def norm_data(in_data):
 
 
 def mute_outliers(samples: np.ndarray):
+    # Outliers of the signal that are smaller or larger than x times the standard deviation,
+    # starting from the medium of the signal, are cut off.
     mean = np.mean(samples)
     std = np.std(samples)
     x = 4.0
@@ -70,12 +72,20 @@ def calculate_laplacian(samples: np.ndarray):
 
 
 def split_normalization_area(samples_list: np.ndarray, used_ch_names: list):
+    '''
+    Divide the channel into the corresponding areas for c3 and c4.
+    Channels with an even number in the name belong to C4, and with an odd number to C3.
+    :param samples_list:list of the channels
+    :param used_ch_names: list of the channel names associated with the channel
+    :return: 2 list containing sorted channels belonging to c3 and c4
+    '''
     channels_around_c3 = list()
     channels_around_c4 = list()
 
     for i in range(len(used_ch_names)):
         c = used_ch_names[i][-1]
 
+        # sort into channels belonging to c3 and c4
         if c.isnumeric():
             if int(c) % 2 == 0:
                 channels_around_c4.append(samples_list[i])
@@ -85,6 +95,7 @@ def split_normalization_area(samples_list: np.ndarray, used_ch_names: list):
             channels_around_c3.append(samples_list[i])
             channels_around_c4.append(samples_list[i])
 
+    # convert back to np arrays
     channels_around_c3 = np.asarray(channels_around_c3)
     channels_around_c4 = np.asarray(channels_around_c4)
     return channels_around_c3, channels_around_c4
@@ -93,6 +104,7 @@ def split_normalization_area(samples_list: np.ndarray, used_ch_names: list):
 def calculate_spatial_filtering(samples_list: np.ndarray, used_ch_names: list):
     """
     Subtract the calculated average samples from C3 and C4 to perform the spatial filtering
+    :param used_ch_names: associated names of all channels (with C3 at position 0 and C4 at position 1)
     :param samples_list: samples of all channels (with C3 at position 0 and C4 at position 1)
     :return: filtered C3, C4 samples
     """
@@ -115,6 +127,7 @@ def calculate_spatial_filtering(samples_list: np.ndarray, used_ch_names: list):
         samples_c3a.append(samples_c3[i] - samples_average_c3[i])
         samples_c4a.append(samples_c4[i] - samples_average_c4[i])
 
+    # convert back to np arrays
     samples_c3a = np.asarray(samples_c3a)
     samples_c4a = np.asarray(samples_c4a)
     return samples_c3a, samples_c4a
@@ -141,7 +154,6 @@ def perform_periodogram(samples: np.ndarray):
 
 def perform_rfft(samples: np.ndarray):
     """
-    See: https://klyshko.github.io/teaching/2019-02-22-teaching
     Performs fft function to convert all samples from time into frequency domain
     :param samples: all samples from a channel (should be filtered)
     :return: fft_spectrum_abs: power spectral density (PSD) of the samples
@@ -156,7 +168,10 @@ def perform_rfft(samples: np.ndarray):
 
 def perform_burg(sample: np.array):
     """
-    recommended for small window sizes
+     recommended for small window sizes
+    :param sample: all samples from a channel (should be filtered)
+    :return: fft_spectrum_abs: power spectral density (PSD) of the samples
+             freqs: the corresponding frequencies
     """
     AR, P, k = arburg(sample, 10)
     PSD = arma2psd(AR)
@@ -169,6 +184,7 @@ def perform_burg(sample: np.array):
 def integrate_psd_values(samples: np.ndarray, frequency_list: np.ndarray, used_filter):
     """
     Integrates over the calculated PSD values in between the specified frequencies (F_MIN, F_MAX)
+    :param used_filter: Set the previously used filter to control integration
     :param samples: F(C3), F(C4)
     :param frequency_list: list of the included frequencies
     :return: sum of all PSDs in the given frequency range
@@ -177,6 +193,7 @@ def integrate_psd_values(samples: np.ndarray, frequency_list: np.ndarray, used_f
     psds_in_band_power = list()
     requested_frequency_range = list()
 
+    # psd methods whose return values do not automatically contain exclusively the desired frequency range must be modified.
     if used_filter == PSD_METHOD.fft or used_filter == PSD_METHOD.burg or used_filter == PSD_METHOD.periodogram:
         for i in range(len(frequency_list)):
             if F_MAX >= frequency_list[i] >= F_MIN:
@@ -184,13 +201,14 @@ def integrate_psd_values(samples: np.ndarray, frequency_list: np.ndarray, used_f
                 requested_frequency_range.append(frequency_list[i])
 
         band_power = scipy.integrate.trapz(psds_in_band_power, requested_frequency_range) if len(requested_frequency_range) > 0 else 0
+    # only multitaper already returns the desired frequency range
     else:
         band_power = scipy.integrate.trapz(samples, frequency_list)
 
     return band_power
 
 
-def manage_ringbuffer(window_size, offset_in_percentage:float):
+def manage_ringbuffer(window_size, offset_in_percentage: float):
     """
     Das ist ein Singleton :)
     amount of samples within 30 seconds = 30s / 1/250Hz
@@ -204,7 +222,7 @@ def manage_ringbuffer(window_size, offset_in_percentage:float):
     return ringbuffer_hcon
 
 
-def perform_algorithm(sliding_window, used_ch_names, sample_rate, queue_manager:QueueManager, data_mdl, offset_in_percentage=0.2):
+def perform_algorithm(sliding_window, used_ch_names, sample_rate, queue_manager: QueueManager, data_mdl, offset_in_percentage=0.2):
     """
     Converts a sliding window into the corresponding horizontal movement
     Contains following steps:
@@ -212,9 +230,13 @@ def perform_algorithm(sliding_window, used_ch_names, sample_rate, queue_manager:
         (2) Spectral analysis
         (3) Band Power calculation
         (4) Derive normalized cursor control samples
+    :param data_mdl: reference of datamodel, where constants of cc_algorithm are stored
+    :param queue_manager: reference of queue manager to pass data to liveplot in another thread
+    :param sample_rate: sample rate of the samples
+    :param used_ch_names: name of the used channel from the samples
     :param sliding_window: A sliding window (SW) with n channels, n must contain C3 and C4
            (SW(t) should be overlapping with SW(t+1))
-    :param window_size_factor: n: n*200ms
+    :param offset_in_percentage: offset between start of new window in percentage
     :return: the normalized value representing horizontal movement
     """
 
@@ -273,10 +295,9 @@ def perform_algorithm(sliding_window, used_ch_names, sample_rate, queue_manager:
     else:
         calculated_label = -1
 
-    # only fill queues if the plot gets drawn
+    # only fill queues if the plot gets drawn and queues are not full
     if data_mdl.draw_plot:
         if not queue_manager.queue_hcon.full():
-            # print(queue_manager.queue_hcon_norm.queue)
             queue_manager.queue_hcon_norm.put(normalized_hcon)
             queue_manager.queue_hcon.put(hcon)
         if not queue_manager.queue_c3_pow.full() and not queue_manager.queue_c4_pow.full():
