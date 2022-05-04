@@ -88,11 +88,10 @@ class GameWindow(tk.Toplevel):
                 ctypes.windll.user32.SetProcessDPIAware()
 
         # Window settings
-        self.title("Game")
         self.minsize(config.WINDOW_WIDTH, config.WINDOW_HEIGHT)
         self.resizable(False, False)
 
-        self.game_controller = GameController(self.master)  # Create Controller
+        self.game_controller = GameController(self)  # Create Controller
         self.game_view = GameView(self)  # Create View
         self.game_controller.bind(self.game_view)  # Bind View to Controller
 
