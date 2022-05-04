@@ -125,11 +125,11 @@ class Player:
             return 0
 
         if self.direction == 1:
-            if self.pos[2] >= self.canvas_width:
+            if self.pos[2] + (self.velocity_x_axis * self.speed_factor) >= self.canvas_width:
                 if not self.wall_hit:
                     self.wall_hit = True
                 return 0
-            if self.pos[0] <= 0:
+            if self.pos[0] + (self.velocity_x_axis * self.speed_factor) <= 0:
                 if not self.wall_hit:
                     self.wall_hit = True
                     return 0
@@ -139,11 +139,11 @@ class Player:
                 return 1
 
         elif self.direction == -1:
-            if self.pos[0] <= 0:
+            if self.pos[0] + (self.velocity_x_axis * self.speed_factor) <= 0:
                 if self.wall_hit is False:
                     self.wall_hit = True
                 return 0
-            elif self.pos[2] >= self.canvas_width:
+            elif self.pos[2] + (self.velocity_x_axis * self.speed_factor) >= self.canvas_width:
                 if not self.wall_hit:
                     self.wall_hit = True
                     return 0
