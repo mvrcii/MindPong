@@ -254,9 +254,12 @@ def stop_stream():
     """Stops the data stream and the releases session"""
     global stream_available
     stream_available = False
-    if live_Data:
-        board.stop_stream()
-        board.release_session()
+    if live_Data and "board" in globals() and board:
+        try:
+            board.stop_stream()
+            board.release_session()
+        except BrainFlowError as err:
+            print(err.args[0])
 
 
 if __name__ == '__main__':
