@@ -2,7 +2,7 @@ import time
 from abc import ABC, abstractmethod
 from tkinter.messagebox import askyesno, showinfo
 
-from scripts.config import CALIBRATION_TIME
+from scripts.config import CALIBRATION_TIME, BCI_CHANNELS
 from scripts.data.extraction import trial_handler
 from scripts.mvc.view import View, ConfigView, GameView
 from scripts.pong.game import End
@@ -151,7 +151,8 @@ class ConfigController(Controller):
         self.__set_comment()
         from scripts.data.extraction.trial_handler import count_trials, count_event_types
         meta_data = MetaData(sid=self.data.subject_id, age=self.data.subject_age, sex=self.data.subject_sex,
-                             comment=self.data.comment, amount_events=count_event_types, amount_trials=count_trials)
+                             comment=self.data.comment, amount_events=count_event_types, amount_trials=count_trials,
+                             channel_mapping=BCI_CHANNELS)
         print(meta_data.__str__())
         file_name = "session-%s-%s" % (self.data.subject_id, datetime.now().strftime("%d%m%Y-%H%M%S"))
 
