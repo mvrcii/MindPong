@@ -85,7 +85,7 @@ class ConfigController(Controller):
             if percentage >= 100:
                 if self.data.trial_recording:
                     # Saves a trial that includes the calibration when the trial recording is switched on
-                    trial_handler.mark_trial(self.calibration_timer, time.time(), trial_handler.Labels.CALIBRATION)
+                    trial_handler.mark_trial(trial_handler.start_time, time.time(), trial_handler.Labels.CALIBRATION)
                 self.__stop_calibration()
                 self.view.hide_button("Abort")
                 self.view.show_button("Stop Session")
