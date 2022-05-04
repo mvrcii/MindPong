@@ -1,30 +1,30 @@
 import threading, queue
 import time
-
+import matplotlib.pyplot as plt
 import numpy as np
 from scripts.algorithms import cursor_online_control, BCIC_dataset_loader as bdl
-import scripts.data.visualisation.liveplot
-from scripts.data.visualisation.liveplot_matlab import start_live_plot, connect_queue
+import scripts.data.visualisation.liveplot_matlab as liveplot_matplot
 
-# GLOBAL DATA
+# constants
 TMIN = 100.0  # Minimum time value shown in the following figures
 TMAX = 850.0  # Maximum time value shown in the following figures
-TS_SIZE = 1.0  # 1 s time slice
-TS_STEP = 0.2  # 50 ms in percentage
-SAMPLING_RATE = 250
+
+# GLOBAL DATA
 num_used_channels = 0
 mutex = threading.Lock
-SLIDING_WINDOW_SIZE_FACTOR = 5
 
 
+class ConfigData:
+    def __init__(self):
+        self.threshold = 1.5
+        self.f_min = 8
+        self.f_max = 12
+        self.window_size = 1.0
+        self.window_offset = 0.05
+        self.offset_in_percentage = self.window_size / self.window_offset / 100.0
+        self.sampling_rate = 250
+        self.draw_plot = True
 
-'''
-Sliding window SIZE: 
-    1 -> 200ms
-    2 -> 400ms
-    ...
-    5 -> 1s
-'''
 
 class QueueManager:
     def __init__(self):
@@ -78,34 +78,21 @@ def test_algorithm(chan_data, label_data, used_ch_names):
     - calculate und plot accuracy
     :return: None
     """
+    config = ConfigData()
     accuracy = 0
     found_label = False
     num_valid_sliding_windows = 0
-    n_slices = int((TMAX - TMIN - TS_SIZE) / TS_STEP)
+    n_slices = int((TMAX - TMIN - config.window_size) / config.offset_in_percentage)
     toff = np.zeros(n_slices, dtype=float)
     label = np.zeros(n_slices, dtype=int)
     for i in range(n_slices):
-        toff[i] = TMIN + i * TS_STEP
-        label[i] = label_data[int((TMIN + i * TS_STEP) * SAMPLING_RATE)]
-        start_idx = int(toff[i] * SAMPLING_RATE)
-        stop_idx = int(((toff[i] + TS_SIZE) * SAMPLING_RATE) - 1)
+        toff[i] = TMIN + i * config.offset_in_percentage
+        label[i] = label_data[int((TMIN + i * config.offset_in_percentage) * config.sampling_rate)]
+        start_idx = int(toff[i] * config.sampling_rate)
+        stop_idx = int(((toff[i] + config.window_size) * config.sampling_rate) - 1)
 
         # calls the one and only cursor control algorithm
-        calculated_label = cursor_online_control.perform_algorithm(chan_data[:, start_idx:stop_idx], used_ch_names, SAMPLING_RATE, queue_manager, offset_in_percentage=TS_STEP)
-        channel_0 = chan_data[0, start_idx:stop_idx]
-        channel_1 = chan_data[1, start_idx:stop_idx]
-        for sample in range(len(channel_0)):
-            try:
-                queue_manager.queue_c3.put(channel_0[sample], True)
-                queue_manager.queue_c4.put(channel_1[sample], True)
-            except queue.Full:
-                print('Queue is full')
-            # time.sleep(0.00008)
-
-        # try:
-        #     queue_manager.queue_label.put_nowait(label[i])
-        # except queue.Full:
-        #     pass
+        calculated_label = cursor_online_control.perform_algorithm(chan_data[:, start_idx:stop_idx], used_ch_names, config.sampling_rate, queue_manager, data_mdl=config, offset_in_percentage=config.offset_in_percentage)
 
         # compare the calculated label with the predefined label, if same -> increase accuracy
         if label[i] != -1:
@@ -127,19 +114,21 @@ def test_algorithm(chan_data, label_data, used_ch_names):
 
 
 def connect_queues():
-
-    # scripts.data.visualisation.liveplot.add_queue(('QUEUE_CLABEL', '#F1C40F', queue_manager.queue_c3_pow))
-    # scripts.data.visualisation.liveplot.add_queue(('QUEUE_LABEL', '#16A085', queue_manager.queue_c4_pow))
-    # scripts.data.visualisation.liveplot.add_queue(('QUEUE_HCON', '#9B59B6', queue_hcon))
-    connect_queue(queue_manager.queue_c3, 'raw', row=2, column=1, position=1)
-    connect_queue(queue_manager.queue_c4, 'raw', row=2, column=1, position=1)
-    connect_queue(queue_manager.queue_c3_pow, 'pow',row=2, column=1, position=2)
-    connect_queue(queue_manager.queue_c4_pow, 'pow', row=2, column=1, position=2)
+    """
+    Connects the queues of type queuemanager object which are
+    filled in the cursor control algorithm with an object in liveplot_matlab
+    in which a reference is stored, so that the queue can be emptied there.
+    """
+    liveplot_matplot.connect_queue(queue_manager.queue_c3_pow, 'pow', color='#0096db', row=3, column=1, position=1, name='C3 pow')
+    liveplot_matplot.connect_queue(queue_manager.queue_c4_pow, 'pow', color='#009d6b', row=3, column=1, position=1, name='C4 pow')
+    liveplot_matplot.connect_queue(queue_manager.queue_hcon, 'hcon', color='#f17a2c', row=3, column=1, position=2, name='hcon')
+    liveplot_matplot.connect_queue(queue_manager.queue_hcon_norm, 'hcon', color='#FFC107', row=3, column=1, position=2, name='hcon normalized')
+    liveplot_matplot.connect_queue(queue_manager.queue_clabel, 'label', color='#96669e', row=3, column=1, position=3, y_labels=['n', 'l', 'r'],name='calculated label')
 
 def sort_incoming_channels(sliding_window, used_ch_names):
 
     #                 'C3', 'Cz', 'C4', 'P3', 'Pz', 'P4', 'O1', 'O2', 'FC5', 'FC1', 'FC2', 'FC6', 'CP5', 'CP1', 'CP2', 'CP6'
-    ch_names_weight = [1,    0,    1,    0,    0,    0,    0,    0,     1,     1,     1,     1,     1,     1,     1,     1]
+    ch_names_weight = [1,    0,    1,    0,    0,    0,    0,    0,     1,     1,     1,     1,     1,     1,     1,    1]
 
     #                 'C3', 'Cz', 'C4', 'P3', '?', 'P4', 'T3', '?', '?', 'F3', 'F4', '?', '?', '?', '?', 'T4'
     ch_names_weight = [1,    1,    1,    1,    0,    1,    1,   0,   0,   1,    1,    0,   0,   0,   0,    1]
@@ -172,8 +161,17 @@ def test_algorithm_with_dataset():
 
 if __name__ == '__main__':
     print('CCA-test main started ...')
+    fig = plt.Figure()
+    plt.ion()
+    liveplot_matplot.start_live_plot(fig)
+    liveplot_matplot.initial_draw()
     queue_manager = QueueManager()
     threading.Thread(target=test_algorithm_with_dataset, daemon=True).start()
-    # scripts.data.visualisation.liveplot.start_liveplot()
-    start_live_plot(queue_manager, 0.00001)
+    plt.show()
+    while True:
+        liveplot_matplot.perform_live_plot()
+        plt.pause(.001)
+
+
+
 
