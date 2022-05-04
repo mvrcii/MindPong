@@ -21,6 +21,7 @@ class Controller(ABC):
 class ConfigController(Controller):
     def __init__(self, master=None) -> None:
         self.master = master
+        self.root = master.master
         self.view = None
         self.data = None
 
@@ -30,7 +31,7 @@ class ConfigController(Controller):
     def bind(self, view: ConfigView):
         self.view = view
         self.view.create_view()
-        self.data = self.master.data_model
+        self.data = self.root.data_model
 
         self.__init_config_view_values()
         self.view.reset_view()
@@ -89,7 +90,7 @@ class ConfigController(Controller):
                 self.__stop_calibration()
                 self.view.hide_button("Abort")
                 self.view.show_button("Stop Session")
-                self.master.game_window.game_controller.start_game()
+                self.root.game_window.game_controller.start_game()
 
     def __stop_calibration(self):
         """Stops the calibration"""
@@ -116,13 +117,13 @@ class ConfigController(Controller):
             self.view.hide_button("Start Session")
             self.__start_calibration()
             self.__start_liveplot()
-            self.master.create_game_window()
+            self.root.create_game_window()
 
     def __stop_session(self):
         """Stops the current session and changes the view according to the amount of recorded trials."""
         answer = askyesno(title="Confirmation", message="Are you sure that you want to stop the session?")
         if answer:
-            self.master.game_window.game_controller.show_end_screen()
+            self.root.game_window.game_controller.show_end_screen()
             self.view.hide_button("Stop Session")
             self.view.show_plot(False)
             self.data.draw_plot = False
@@ -156,7 +157,7 @@ class ConfigController(Controller):
 
         save_session(meta_data.turn_into_np_array(), file_name)
         showinfo("Information", "Successfully saved the session.")
-        self.master.destroy_game_window()
+        self.root.destroy_game_window()
         self.view.reset_view()
 
     def __discard_session(self):
@@ -164,7 +165,7 @@ class ConfigController(Controller):
         from scripts.data.extraction.trial_handler import reset_data
         reset_data()
         self.view.reset_view()
-        self.master.destroy_game_window()
+        self.root.destroy_game_window()
 
     def __start_liveplot(self):
         """Binds the plot figure to the liveplot script and shows the plot if the toggle is activated"""
