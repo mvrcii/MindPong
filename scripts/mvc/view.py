@@ -77,6 +77,14 @@ class ConfigView(View):
         self.hide_button("Abort")
         self.show_button("Start Session", row=0, column=0)
         self.__clear_comment_box()
+        self.show_trial_recording_check_button()
+
+    def show_trial_recording_check_button(self):
+        from scripts.data.acquisition.read_data import live_Data
+        if live_Data:
+            self.check_buttons["Trial Recording"].grid(row=1, column=0)
+        else:
+            self.check_buttons["Trial Recording"].grid_forget()
 
     def enable_inputs(self):
         """Helper function to enable the input fields"""
