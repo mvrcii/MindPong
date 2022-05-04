@@ -194,9 +194,13 @@ class Player:
         (2) Stops movement of the player
         :return: int: calculated velocity
         """
-        hit_right = self.pos[2] + (self.velocity_x_axis * self.speed_factor) >= self.canvas_width
-        hit_left = self.pos[0] + (self.velocity_x_axis * self.speed_factor) <= 0
+        hit_right = self.pos[2] + (self.velocity_x_axis * self.speed_factor * 2) >= self.canvas_width
+        hit_left = self.pos[0] + (self.velocity_x_axis * self.speed_factor * 2) <= 0
         if (hit_left and (self.direction == -1)) or (hit_right and (self.direction == 1)):
+            if hit_left:
+                self.canvas.moveto(self.id, 0, self.y_pos)
+            else:
+                self.canvas.moveto(self.id, self.canvas_width - self.width, self.y_pos)
             self.velocity_x_axis = 0
             self.velocity = 0
         else:
@@ -209,16 +213,20 @@ class Player:
         (1) Detects if target is hit
         (2) Initiates the handling of the hit
         """
-        hit_from_right = self.target.pos[0] <= self.pos[2] + (self.velocity_x_axis * self.speed_factor) <= \
+        hit_from_left = self.target.pos[0] <= self.pos[2] + (self.velocity_x_axis * self.speed_factor) <= \
                          self.target.pos[2]
-        hit_from_left = self.target.pos[2] >= self.pos[0] + (self.velocity_x_axis * self.speed_factor) >= \
+        hit_from_right = self.target.pos[2] >= self.pos[0] + (self.velocity_x_axis * self.speed_factor) >= \
                         self.target.pos[0]
         if hit_from_left or hit_from_right:
             self.root.change(game.Hit)
-            if hit_from_left:
+            if hit_from_right:
+                vorher = self.pos[1]
                 self.canvas.moveto(self.id, self.target.pos[2], self.y_pos)
+                print(f"rechts vorher {vorher} nachher {self.pos[1]}")
             else:
+                vorher = self.pos[1]
                 self.canvas.moveto(self.id, self.target.pos[0] - self.width, self.y_pos)
+                print(f"links vorher {vorher} nachher {self.pos[1]}")
             self.velocity_x_axis = 0
             self.velocity = 0
         else:
