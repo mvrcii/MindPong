@@ -67,7 +67,7 @@ class ConfigWindow(tk.Frame):
         self.rowconfigure(0, weight=1)
         self.grid(row=0, column=0, sticky='nsew')
 
-        self.config_controller = ConfigController(self.master)
+        self.config_controller = ConfigController(self)
         self.config_view = ConfigView(master)
         self.config_controller.bind(self.config_view)
 
@@ -88,11 +88,10 @@ class GameWindow(tk.Toplevel):
                 ctypes.windll.user32.SetProcessDPIAware()
 
         # Window settings
-        self.title("Game")
         self.minsize(config.WINDOW_WIDTH, config.WINDOW_HEIGHT)
         self.resizable(False, False)
 
-        self.game_controller = GameController(self.master)  # Create Controller
+        self.game_controller = GameController(self)  # Create Controller
         self.game_view = GameView(self)  # Create View
         self.game_controller.bind(self.game_view)  # Bind View to Controller
 
