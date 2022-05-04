@@ -36,6 +36,7 @@ class ConfigController(Controller):
         self.__init_config_view_values()
         self.view.reset_view()
 
+        self.view.buttons["Connect Board"].configure(command=self.__connect_board)
         self.view.buttons["Start Session"].configure(command=self.__start_session)
         self.view.buttons["Stop Session"].configure(command=self.__stop_session)
         self.view.buttons["Save Session"].configure(command=self.__save_session)
@@ -105,6 +106,15 @@ class ConfigController(Controller):
             from scripts.data.acquisition.read_data import stop_stream
             stop_stream()
             self.__discard_session()
+
+    def __connect_board(self):
+        """ Creates the connection to the board"""
+        from scripts.data.acquisition.read_data import init_board
+        if init_board():
+            self.view.hide_button("Connect Board")
+            self.view.show_button("Start Session")
+        else:
+            showinfo("Warning", "Connection failed. Try again.")
 
     def __start_session(self):
         """Starts the session, if the input fields are valid, by disabling the input fields, starting the game
