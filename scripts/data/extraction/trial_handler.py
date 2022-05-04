@@ -55,7 +55,6 @@ def mark_trial(start: float, end: float, label: Labels):
     """
     global start_time, count_trials, count_event_types
     pos = round((start - start_time) / TIME_FOR_ONE_SAMPLE)
-    print(pos)
     duration = round((end - start) / TIME_FOR_ONE_SAMPLE)
     event_duration.append(duration)
     if label not in event_type:
