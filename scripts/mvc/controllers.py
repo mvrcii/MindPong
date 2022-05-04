@@ -59,7 +59,6 @@ class ConfigController(Controller):
         self.view.spin_boxes["trial_min_duration"].set(self.data.trial_min_duration)
         self.view.check_button_vars["Trial Recording"].set(self.data.trial_recording)
 
-
     def update(self):
         self.__update_calibration()
 
@@ -174,9 +173,8 @@ class ConfigController(Controller):
 
     def __discard_session(self):
         """Discards the current session."""
-        from scripts.data.extraction.trial_handler import reset_counters
-        reset_counters()
         self.view.reset_view()
+        self.__clear_global_variables()
         self.master.destroy_game_window()
 
     def __start_liveplot(self):
@@ -360,6 +358,14 @@ class ConfigController(Controller):
 
     def __on_valid(self, label):
         self.view.labels[label].config(foreground='black')
+
+    @staticmethod
+    def __clear_global_variables():
+        """Clears the global variables"""
+        from scripts.data.extraction.trial_handler import reset_counters
+        from scripts.algorithms.cursor_online_control import clear_ring_buffer
+        reset_counters()
+        clear_ring_buffer()
 
 
 class GameController(Controller):
