@@ -72,7 +72,6 @@ def get_channel_rawdata(session_path: str, ch_names: List[str] = None):
         chan_label[event_pos[i]:event_pos[i] + event_dur[i]] = event_type.value
         # Left hand          0
         # Right hand         1
-        # Eyes open          2
-        # Eyes closed        3
+        # Calibration        2
         # Unknown           -1
     return chan_data, chan_label
