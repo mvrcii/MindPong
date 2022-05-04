@@ -356,7 +356,7 @@ class GameController(Controller):
 
     def bind(self, view: GameView):
         self.view = view
-        self.view.bind_data(self.master.data_model)
+        self.view.bind_data(self.master.master.data_model)
         self.view.create_view()
 
     def start_game(self):
