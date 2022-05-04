@@ -190,10 +190,8 @@ def handle_samples(chan_data=None):
             else:
                 continue
             # only sends trial_handler raw data if trial recording is wished
-        if data_model.trial_recording:
+        if data_model.trial_recording and live_Data:
             if first_data:
-                trial_handler.NUMBER_CHANNELS = NUMBER_CHANNELS
-                trial_handler.raw_data = [[] for _ in range(NUMBER_CHANNELS)]
                 trial_handler.send_raw_data(data, start=time.time())
                 first_data = False
             else:
