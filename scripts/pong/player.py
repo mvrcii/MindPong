@@ -154,9 +154,11 @@ class Player:
 
     def draw(self):
         """Draw the player"""
-
+        vorher = self.pos[0]
         self.canvas.move(self.id, self.velocity_x_axis * self.speed_factor, 0)
         self.pos = self.canvas.coords(self.id)
+        if self.pos[0] <= 0:
+            print("Vorher: ", vorher, "Nacher: ", self.pos[0])
 
     def reset(self):
         """Reset the player"""
