@@ -254,9 +254,9 @@ def stop_stream():
     """Stops the data stream and the releases session"""
     global stream_available
     stream_available = False
-    if live_Data and 'board' in globals():
-            board.stop_stream()
-            board.release_session()
+    if live_Data:
+        board.stop_stream()
+        board.release_session()
 
 
 if __name__ == '__main__':
