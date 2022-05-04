@@ -11,7 +11,7 @@ import brainflow
 from brainflow.board_shim import BoardShim, BrainFlowInputParams, BrainFlowError
 
 from scripts.data.loader.game_dataset_loader import get_channel_rawdata
-from scripts.data.visualisation.liveplot_matlab import connect_queue, remove_all_plots
+from scripts.data.visualisation.liveplot_matlab import connect_queue, remove_all_plots, initial_draw
 from scripts.mvc.models import ConfigData
 from scripts.data.extraction import trial_handler
 import scripts.config as config
@@ -54,7 +54,8 @@ OFFSET_DURATION: float  # size of offset in s between two consecutive sliding wi
 OFFSET_SAMPLES: int  # size of offset in amount of samples, *8ms for time
 
 NUMBER_CHANNELS = len(BoardShim.get_eeg_channels(
-    brainflow.board_shim.BoardIds.CYTON_DAISY_BOARD)) if live_Data else len(['C3', 'Cz', 'C4', 'P3', 'P4', 'T3', 'F3', 'F4', 'T4'])
+    brainflow.board_shim.BoardIds.CYTON_DAISY_BOARD)) if live_Data else len(
+    ['C3', 'Cz', 'C4', 'P3', 'P4', 'T3', 'F3', 'F4', 'T4'])
 
 # global variables
 allow_window_creation = True
@@ -75,6 +76,7 @@ def connect_queues():
     connect_queue(queue_manager.queue_hcon, 'hcon', color='#f17a2c', row=3, column=1, position=2, name='hcon')
     connect_queue(queue_manager.queue_hcon_norm, 'hcon', color='#FFC107', row=3, column=1, position=2, name='hcon normalized')
     connect_queue(queue_manager.queue_clabel, 'label', color='#96669e', row=3, column=1, position=3, y_labels=['n', 'l', 'r'],name='calculated label')
+    initial_draw()
 
 
 def init(data_mdl):
@@ -118,7 +120,6 @@ def init_board():
     if live_Data:
         params = BrainFlowInputParams()
         params.serial_port = search_port()
-
 
         """"
         while not scripts.data.visualisation.liveplot.is_window_ready:
@@ -174,17 +175,22 @@ def search_port():
     return None
 
 
-def handle_samples(chan_data=None, label_data=None, chan_labels=None):
-    """Reads EEG data from port, sends it to trial_handler and writes into in the window_buffer"""
+def handle_samples(chan_data=None):
+    """
+    Reads EEG data from port, sends it to trial_handler and writes into in the window_buffer
+    :param float[] chan_data: raw data from recorded Sessions
+    """
     global first_window, window_buffer, allow_window_creation, first_data
     count_samples = 0
-    index_test = 0
-    while (stream_available and data_model.session_recording) or len(chan_data[0]) > index_test:
+    sample_index = 0
+
+    while (stream_available and data_model.session_recording) or (
+            chan_data is not None and len(chan_data[0]) > sample_index):
         if chan_data is not None:
             data = np.ndarray((len(chan_data), 1))
-            for index, i in enumerate(chan_data[:, index_test]):
-                data[index, 0] = i
-            index_test += 1
+            for channel_index, samples in enumerate(chan_data[:, sample_index]):
+                data[channel_index, 0] = samples
+            sample_index += 1
             time.sleep(0.008)
         else:
             data = board.get_board_data(1)[board.get_eeg_channels(
@@ -193,7 +199,7 @@ def handle_samples(chan_data=None, label_data=None, chan_labels=None):
                 # filter data
                 for channel in range(NUMBER_CHANNELS):
                     brainflow.DataFilter.perform_bandstop(data[channel], SAMPLING_RATE, 0.0, 50.0, 5,
-                                                      brainflow.FilterTypes.BUTTERWORTH.value, 0)
+                                                          brainflow.FilterTypes.BUTTERWORTH.value, 0)
             else:
                 continue
             # only sends trial_handler raw data if trial recording is wished
@@ -204,8 +210,8 @@ def handle_samples(chan_data=None, label_data=None, chan_labels=None):
             else:
                 trial_handler.send_raw_data(data)
         if allow_window_creation:
-            for i in range(len(data)):
-                window_buffer[i].extend(data[i])
+            for samples in range(len(data)):
+                window_buffer[samples].extend(data[samples])
             count_samples += 1
             if first_window and count_samples == SLIDING_WINDOW_SAMPLES:
                 first_window = False
@@ -219,7 +225,7 @@ def handle_samples(chan_data=None, label_data=None, chan_labels=None):
 
 
 def sort_channels(sliding_window, used_ch_names):
-
+    """Filters and sorts the data channels for the algorithm"""
     filtered_sliding_window = list()
     filtered_channel_names = list()
     for i in range(len(used_ch_names)):
@@ -260,8 +266,9 @@ def stop_stream():
     """Stops the data stream and the releases session"""
     global stream_available
     stream_available = False
-    board.stop_stream()
-    board.release_session()
+    if live_Data:
+        board.stop_stream()
+        board.release_session()
 
 
 if __name__ == '__main__':

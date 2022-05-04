@@ -133,6 +133,12 @@ def remove_all_plots():
         plots = dict()
 
 
+def initial_draw():
+    global fig
+    if fig:
+        fig.canvas.draw()
+
+
 def connect_queue(queue: queue.Queue, plot_label, row: int, color: str, name: str, column: int, position: int, y_labels:list = None):
     """
     Creates a PlotData object for the queue and assigns the queue to a subplot.
