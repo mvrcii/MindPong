@@ -65,8 +65,6 @@ def mark_trial(start: float, end: float, label: Labels):
     count_trials += 1
     print("Start-Time: ", start, "End-Time: ", end, "Label: ", label.name)
     print("Finished storing")
-    # for i in raw_data:
-    #    print(i[pos:pos+duration])
 
 
 def create_raw_data_array() -> np.ndarray:
