@@ -62,6 +62,7 @@ allow_window_creation = True
 first_window = True
 first_data = True
 stream_available = False  # indicates if stream is available
+
 board: BoardShim
 window_buffer: RingBuffer
 data_model: ConfigData
@@ -74,8 +75,10 @@ def connect_queues():
     connect_queue(queue_manager.queue_c3_pow, 'pow', color='#0096db', row=3, column=1, position=1, name='C3 pow')
     connect_queue(queue_manager.queue_c4_pow, 'pow', color='#009d6b', row=3, column=1, position=1, name='C4 pow')
     connect_queue(queue_manager.queue_hcon, 'hcon', color='#f17a2c', row=3, column=1, position=2, name='hcon')
-    connect_queue(queue_manager.queue_hcon_norm, 'hcon', color='#FFC107', row=3, column=1, position=2, name='hcon normalized')
-    connect_queue(queue_manager.queue_clabel, 'label', color='#96669e', row=3, column=1, position=3, y_labels=['n', 'l', 'r'],name='calculated label')
+    connect_queue(queue_manager.queue_hcon_norm, 'hcon', color='#FFC107', row=3, column=1, position=2,
+                  name='hcon normalized')
+    connect_queue(queue_manager.queue_clabel, 'label', color='#96669e', row=3, column=1, position=3,
+                  y_labels=['n', 'l', 'r'], name='calculated label')
     initial_draw()
 
 
@@ -129,6 +132,7 @@ def init(data_mdl):
         path = '../scripts/data/session/' + session_file_name
         chan_labels = ['C3', 'Cz', 'C4', 'P3', 'P4', 'T3', 'F3', 'F4', 'T4']
         chan_data, label_data = get_channel_rawdata(session_path=path, ch_names=chan_labels)
+        stream_available = True
         handle_samples(chan_data)
 
 
@@ -168,8 +172,7 @@ def handle_samples(chan_data=None):
     count_samples = 0
     sample_index = 0
 
-    while (stream_available and data_model.session_recording) or (
-            chan_data is not None and len(chan_data[0]) > sample_index):
+    while stream_available and (live_Data or len(chan_data[0]) > sample_index):
         if chan_data is not None:
             data = np.ndarray((len(chan_data), 1))
             for channel_index, samples in enumerate(chan_data[:, sample_index]):
@@ -189,6 +192,8 @@ def handle_samples(chan_data=None):
             # only sends trial_handler raw data if trial recording is wished
         if data_model.trial_recording:
             if first_data:
+                trial_handler.NUMBER_CHANNELS = NUMBER_CHANNELS
+                trial_handler.raw_data = [[] for _ in range(NUMBER_CHANNELS)]
                 trial_handler.send_raw_data(data, start=time.time())
                 first_data = False
             else:
@@ -249,9 +254,9 @@ def stop_stream():
     """Stops the data stream and the releases session"""
     global stream_available
     stream_available = False
-    if live_Data:
-        board.stop_stream()
-        board.release_session()
+    if live_Data and 'board' in globals():
+            board.stop_stream()
+            board.release_session()
 
 
 if __name__ == '__main__':

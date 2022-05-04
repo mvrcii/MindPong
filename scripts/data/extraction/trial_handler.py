@@ -13,12 +13,13 @@ class Labels(Enum):
     RIGHT = 1
     CALIBRATION = 2
 
+
 NUMBER_CHANNELS = len(BoardShim.get_eeg_channels(brainflow.board_shim.BoardIds.CYTON_DAISY_BOARD))
 
 # time which is needed for one sample in s, T = 1/f = 1/125 = 0.008
 TIME_FOR_ONE_SAMPLE = 1 / BoardShim.get_sampling_rate(brainflow.board_shim.BoardIds.CYTON_DAISY_BOARD)
 
-raw_data = [[] for _ in range(NUMBER_CHANNELS)]
+raw_data = []
 event_type = []
 event_pos = []
 event_duration = []
@@ -65,7 +66,7 @@ def mark_trial(start: float, end: float, label: Labels):
     print("Start-Time: ", start, "End-Time: ", end, "Label: ", label.name)
     print("Finished storing")
     for i in raw_data:
-        print(i[pos:pos+duration])
+        print(i[pos:pos + duration])
 
 
 def create_raw_data_array() -> np.ndarray:
