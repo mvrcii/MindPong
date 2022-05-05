@@ -71,11 +71,12 @@ class ConfigView(View):
         """Sets the view """
         self.enable_inputs()
         self.show_plot(False)
+        self.hide_button("Start Session")
         self.hide_button("Stop Session")
         self.hide_button("Save Session")
         self.hide_button("Discard Session")
         self.hide_button("Abort")
-        self.show_button("Start Session", row=0, column=0)
+        self.show_button("Connect Board", row=0, column=0)
         self.__clear_comment_box()
         self.show_trial_recording_check_button()
 
@@ -188,6 +189,7 @@ class ConfigView(View):
         self.__create_button(button_frame, "Save Session")
         self.__create_button(button_frame, "Discard Session")
         self.__create_button(button_frame, "Abort")
+        self.__create_button(button_frame, "Connect Board")
 
         # Progress bar
         self.progress_bar_frame = ttk.LabelFrame(button_frame, text="Calibration Timer")
