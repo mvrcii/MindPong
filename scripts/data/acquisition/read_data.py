@@ -38,7 +38,7 @@ class QueueManager:
 
 
 # constants
-live_Data = True  # boolean to replay a recorded session with session_file_name as file name
+live_Data = False# boolean to replay a recorded session with session_file_name as file name
 session_file_name = 'session-1-01052022-091646.npz'
 
 SAMPLING_RATE = BoardShim.get_sampling_rate(brainflow.board_shim.BoardIds.CYTON_DAISY_BOARD) if live_Data else 125
@@ -107,6 +107,8 @@ def init(data_mdl):
         path = '../scripts/data/session/' + session_file_name
         chan_labels = ['C3', 'Cz', 'C4', 'P3', 'P4', 'T3', 'F3', 'F4', 'T4']
         chan_data, label_data = get_channel_rawdata(session_path=path, ch_names=chan_labels)
+        global stream_available
+        stream_available = True
         handle_samples(chan_data)
 
 def init_board():
@@ -184,7 +186,6 @@ def handle_samples(chan_data=None):
     global first_window, window_buffer, allow_window_creation, first_data
     count_samples = 0
     sample_index = 0
-
     while stream_available and (live_Data or len(chan_data[0]) > sample_index):
         if chan_data is not None:
             data = np.ndarray((len(chan_data), 1))
