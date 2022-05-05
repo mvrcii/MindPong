@@ -9,7 +9,8 @@ from scripts.pong.game import End
 from scripts.data.extraction.trial_handler import save_session
 from scripts.mvc.models import MetaData
 from datetime import datetime
-from scripts.data.visualisation.liveplot_matlab import start_live_plot, perform_live_plot, queues
+from scripts.data.visualisation.liveplot_matlab import start_live_plot, perform_live_plot
+from scripts.data.acquisition.read_data import live_Data
 
 
 class Controller(ABC):
@@ -27,6 +28,7 @@ class ConfigController(Controller):
 
         self.valid_form = True
         self.calibration_timer = 0
+        self.session_start_time = None
 
     def bind(self, view: ConfigView):
         self.view = view
@@ -125,9 +127,15 @@ class ConfigController(Controller):
         if self.valid_form:
             self.view.disable_inputs()
             self.view.hide_button("Start Session")
-            self.__start_calibration()
+            self.session_start_time = datetime.now()
             self.__start_liveplot()
             self.root.create_game_window()
+
+            if live_Data:
+                self.__start_calibration()
+            else:
+                self.view.show_button("Stop Session")
+                self.root.game_window.game_controller.start_game()
 
     def __stop_session(self):
         """Stops the current session and changes the view according to the amount of recorded trials."""
@@ -140,7 +148,7 @@ class ConfigController(Controller):
             from scripts.data.acquisition.read_data import stop_stream
             stop_stream()
             # Only allow saving if trial recording is turned on
-            if self.data.trial_recording:
+            if self.data.trial_recording and live_Data:
                 from scripts.data.extraction.trial_handler import count_trials
                 if count_trials > 0:
                     self.view.show_button("Discard Session")
@@ -149,6 +157,9 @@ class ConfigController(Controller):
                 else:
                     showinfo("Information", "There are no trials to save.")
                     self.__discard_session()
+            elif not live_Data:
+                showinfo("Information", "A session replay cannot be saved.")
+                self.__discard_session()
             else:
                 self.__discard_session()
 
@@ -161,10 +172,11 @@ class ConfigController(Controller):
         self.__set_comment()
         from scripts.data.extraction.trial_handler import count_trials, count_event_types
         meta_data = MetaData(sid=self.data.subject_id, age=self.data.subject_age, sex=self.data.subject_sex,
-                             comment=self.data.comment, amount_events=count_event_types, amount_trials=count_trials,
+                             time=self.session_start_time.time(), comment=self.data.comment,
+                             amount_events=count_event_types, amount_trials=count_trials,
                              channel_mapping=BCI_CHANNELS)
         print(meta_data.__str__())
-        file_name = "session-%s-%s" % (self.data.subject_id, datetime.now().strftime("%d%m%Y-%H%M%S"))
+        file_name = "session-%s-%s" % (self.data.subject_id, self.session_start_time.strftime("%d%m%Y-%H%M%S"))
 
         save_session(meta_data.turn_into_np_array(), file_name)
         showinfo("Information", "Successfully saved the session.")
@@ -173,9 +185,8 @@ class ConfigController(Controller):
 
     def __discard_session(self):
         """Discards the current session."""
-        from scripts.data.extraction.trial_handler import reset_data
-        reset_data()
         self.view.reset_view()
+        self.__clear_global_variables()
         self.root.destroy_game_window()
 
     def __start_liveplot(self):
@@ -359,6 +370,14 @@ class ConfigController(Controller):
 
     def __on_valid(self, label):
         self.view.labels[label].config(foreground='black')
+
+    @staticmethod
+    def __clear_global_variables():
+        """Clears the global variables"""
+        from scripts.data.extraction.trial_handler import reset_data
+        from scripts.algorithms.cursor_online_control import clear_ring_buffer
+        reset_data()
+        clear_ring_buffer()
 
 
 class GameController(Controller):

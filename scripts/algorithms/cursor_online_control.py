@@ -204,6 +204,11 @@ def manage_ringbuffer(window_size, offset_in_percentage:float):
     return ringbuffer_hcon
 
 
+def clear_ring_buffer():
+    global ringbuffer_hcon
+    ringbuffer_hcon = None
+
+
 def perform_algorithm(sliding_window, used_ch_names, sample_rate, queue_manager:QueueManager, data_mdl, offset_in_percentage=0.2):
     """
     Converts a sliding window into the corresponding horizontal movement
