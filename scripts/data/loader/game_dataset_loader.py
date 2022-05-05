@@ -1,5 +1,6 @@
 """
 Based on bcic_data_loading.py
+Script to read npz files from MindPong and converting them in a Format for the ML-BCI-framework
 """
 
 from typing import List

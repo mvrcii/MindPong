@@ -1,5 +1,3 @@
-import queue
-import threading
 import platform
 import time
 import numpy as np
@@ -11,31 +9,12 @@ import brainflow
 from brainflow.board_shim import BoardShim, BrainFlowInputParams, BrainFlowError
 
 from scripts.data.loader.game_dataset_loader import get_channel_rawdata
-from scripts.data.visualisation.liveplot_matlab import connect_queue, remove_all_plots, initial_draw
 from scripts.mvc.models import ConfigData
 from scripts.data.extraction import trial_handler
+import scripts.data.acquisition.QueueManager as QueueManager
 import scripts.config as config
 
-
-class QueueManager:
-    def __init__(self):
-        self.queue_label = queue.Queue(100)
-        self.queue_clabel = queue.Queue(100)
-
-        self.queue_c3_pow = queue.Queue(100)
-        self.queue_c4_pow = queue.Queue(100)
-
-        self.queue_hcon = queue.Queue(100)
-        self.queue_hcon_norm = queue.Queue(100)
-
-    def clear_all_queues(self):
-        self.queue_label.queue.clear()
-        self.queue_clabel.queue.clear()
-        self.queue_c3_pow.queue.clear()
-        self.queue_c4_pow.queue.clear()
-        self.queue_hcon.queue.clear()
-        self.queue_hcon_norm.queue.clear()
-
+""" Script to read Data from the OpenBci-Headset and creating the Sliding-Windows """
 
 # constants
 live_Data = False  # boolean to replay a recorded session with session_file_name as file name
@@ -47,8 +26,7 @@ SAMPLING_RATE = BoardShim.get_sampling_rate(brainflow.board_shim.BoardIds.CYTON_
 TIME_FOR_ONE_SAMPLE = 1 / SAMPLING_RATE
 
 SLIDING_WINDOW_DURATION: float  # size of sliding window in s
-# size of sliding window in amount of samples, *8ms for time
-SLIDING_WINDOW_SAMPLES: int
+SLIDING_WINDOW_SAMPLES: int  # size of sliding window in amount of samples, *8ms for time
 
 OFFSET_DURATION: float  # size of offset in s between two consecutive sliding windows
 OFFSET_SAMPLES: int  # size of offset in amount of samples, *8ms for time
@@ -65,18 +43,8 @@ stream_available = False  # indicates if stream is available
 board: BoardShim
 window_buffer: RingBuffer
 data_model: ConfigData
-queue_manager = QueueManager()
 
-
-def connect_queues():
-    queue_manager.clear_all_queues()
-    remove_all_plots()
-    connect_queue(queue_manager.queue_c3_pow, 'pow', color='#0096db', row=3, column=1, position=1, name='C3 pow')
-    connect_queue(queue_manager.queue_c4_pow, 'pow', color='#009d6b', row=3, column=1, position=1, name='C4 pow')
-    connect_queue(queue_manager.queue_hcon, 'hcon', color='#f17a2c', row=3, column=1, position=2, name='hcon')
-    connect_queue(queue_manager.queue_hcon_norm, 'hcon', color='#FFC107', row=3, column=1, position=2, name='hcon normalized')
-    connect_queue(queue_manager.queue_clabel, 'label', color='#96669e', row=3, column=1, position=3, y_labels=['n', 'l', 'r'],name='calculated label')
-    initial_draw()
+queue_manager = QueueManager.QueueManager()
 
 
 def init(data_mdl):
@@ -88,7 +56,7 @@ def init(data_mdl):
     (3) starts the data acquisition
     :param Any data_mdl: data model object
     """
-    connect_queues()
+    queue_manager.connect_queues()
     global data_model, first_window
     data_model = data_mdl
     first_window = True
@@ -101,12 +69,16 @@ def init(data_mdl):
     window_buffer = [RingBuffer(capacity=SLIDING_WINDOW_SAMPLES, dtype=float) for _ in range(NUMBER_CHANNELS)]
 
     if live_Data:
-        handle_samples()
+        try:
+            handle_samples()
+        except BrainFlowError as err:
+            print(err.args[0])
     else:
         path = '../scripts/data/session/' + session_file_name
         chan_labels = ['C3', 'Cz', 'C4', 'P3', 'P4', 'T3', 'F3', 'F4', 'T4']
         chan_data, label_data = get_channel_rawdata(session_path=path, ch_names=chan_labels)
         handle_samples(chan_data)
+
 
 def init_board():
     """
@@ -120,14 +92,6 @@ def init_board():
     if live_Data:
         params = BrainFlowInputParams()
         params.serial_port = search_port()
-
-        """"
-        while not scripts.data.visualisation.liveplot.is_window_ready:
-            # wait until plot window is initialized
-            time.sleep(0.05)
-        
-        connect_queues()
-        """
 
         if params.serial_port is not None:
             # BoardShim.enable_dev_board_logger()
@@ -145,7 +109,6 @@ def init_board():
             print('Port not found')
             return False
     return True
-
 
 
 def search_port():
@@ -272,5 +235,4 @@ def stop_stream():
 
 
 if __name__ == '__main__':
-    print('read_data main started ...')
-    threading.Thread(target=init, daemon=True).start()
+    pass
