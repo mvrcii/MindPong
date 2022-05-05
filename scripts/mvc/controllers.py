@@ -2,7 +2,7 @@ import time
 from abc import ABC, abstractmethod
 from tkinter.messagebox import askyesno, showinfo
 
-from scripts.config import CALIBRATION_TIME
+from scripts.config import CALIBRATION_TIME, BCI_CHANNELS
 from scripts.data.extraction import trial_handler
 from scripts.mvc.view import View, ConfigView, GameView
 from scripts.pong.game import End
@@ -36,6 +36,7 @@ class ConfigController(Controller):
         self.__init_config_view_values()
         self.view.reset_view()
 
+        self.view.buttons["Connect Board"].configure(command=self.__connect_board)
         self.view.buttons["Start Session"].configure(command=self.__start_session)
         self.view.buttons["Stop Session"].configure(command=self.__stop_session)
         self.view.buttons["Save Session"].configure(command=self.__save_session)
@@ -106,6 +107,15 @@ class ConfigController(Controller):
             stop_stream()
             self.__discard_session()
 
+    def __connect_board(self):
+        """ Creates the connection to the board"""
+        from scripts.data.acquisition.read_data import init_board
+        if init_board():
+            self.view.hide_button("Connect Board")
+            self.view.show_button("Start Session")
+        else:
+            showinfo("Warning", "Connection failed. Try again.")
+
     def __start_session(self):
         """Starts the session, if the input fields are valid, by disabling the input fields, starting the game
         window and the liveplot."""
@@ -151,7 +161,8 @@ class ConfigController(Controller):
         self.__set_comment()
         from scripts.data.extraction.trial_handler import count_trials, count_event_types
         meta_data = MetaData(sid=self.data.subject_id, age=self.data.subject_age, sex=self.data.subject_sex,
-                             comment=self.data.comment, amount_events=count_event_types, amount_trials=count_trials)
+                             comment=self.data.comment, amount_events=count_event_types, amount_trials=count_trials,
+                             channel_mapping=BCI_CHANNELS)
         print(meta_data.__str__())
         file_name = "session-%s-%s" % (self.data.subject_id, datetime.now().strftime("%d%m%Y-%H%M%S"))
 
