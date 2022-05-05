@@ -11,7 +11,7 @@ from brainflow.board_shim import BoardShim, BrainFlowInputParams, BrainFlowError
 from scripts.data.loader.game_dataset_loader import get_channel_rawdata
 from scripts.mvc.models import ConfigData
 from scripts.data.extraction import trial_handler
-import scripts.data.acquisition.QueueManager as QueueManager
+from scripts.data.acquisition.QueueManager import QueueManager
 import scripts.config as config
 
 """ Script to read Data from the OpenBci-Headset and creating the Sliding-Windows """
@@ -44,7 +44,7 @@ board: BoardShim
 window_buffer: RingBuffer
 data_model: ConfigData
 
-queue_manager = QueueManager.QueueManager()
+queue_manager = QueueManager()
 
 
 def init(data_mdl):
