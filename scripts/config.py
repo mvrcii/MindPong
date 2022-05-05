@@ -18,7 +18,7 @@ CALIBRATION_TIME = 30  # in seconds
 
 # Loader
 NOTCH_FILTER_FREQ: float = 50
-NOTCH_FILTER = True
+NOTCH_FILTER = False
 
 # Read Data
 SESSION_RECORDING = True

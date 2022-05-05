@@ -38,8 +38,8 @@ class QueueManager:
 
 
 # constants
-live_Data = True  # boolean to replay a recorded session with session_file_name as file name
-session_file_name = 'session-1-01052022-091646.npz'
+live_Data = False  # boolean to replay a recorded session with session_file_name as file name
+session_file_name = 'session-1-01052022-161124.npz'
 
 SAMPLING_RATE = BoardShim.get_sampling_rate(brainflow.board_shim.BoardIds.CYTON_DAISY_BOARD) if live_Data else 125
 
@@ -75,10 +75,8 @@ def connect_queues():
     connect_queue(queue_manager.queue_c3_pow, 'pow', color='#0096db', row=3, column=1, position=1, name='C3 pow')
     connect_queue(queue_manager.queue_c4_pow, 'pow', color='#009d6b', row=3, column=1, position=1, name='C4 pow')
     connect_queue(queue_manager.queue_hcon, 'hcon', color='#f17a2c', row=3, column=1, position=2, name='hcon')
-    connect_queue(queue_manager.queue_hcon_norm, 'hcon', color='#FFC107', row=3, column=1, position=2,
-                  name='hcon normalized')
-    connect_queue(queue_manager.queue_clabel, 'label', color='#96669e', row=3, column=1, position=3,
-                  y_labels=['n', 'l', 'r'], name='calculated label')
+    connect_queue(queue_manager.queue_hcon_norm, 'hcon', color='#FFC107', row=3, column=1, position=2, name='hcon normalized')
+    connect_queue(queue_manager.queue_clabel, 'label', color='#96669e', row=3, column=1, position=3, y_labels=['n', 'l', 'r'], name='calculated label')
     initial_draw()
 
 
@@ -178,7 +176,7 @@ def handle_samples(chan_data=None):
             for channel_index, samples in enumerate(chan_data[:, sample_index]):
                 data[channel_index, 0] = samples
             sample_index += 1
-            time.sleep(0.008)
+            time.sleep(0.001)
         else:
             data = board.get_board_data(1)[board.get_eeg_channels(
                 brainflow.board_shim.BoardIds.CYTON_DAISY_BOARD)]  # get all data and remove it from internal buffer
@@ -252,7 +250,7 @@ def stop_stream():
     """Stops the data stream and the releases session"""
     global stream_available
     stream_available = False
-    if live_Data and "board" in globals() and board:
+    if live_Data and 'board' in globals() and board:
         try:
             board.stop_stream()
             board.release_session()

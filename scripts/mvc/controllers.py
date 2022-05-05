@@ -125,7 +125,7 @@ class ConfigController(Controller):
                 self.__start_calibration()
             else:
                 self.view.show_button("Stop Session")
-                self.master.game_window.game_controller.start_game()
+                self.root.game_window.game_controller.start_game()
 
     def __stop_session(self):
         """Stops the current session and changes the view according to the amount of recorded trials."""
