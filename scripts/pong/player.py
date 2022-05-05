@@ -82,7 +82,6 @@ class Player:
         self.last_direction_update = 0
         self.trial_label = trial_handler.Labels.INVALID
         self.y_pos = self.canvas_height * 0.5 - self.height
-        self.velocity = 0
 
         self.request(strategy).control(self)
 
@@ -124,15 +123,13 @@ class Player:
         if self.start_pos:
             return 0
 
-        return self.velocity
+        return self.direction
 
     def draw(self):
         """Draw the player"""
-        vorher = self.pos[0]
+
         self.canvas.move(self.id, self.velocity_x_axis * self.speed_factor, 0)
         self.pos = self.canvas.coords(self.id)
-        if self.pos[0] <= 0:
-            print("Vorher: ", vorher, "Nacher: ", self.pos[0])
 
     def reset(self):
         """Reset the player"""
@@ -190,9 +187,8 @@ class Player:
 
     def collision_with_border(self):
         """
-        (1) Indicates a hit with the boarders
+        (1) Indicates a hit with the borders
         (2) Stops movement of the player
-        :return: int: calculated velocity
         """
         hit_right = self.pos[2] + (self.velocity_x_axis * self.speed_factor * 2) >= self.canvas_width
         hit_left = self.pos[0] + (self.velocity_x_axis * self.speed_factor * 2) <= 0
@@ -202,11 +198,7 @@ class Player:
             else:
                 self.canvas.moveto(self.id, self.canvas_width - self.width, self.y_pos)
             self.velocity_x_axis = 0
-            self.velocity = 0
-        else:
-            self.velocity = self.direction
-
-
+            self.direction = 0
 
     def collision_with_target(self):
         """
@@ -214,30 +206,22 @@ class Player:
         (2) Initiates the handling of the hit
         """
         hit_from_left = self.target.pos[0] <= self.pos[2] + (self.velocity_x_axis * self.speed_factor) <= \
-                         self.target.pos[2]
+                        self.target.pos[2]
         hit_from_right = self.target.pos[2] >= self.pos[0] + (self.velocity_x_axis * self.speed_factor) >= \
-                        self.target.pos[0]
+                         self.target.pos[0]
         if hit_from_left or hit_from_right:
             self.root.change(game.Hit)
             if hit_from_right:
-                vorher = self.pos[1]
                 self.canvas.moveto(self.id, self.target.pos[2], self.y_pos)
-                print(f"rechts vorher {vorher} nachher {self.pos[1]}")
             else:
-                vorher = self.pos[1]
                 self.canvas.moveto(self.id, self.target.pos[0] - self.width, self.y_pos)
-                print(f"links vorher {vorher} nachher {self.pos[1]}")
             self.velocity_x_axis = 0
-            self.velocity = 0
-        else:
-            self.velocity = self.direction
+            self.direction = 0
 
     def collision_handler(self):
-        if self.collision_with_target() == 0 or self.collision_with_border() == 0:
-
-            return 0
-        else:
-            return 1
+        """ Detects collision with target and borders"""
+        self.collision_with_target()
+        self.collision_with_border()
 
     def start_trial(self):
         """Saves the timestamp by the start of a trial"""

@@ -14,7 +14,7 @@ OBJECT_SIZE = 14
 
 
 # Calibration
-CALIBRATION_TIME = 3  # in seconds
+CALIBRATION_TIME = 30  # in seconds
 
 # Loader
 NOTCH_FILTER_FREQ: float = 50
