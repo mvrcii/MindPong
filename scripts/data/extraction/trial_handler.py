@@ -6,6 +6,8 @@ import numpy as np
 from brainflow import BoardShim
 
 
+""" Skript for buffering the raw data, the trials and saving them as an npz file"""
+
 class Labels(Enum):
     """An Enum Class for different trial labels for event types"""
     INVALID = 99
@@ -20,9 +22,9 @@ NUMBER_CHANNELS = len(BoardShim.get_eeg_channels(brainflow.board_shim.BoardIds.C
 TIME_FOR_ONE_SAMPLE = 1 / BoardShim.get_sampling_rate(brainflow.board_shim.BoardIds.CYTON_DAISY_BOARD)
 
 raw_data = [[] for _ in range(NUMBER_CHANNELS)]
-event_type = []
-event_pos = []
-event_duration = []
+event_type = []  # label of a Trial
+event_pos = []  # starting position of a Trial
+event_duration = []  # duration of a trial in samples
 start_time = time.time()
 count_trials = 0
 count_event_types = 0
@@ -109,7 +111,8 @@ def create_duration_array() -> np.ndarray:
 
 def save_session(metadata: np.ndarray, npz_name: str):
     """
-    Save the metadata, the raw data, the event types and the position of the events of one session in a npz-file
+    Save the metadata, the raw data, the event types, the position and the duration
+    of the events of one session in a npz-file
     :param np.ndarray metadata: metadata of the session in a np.ndarray
     :param str npz_name: name of the npz-file, not the path name!
     """
