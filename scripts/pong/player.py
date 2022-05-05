@@ -257,8 +257,7 @@ class Player:
     def stop_trial(self):
         """Stops the recording of a trial and stores valid trials"""
         stop_time_trial = time.time()
-        if (
-                stop_time_trial - self.start_time_trial) > self.config_data.trial_min_duration / 1000 and self.last_direction_update != 0:
+        if (stop_time_trial - self.start_time_trial) > self.config_data.trial_min_duration / 1000 and self.last_direction_update != 0:
             trial_handler.mark_trial(self.start_time_trial, stop_time_trial, self.trial_label)
             print("Valid trial is stored")
         self.last_direction_update = 0
