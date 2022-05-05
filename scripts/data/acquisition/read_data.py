@@ -38,8 +38,9 @@ class QueueManager:
 
 
 # constants
-live_Data = True  # boolean to replay a recorded session with session_file_name as file name
+live_Data = False  # boolean to replay a recorded session with session_file_name as file name
 session_file_name = 'session-1-01052022-091646.npz'
+chan_labels = ['C3', 'C4', 'FC5', 'FC1', 'FC2', 'FC6', 'CP5', 'CP1', 'CP2', 'CP6']
 
 SAMPLING_RATE = BoardShim.get_sampling_rate(brainflow.board_shim.BoardIds.CYTON_DAISY_BOARD) if live_Data else 125
 
@@ -54,8 +55,7 @@ OFFSET_DURATION: float  # size of offset in s between two consecutive sliding wi
 OFFSET_SAMPLES: int  # size of offset in amount of samples, *8ms for time
 
 NUMBER_CHANNELS = len(BoardShim.get_eeg_channels(
-    brainflow.board_shim.BoardIds.CYTON_DAISY_BOARD)) if live_Data else len(
-    ['C3', 'Cz', 'C4', 'P3', 'P4', 'T3', 'F3', 'F4', 'T4'])
+    brainflow.board_shim.BoardIds.CYTON_DAISY_BOARD)) if live_Data else len(chan_labels)
 
 # global variables
 allow_window_creation = True
@@ -105,11 +105,11 @@ def init(data_mdl):
         handle_samples()
     else:
         path = '../scripts/data/session/' + session_file_name
-        chan_labels = ['C3', 'Cz', 'C4', 'P3', 'P4', 'T3', 'F3', 'F4', 'T4']
         chan_data, label_data = get_channel_rawdata(session_path=path, ch_names=chan_labels)
         global stream_available
         stream_available = True
         handle_samples(chan_data)
+
 
 def init_board():
     """
@@ -148,7 +148,6 @@ def init_board():
             print('Port not found')
             return False
     return True
-
 
 
 def search_port():
@@ -255,7 +254,7 @@ def send_window():
     if live_Data:
         window, used_channels = sort_channels(window, config.BCI_CHANNELS)
     else:
-        used_channels = ['C3', 'Cz', 'C4', 'P3', 'P4', 'T3', 'F3', 'F4', 'T4']
+        used_channels = chan_labels
     # push window to cursor control algorithm
     # TODO: change OFFSET_DURATION to percentage? Else change calculation in coc algorithm
     from scripts.algorithms.cursor_online_control import perform_algorithm
