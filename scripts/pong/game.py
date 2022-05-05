@@ -98,6 +98,8 @@ class Game(tk.Frame):
         Clears the canvas background. Very important function to avoid flickering and artifacts
     change(state):
         Changes the internal state to state if possible
+    init_labels():
+        initializes text labels for the different scores
     """
 
     def __init__(self, parent, controller, data):
@@ -122,10 +124,10 @@ class Game(tk.Frame):
         :attribute int self.curr_restart_time: counts time for hit state
         :attribute float[] self.remaining_time_history: list with left over time
         :attribute Any self.data: data model
-        :attribute
-
-
-        self.score_label, self.score_per_label, self.time_label, self.average_time_label = None, None, None, None
+        :attribute int self.score_label: id from label score
+        :attribute int self.score_per_label: id from label score in percentage
+        :attribute int self.time_label: id from label time needed
+        :attribute int  self.average_time_label: id from label average time left
         """
 
         tk.Frame.__init__(self, parent)

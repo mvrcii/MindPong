@@ -18,7 +18,7 @@ import scripts.config as config
 
 # constants
 live_Data = False  # boolean to replay a recorded session with session_file_name as file name
-session_file_name = 'session-1-01052022-091646.npz'
+session_file_name = 'session-1-05052022-154258.npz'
 chan_labels = ['C3', 'C4', 'FC5', 'FC1', 'FC2', 'FC6', 'CP5', 'CP1', 'CP2', 'CP6']
 
 SAMPLING_RATE = BoardShim.get_sampling_rate(brainflow.board_shim.BoardIds.CYTON_DAISY_BOARD) if live_Data else 125
