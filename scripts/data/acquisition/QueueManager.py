@@ -1,6 +1,8 @@
 import queue
 from scripts.data.visualisation.liveplot_matlab import connect_queue, remove_all_plots, initial_draw
 
+"""Class to handle the Queues for the live plot"""
+
 
 class QueueManager:
     def __init__(self):
