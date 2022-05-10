@@ -11,7 +11,7 @@ from brainflow.board_shim import BoardShim, BrainFlowInputParams, BrainFlowError
 from scripts.data.loader.game_dataset_loader import get_channel_rawdata
 from scripts.mvc.models import ConfigData
 from scripts.data.extraction import trial_handler
-from scripts.data.acquisition.QueueManager import QueueManager
+from scripts.utils.QueueManager import QueueManager
 import scripts.config as config
 
 """ Script to read Data from the OpenBci-Headset and creating the Sliding-Windows """
@@ -46,17 +46,6 @@ window_buffer: RingBuffer
 data_model: ConfigData
 
 queue_manager = QueueManager()
-
-
-def connect_queues():
-    queue_manager.clear_all_queues()
-    remove_all_plots()
-    connect_queue(queue_manager.queue_c3_pow, 'pow', color='#0096db', row=3, column=1, position=1, name='C3 pow')
-    connect_queue(queue_manager.queue_c4_pow, 'pow', color='#009d6b', row=3, column=1, position=1, name='C4 pow')
-    connect_queue(queue_manager.queue_hcon, 'hcon', color='#f17a2c', row=3, column=1, position=2, name='hcon')
-    connect_queue(queue_manager.queue_hcon_stand, 'hcon', color='#FFC107', row=3, column=1, position=2, name='hcon normalized')
-    connect_queue(queue_manager.queue_clabel, 'label', color='#96669e', row=3, column=1, position=3, y_labels=['n', 'l', 'r'],name='calculated label')
-    initial_draw()
 
 
 def init(data_mdl):
