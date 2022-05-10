@@ -375,7 +375,7 @@ class ConfigController(Controller):
     def __clear_global_variables():
         """Clears the global variables"""
         from scripts.data.extraction.trial_handler import reset_data
-        from scripts.algorithms.cursor_online_control import clear_ring_buffer
+        from scripts.data.analysis.cursor_online_control import clear_ring_buffer
         reset_data()
         clear_ring_buffer()
 

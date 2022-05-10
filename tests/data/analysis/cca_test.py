@@ -2,7 +2,8 @@ import threading, queue
 import time
 import matplotlib.pyplot as plt
 import numpy as np
-from scripts.algorithms import cursor_online_control, BCIC_dataset_loader as bdl
+from tests.data.analysis import BCIC_dataset_loader as bdl
+from scripts.data.analysis import cursor_online_control
 import scripts.data.visualisation.liveplot_matlab as liveplot_matplot
 
 # constants
@@ -38,7 +39,7 @@ class QueueManager:
         self.queue_c4_pow = queue.Queue(100)
 
         self.queue_hcon = queue.Queue(100)
-        self.queue_hcon_norm = queue.Queue(100)
+        self.queue_hcon_stand = queue.Queue(100)
 
 
 def load_bcic_dataset(ch_weight):
@@ -122,8 +123,9 @@ def connect_queues():
     liveplot_matplot.connect_queue(queue_manager.queue_c3_pow, 'pow', color='#0096db', row=3, column=1, position=1, name='C3 pow')
     liveplot_matplot.connect_queue(queue_manager.queue_c4_pow, 'pow', color='#009d6b', row=3, column=1, position=1, name='C4 pow')
     liveplot_matplot.connect_queue(queue_manager.queue_hcon, 'hcon', color='#f17a2c', row=3, column=1, position=2, name='hcon')
-    liveplot_matplot.connect_queue(queue_manager.queue_hcon_norm, 'hcon', color='#FFC107', row=3, column=1, position=2, name='hcon normalized')
+    liveplot_matplot.connect_queue(queue_manager.queue_hcon_stand, 'hcon', color='#FFC107', row=3, column=1, position=2, name='hcon standardized')
     liveplot_matplot.connect_queue(queue_manager.queue_clabel, 'label', color='#96669e', row=3, column=1, position=3, y_labels=['n', 'l', 'r'],name='calculated label')
+
 
 def sort_incoming_channels(sliding_window, used_ch_names):
 
