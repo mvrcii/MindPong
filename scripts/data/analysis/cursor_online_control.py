@@ -29,7 +29,7 @@ SAMPLING_FREQ: int
 USED_METHOD = PSD_METHOD.multitaper
 
 
-def standardize_data(in_data):
+def standardize_data(in_data: np.ndarray):
     """
     Standardizes input data
     Benefit of standardization rather than normalisation, as standardization is much more robust against outliers.
@@ -293,7 +293,7 @@ def perform_algorithm(sliding_window, used_ch_names, sample_rate, queue_manager:
     if not ringbuffer.is_full:
         ringbuffer.append(hcon)
 
-    # From the collected previous calculated hcon values from (the last ) 30 seconds,
+    # From the collected previous calculated hcon values from (the last) 30 seconds,
     # a standard deviation and a mean value are determined.
     # The current hcon is standardized with these values
     values = np.array(ringbuffer)
@@ -302,11 +302,15 @@ def perform_algorithm(sliding_window, used_ch_names, sample_rate, queue_manager:
     standardized_hcon = (hcon - mean) / standard_deviation if standard_deviation else 0
 
     # converts the returned hcon to the corresponding label
-    if standardized_hcon > data_mdl.threshold-0.2:     # left
+    if standardized_hcon > data_mdl.threshold-0.2:
+        # left signal
         calculated_label = 0
+        # call move_left_direction event for the game to move left
         post_event("move_left_direction")
-    elif standardized_hcon < -data_mdl.threshold:  # right
+    elif standardized_hcon < -data_mdl.threshold:
+        # right signal
         calculated_label = 1
+        # call move_right_direction event for the game to move right
         post_event("move_right_direction")
     else:
         calculated_label = -1
