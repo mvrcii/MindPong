@@ -27,21 +27,6 @@ class ConfigData:
         self.draw_plot = True
 
 
-class QueueManager:
-    def __init__(self):
-        self.queue_label = queue.Queue(100)
-        self.queue_clabel = queue.Queue(100)
-
-        self.queue_c3 = queue.Queue(100)
-        self.queue_c4 = queue.Queue(100)
-
-        self.queue_c3_pow = queue.Queue(100)
-        self.queue_c4_pow = queue.Queue(100)
-
-        self.queue_hcon = queue.Queue(100)
-        self.queue_hcon_stand = queue.Queue(100)
-
-
 def load_bcic_dataset(ch_weight):
     """
     - converts ch_weight into the corresponding channels and inserts C3 and C4 to the first two places in the list
@@ -93,7 +78,7 @@ def test_algorithm(chan_data, label_data, used_ch_names):
         stop_idx = int(((toff[i] + config.window_size) * config.sampling_rate) - 1)
 
         # calls the one and only cursor control algorithm
-        calculated_label = cursor_online_control.perform_algorithm(chan_data[:, start_idx:stop_idx], used_ch_names, config.sampling_rate, queue_manager, data_mdl=config, offset_in_percentage=config.offset_in_percentage)
+        calculated_label = cursor_control_algorithm.perform_algorithm(chan_data[:, start_idx:stop_idx], used_ch_names, config.sampling_rate, data_mdl=config, offset_in_percentage=config.offset_in_percentage)
 
         # compare the calculated label with the predefined label, if same -> increase accuracy
         if label[i] != -1:
@@ -114,21 +99,7 @@ def test_algorithm(chan_data, label_data, used_ch_names):
     print(f'Accuracy = {accuracy}')
 
 
-def connect_queues():
-    """
-    Connects the queues of type queuemanager object which are
-    filled in the cursor control algorithm with an object in liveplot_matlab
-    in which a reference is stored, so that the queue can be emptied there.
-    """
-    liveplot_matplot.connect_queue(queue_manager.queue_c3_pow, 'pow', color='#0096db', row=3, column=1, position=1, name='C3 pow')
-    liveplot_matplot.connect_queue(queue_manager.queue_c4_pow, 'pow', color='#009d6b', row=3, column=1, position=1, name='C4 pow')
-    liveplot_matplot.connect_queue(queue_manager.queue_hcon, 'hcon', color='#f17a2c', row=3, column=1, position=2, name='hcon')
-    liveplot_matplot.connect_queue(queue_manager.queue_hcon_stand, 'hcon', color='#FFC107', row=3, column=1, position=2, name='hcon standardized')
-    liveplot_matplot.connect_queue(queue_manager.queue_clabel, 'label', color='#96669e', row=3, column=1, position=3, y_labels=['n', 'l', 'r'],name='calculated label')
-
-
 def sort_incoming_channels(sliding_window, used_ch_names):
-
     #                 'C3', 'Cz', 'C4', 'P3', 'Pz', 'P4', 'O1', 'O2', 'FC5', 'FC1', 'FC2', 'FC6', 'CP5', 'CP1', 'CP2', 'CP6'
     ch_names_weight = [1,    0,    1,    0,    0,    0,    0,    0,     1,     1,     1,     1,     1,     1,     1,    1]
 
@@ -162,7 +133,6 @@ def test_algorithm_with_dataset():
 
 if __name__ == '__main__':
     print('CCA-test main started ...')
-    queue_manager = QueueManager()
     test_algorithm_with_dataset()
 
 

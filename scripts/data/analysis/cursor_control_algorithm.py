@@ -235,7 +235,7 @@ def manage_ringbuffer(window_size, offset_in_percentage: float):
     return ringbuffer_hcon
 
 
-def perform_algorithm(sliding_window, used_ch_names, sample_rate, queue_manager: QueueManager, data_mdl, offset_in_percentage=0.2):
+def perform_algorithm(sliding_window, used_ch_names, sample_rate, data_mdl, queue_manager: QueueManager = None, offset_in_percentage=0.2):
     """
     Converts a sliding window into the corresponding horizontal movement
     Contains following steps:
@@ -316,7 +316,7 @@ def perform_algorithm(sliding_window, used_ch_names, sample_rate, queue_manager:
         calculated_label = -1
 
     # only fill queues if the plot gets drawn and queues are not full
-    if data_mdl.draw_plot:
+    if data_mdl.draw_plot and queue_manager:
         if not queue_manager.queue_hcon.full():
             queue_manager.queue_hcon_stand.put(standardized_hcon)
             queue_manager.queue_hcon.put(hcon)
