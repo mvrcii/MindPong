@@ -1,4 +1,3 @@
-from enum import Enum
 from tkinter import *
 import tkinter as tk
 import time
@@ -63,7 +62,6 @@ class Idle(GameState):
     """
     A child of GameState defining the state idle
     """
-
     name = "idle"
     allowed = ['playing', 'hit', 'respawn', 'end']
 
@@ -100,6 +98,8 @@ class Game(tk.Frame):
         Clears the canvas background. Very important function to avoid flickering and artifacts
     change(state):
         Changes the internal state to state if possible
+    init_labels():
+        initializes text labels for the different scores
     """
 
     def __init__(self, parent, controller, data):
@@ -124,6 +124,10 @@ class Game(tk.Frame):
         :attribute int self.curr_restart_time: counts time for hit state
         :attribute float[] self.remaining_time_history: list with left over time
         :attribute Any self.data: data model
+        :attribute int self.score_label: id from label score
+        :attribute int self.score_per_label: id from label score in percentage
+        :attribute int self.time_label: id from label time needed
+        :attribute int  self.average_time_label: id from label average time left
         """
 
         tk.Frame.__init__(self, parent)
@@ -136,6 +140,7 @@ class Game(tk.Frame):
 
         self.width = WINDOW_WIDTH
         self.height = WINDOW_HEIGHT
+
         # State of the game - default is idle
         self.state = Idle()
 
@@ -214,6 +219,7 @@ class Game(tk.Frame):
                                            text=str(round(needed_time, 1)) + "s",
                                            state=NORMAL)
                     """"
+                    show catch in percentage
                     self.canvas.itemconfig(self.time_label,
                                            text="Time left: " + str(round(remaining_time_percentage)) + "%",
                                            state=NORMAL)
@@ -224,12 +230,10 @@ class Game(tk.Frame):
                 self.score += 1
                 self.canvas.itemconfig(self.time_label, state=HIDDEN)
                 self.change(Respawn)
-
             else:
                 self.curr_restart_time += delta
 
         elif curr_state is Respawn.name:
-
             self.canvas.delete(self.target.id)
 
             self.player.speed_factor = 0

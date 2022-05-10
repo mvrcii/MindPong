@@ -1,11 +1,9 @@
-import select
 import time
 
 import scripts.pong.game as game
 import scripts.config as config
 
 import scripts.data.extraction.trial_handler as trial_handler
-from scripts.mvc.models import ConfigData
 
 
 # Define player properties and functions
@@ -15,17 +13,20 @@ class Player:
 
     Methods:
     ----------
-    :method update(self, delta_time): Update velocity according to the time
-    :method calculate_velocity(self): Calculate velocity
-    :method draw(self): Draw the plyer
-    :method reset(self): Reset the player
-    :method init(self): Initializes the player object and its position
-    :method move_left(self, evt): Moves player left
-    :method move_right(self, evt): Moves player right
-    :method collision_with_target(self): checks collision with target
-    :method start_trial(self): sets the timestamp of the start of a trial
-    :method is_trial_valid(self): checks if the trial is still valid (player moves to target)
-    :method stop_trial(self): stops trial recording and saves valid trials
+    :method request(strategy): returns strategy
+    :method update(delta_time): Update velocity according to the time
+    :method calculate_velocity(): Calculate velocity
+    :method draw(): Draw the plyer
+    :method reset(): Reset the player
+    :method init(): Initializes the player object and its position
+    :method move_left(evt): Moves player left
+    :method move_right(evt): Moves player right
+    :method collision_with_border(): checks collision with border
+    :method collision_with_target(): checks collision with target
+    :method collision_handler(): checks collisions
+    :method start_trial(): sets the timestamp of the start of a trial
+    :method is_trial_valid(): checks if the trial is still valid (player moves to target)
+    :method stop_trial(): stops trial recording and saves valid trials
     """
 
     def __init__(self, root, canvas, width, height, color, target, strategy):
@@ -40,6 +41,7 @@ class Player:
         :param Any strategy: strategy for player movement
         :attribute Any self.root: Root
         :attribute Any self.canvas: Canvas
+        :attribute ConfigData self.config_data: config from menu
         :attribute Any self.canvas:width: Canvas width
         :attribute Any self.height: Canvas height
         :attribute Any self.color: Color of the player
@@ -59,6 +61,7 @@ class Player:
         :attribute Any self.start_time_trial: timestamp of the start of a trial in s
         :attribute int self.last_direction_update: last direction update
         :attribute Label self.trial_label: type of the event in the trial
+        :attribute float self.y_pos: y-cord for the player
         """
 
         self.root = root

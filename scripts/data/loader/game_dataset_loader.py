@@ -1,5 +1,6 @@
 """
 Based on bcic_data_loading.py
+Script to read npz files from MindPong and converting them in a Format for the ML-BCI-framework
 """
 
 from typing import List
@@ -48,7 +49,7 @@ def get_channel_rawdata(session_path: str, ch_names: List[str] = None):
 
     meta = data['meta']
     chan_data = data['raw_data']
-    event_types = data['event_type']
+    event_type = data['event_type']
     event_pos = data['event_pos']
     event_dur = data['event_duration']
 
@@ -68,8 +69,8 @@ def get_channel_rawdata(session_path: str, ch_names: List[str] = None):
         chan_data = bp_notch_filtering(chan_data, samplerate)  # Optional bandpass and notch filtering
 
     chan_label = np.full(chan_data.shape[0], -1, dtype=int)
-    for i, event_type in enumerate(event_types):
-        chan_label[event_pos[i]:event_pos[i] + event_dur[i]] = event_type.value
+    for pos, dur, e_type in zip(event_pos, event_dur, event_type):
+        chan_label[pos:pos + dur] = e_type.value
         # Left hand          0
         # Right hand         1
         # Calibration        2
