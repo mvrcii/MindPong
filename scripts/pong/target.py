@@ -6,6 +6,11 @@ import scripts.config as config
 class Target:
     """
     Target class
+
+    Methods:
+    ----------
+    method: update(delta_time): handles time for new spawn
+    method: spawn_new_target(player_pos): spawns the target at a random postion
     """
 
     def __init__(self, root, canvas, color, size):
@@ -25,7 +30,6 @@ class Target:
         """
         handle time for a new spawn when target was not reached in time
         :param delta_time:
-        :return: None
         """
         self.time_last_hit += delta_time
         if self.time_last_hit >= config.TIME_TO_CATCH_PER_PIXEL * self.start_distance:
@@ -36,11 +40,11 @@ class Target:
         """
         Spawns a new target with a random position with a min. distance
         :param player_pos: position of the player object
-        :return: None
         """
         offset_border = 70.0  # Offset to prevent that the text is in the border
         min_x = 0
         max_x = self.canvas_width - self.size
+
         condition = True
         while condition:
             random_x = random.uniform(min_x, max_x)
