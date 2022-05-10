@@ -257,7 +257,7 @@ def send_window():
         used_channels = chan_labels
     # push window to cursor control algorithm
     # TODO: change OFFSET_DURATION to percentage? Else change calculation in coc algorithm
-    from scripts.data.analysis.cursor_online_control import perform_algorithm
+    from scripts.data.analysis.cursor_control_algorithm import perform_algorithm
     perform_algorithm(window, used_channels, SAMPLING_RATE, queue_manager,
                       offset_in_percentage=OFFSET_DURATION / SLIDING_WINDOW_DURATION, data_mdl=data_model)
 

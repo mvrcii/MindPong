@@ -3,7 +3,7 @@ import time
 import matplotlib.pyplot as plt
 import numpy as np
 from tests.data.analysis import BCIC_dataset_loader as bdl
-from scripts.data.analysis import cursor_online_control
+from scripts.data.analysis import cursor_control_algorithm
 import scripts.data.visualisation.liveplot_matlab as liveplot_matplot
 
 # constants
@@ -157,22 +157,13 @@ def test_algorithm_with_dataset():
     #                 Fz  FC3  FC1  FCz  FC2  FC4  C5  C3  C1  Cz  C2  C4  C6  CP3  CP1  CPz  CP2  CP4  P1  Pz  P2  POz
     ch_names_weight = [0,  1,   1,   0,   1,   1,   0,  1,  0,  0,  0,  1,  0,  1,   1,   0,   1,   1,   0,  0,  0,  0]
     preloaded_data, preloaded_labels, used_ch_names = load_bcic_dataset(ch_names_weight)
-    connect_queues()
     test_algorithm(preloaded_data, preloaded_labels, used_ch_names)
 
 
 if __name__ == '__main__':
     print('CCA-test main started ...')
-    fig = plt.Figure()
-    plt.ion()
-    liveplot_matplot.start_live_plot(fig)
-    liveplot_matplot.initial_draw()
     queue_manager = QueueManager()
-    threading.Thread(target=test_algorithm_with_dataset, daemon=True).start()
-    plt.show()
-    while True:
-        liveplot_matplot.perform_live_plot()
-        plt.pause(.001)
+    test_algorithm_with_dataset()
 
 
 
