@@ -14,8 +14,8 @@ import scripts.config as config
 class PSD_METHOD(enum.Enum):
     fft = 1
     multitaper = 2
-    burg = 3
-    periodogram = 4
+    periodogram = 3
+    burg = 4
 
 
 # Global variables
@@ -26,8 +26,9 @@ SAMPLING_FREQ: int
 USED_METHOD = PSD_METHOD.multitaper
 
 
-def norm_data(in_data):
-    # normalize data
+def standardise_data(in_data):
+    # standardises data
+    # Benefit of standardisation rather than normalisation, as standardisation is much more robust against outliers.
     mean = np.mean(in_data)
     std = np.std(in_data)
     out_data = in_data - mean
@@ -71,14 +72,14 @@ def calculate_laplacian(samples: np.ndarray):
     return result
 
 
-def split_normalization_area(samples_list: np.ndarray, used_ch_names: list):
-    '''
+def split_laplacian_areas(samples_list: np.ndarray, used_ch_names: list):
+    """
     Divide the channel into the corresponding areas for c3 and c4.
     Channels with an even number in the name belong to C4, and with an odd number to C3.
     :param samples_list:list of the channels
     :param used_ch_names: list of the channel names associated with the channel
     :return: 2 list containing sorted channels belonging to c3 and c4
-    '''
+    """
     channels_around_c3 = list()
     channels_around_c4 = list()
 
@@ -110,14 +111,15 @@ def calculate_spatial_filtering(samples_list: np.ndarray, used_ch_names: list):
     """
     samples_c3a = list()
     samples_c4a = list()
-    samples_c3 = mute_outliers(samples_list[0][:])
-    samples_c4 = mute_outliers(samples_list[1][:])
     # splits the channels into c3 and c4 related channels
-    split_channels = split_normalization_area(samples_list[2:], used_ch_names[2:])
-
+    split_channels = split_laplacian_areas(samples_list[2:], used_ch_names[2:])
     # calculate the average for the c3 and c4 related channels
     samples_average_c3 = calculate_laplacian(split_channels[0][:])
     samples_average_c4 = calculate_laplacian(split_channels[1][:])
+
+    # mute outliers
+    samples_c3 = mute_outliers(samples_list[0][:])
+    samples_c4 = mute_outliers(samples_list[1][:])
     samples_average_c3 = mute_outliers(samples_average_c3)
     samples_average_c4 = mute_outliers(samples_average_c4)
 
@@ -177,7 +179,7 @@ def perform_burg(sample: np.array):
     PSD = arma2psd(AR)
     space = linspace(0, 50, PSD.size)
 
-    # caution! bandpassfilter with 50Hz required
+    # caution! bandpass filter with 50Hz required
     return PSD, space
 
 
@@ -201,7 +203,7 @@ def integrate_psd_values(samples: np.ndarray, frequency_list: np.ndarray, used_f
                 requested_frequency_range.append(frequency_list[i])
 
         band_power = scipy.integrate.trapz(psds_in_band_power, requested_frequency_range) if len(requested_frequency_range) > 0 else 0
-    # only multitaper already returns the desired frequency range
+    # only Multitaper returns the already  desired frequency range
     else:
         band_power = scipy.integrate.trapz(samples, frequency_list)
 
@@ -242,7 +244,7 @@ def perform_algorithm(sliding_window, used_ch_names, sample_rate, queue_manager:
 
     # 0. mute outliers
     for i in range(len(sliding_window)):
-        sliding_window[i] = norm_data(sliding_window[i])
+        sliding_window[i] = standardise_data(sliding_window[i])
 
     global SAMPLING_FREQ, F_MIN, F_MAX
     SAMPLING_FREQ = sample_rate
@@ -272,24 +274,27 @@ def perform_algorithm(sliding_window, used_ch_names, sample_rate, queue_manager:
     area_c3 = integrate_psd_values(psd_c3a, f_c3a, USED_METHOD)
     area_c4 = integrate_psd_values(psd_c4a, f_c4a, USED_METHOD)
 
-    # 4. Derive cursor control samples
+    # 4. derivation of the control signal hcon from integrated PSD values of c3 and c4
     hcon = (area_c4*config.WEIGHT) - area_c3
 
-    # normalize to zero mean and unit variance to derive the cursor control samples
     ringbuffer = manage_ringbuffer((len(sliding_window[0]) + 1)/sample_rate, offset_in_percentage)
+    # Conditional instruction is responsible for writing to the ring buffer only in the first 30 seconds.
     if not ringbuffer.is_full:
         ringbuffer.append(hcon)
 
+    # From the collected previous calculated hcon values from (the last ) 30 seconds,
+    # a standard deviation and a mean value are determined.
+    # The current hcon is standardised with these values
     values = np.array(ringbuffer)
     mean = np.mean(values)
     standard_deviation = np.std(values)
-    normalized_hcon = (hcon - mean) / standard_deviation if standard_deviation else 0
+    standardised_hcon = (hcon - mean) / standard_deviation if standard_deviation else 0
 
     # converts the returned hcon to the corresponding label
-    if normalized_hcon > data_mdl.threshold-0.2:     # left
+    if standardised_hcon > data_mdl.threshold-0.2:     # left
         calculated_label = 0
         post_event("move_left_direction")
-    elif normalized_hcon < -data_mdl.threshold:  # right
+    elif standardised_hcon < -data_mdl.threshold:  # right
         calculated_label = 1
         post_event("move_right_direction")
     else:
@@ -298,7 +303,7 @@ def perform_algorithm(sliding_window, used_ch_names, sample_rate, queue_manager:
     # only fill queues if the plot gets drawn and queues are not full
     if data_mdl.draw_plot:
         if not queue_manager.queue_hcon.full():
-            queue_manager.queue_hcon_norm.put(normalized_hcon)
+            queue_manager.queue_hcon_stand.put(standardised_hcon)
             queue_manager.queue_hcon.put(hcon)
         if not queue_manager.queue_c3_pow.full() and not queue_manager.queue_c4_pow.full():
             queue_manager.queue_c3_pow.put(area_c3)
