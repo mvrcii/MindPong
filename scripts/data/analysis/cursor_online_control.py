@@ -10,8 +10,11 @@ from scripts.utils.event_listener import post_event
 from scripts.data.acquisition.read_data import QueueManager
 import scripts.config as config
 
-# method for psd estimation
+
 class PSD_METHOD(enum.Enum):
+    """
+    Method for psd estimation
+    """
     fft = 1
     multitaper = 2
     periodogram = 3
@@ -26,9 +29,13 @@ SAMPLING_FREQ: int
 USED_METHOD = PSD_METHOD.multitaper
 
 
-def standardise_data(in_data):
-    # standardises data
-    # Benefit of standardisation rather than normalisation, as standardisation is much more robust against outliers.
+def standardize_data(in_data):
+    """
+    Standardizes input data
+    Benefit of standardization rather than normalisation, as standardization is much more robust against outliers.
+    :param in_data: samples of a channel
+    :return: Standardized data
+    """
     mean = np.mean(in_data)
     std = np.std(in_data)
     out_data = in_data - mean
@@ -37,8 +44,12 @@ def standardise_data(in_data):
 
 
 def mute_outliers(samples: np.ndarray):
-    # Outliers of the signal that are smaller or larger than x times the standard deviation,
-    # starting from the medium of the signal, are cut off.
+    """
+    Outliers of the signal that are smaller or larger than x times the standard deviation,
+    starting from the medium of the signal, are cut off.
+    :param samples: samples of a channel
+    :return: data without outliers
+    """
     mean = np.mean(samples)
     std = np.std(samples)
     x = 4.0
@@ -244,7 +255,7 @@ def perform_algorithm(sliding_window, used_ch_names, sample_rate, queue_manager:
 
     # 0. mute outliers
     for i in range(len(sliding_window)):
-        sliding_window[i] = standardise_data(sliding_window[i])
+        sliding_window[i] = standardize_data(sliding_window[i])
 
     global SAMPLING_FREQ, F_MIN, F_MAX
     SAMPLING_FREQ = sample_rate
@@ -284,17 +295,17 @@ def perform_algorithm(sliding_window, used_ch_names, sample_rate, queue_manager:
 
     # From the collected previous calculated hcon values from (the last ) 30 seconds,
     # a standard deviation and a mean value are determined.
-    # The current hcon is standardised with these values
+    # The current hcon is standardized with these values
     values = np.array(ringbuffer)
     mean = np.mean(values)
     standard_deviation = np.std(values)
-    standardised_hcon = (hcon - mean) / standard_deviation if standard_deviation else 0
+    standardized_hcon = (hcon - mean) / standard_deviation if standard_deviation else 0
 
     # converts the returned hcon to the corresponding label
-    if standardised_hcon > data_mdl.threshold-0.2:     # left
+    if standardized_hcon > data_mdl.threshold-0.2:     # left
         calculated_label = 0
         post_event("move_left_direction")
-    elif standardised_hcon < -data_mdl.threshold:  # right
+    elif standardized_hcon < -data_mdl.threshold:  # right
         calculated_label = 1
         post_event("move_right_direction")
     else:
@@ -303,7 +314,7 @@ def perform_algorithm(sliding_window, used_ch_names, sample_rate, queue_manager:
     # only fill queues if the plot gets drawn and queues are not full
     if data_mdl.draw_plot:
         if not queue_manager.queue_hcon.full():
-            queue_manager.queue_hcon_stand.put(standardised_hcon)
+            queue_manager.queue_hcon_stand.put(standardized_hcon)
             queue_manager.queue_hcon.put(hcon)
         if not queue_manager.queue_c3_pow.full() and not queue_manager.queue_c4_pow.full():
             queue_manager.queue_c3_pow.put(area_c3)
