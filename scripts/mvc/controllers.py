@@ -2,14 +2,15 @@ import time
 from abc import ABC, abstractmethod
 from tkinter.messagebox import askyesno, showinfo
 
-from scripts.config import CALIBRATION_TIME
+from scripts.config import CALIBRATION_TIME, BCI_CHANNELS
 from scripts.data.extraction import trial_handler
 from scripts.mvc.view import View, ConfigView, GameView
 from scripts.pong.game import End
 from scripts.data.extraction.trial_handler import save_session
 from scripts.mvc.models import MetaData
 from datetime import datetime
-from scripts.data.visualisation.liveplot_matlab import start_live_plot, perform_live_plot, queues
+from scripts.data.visualisation.liveplot_matlab import start_live_plot, perform_live_plot
+from scripts.data.acquisition.read_data import live_Data
 
 
 class Controller(ABC):
@@ -21,20 +22,23 @@ class Controller(ABC):
 class ConfigController(Controller):
     def __init__(self, master=None) -> None:
         self.master = master
+        self.root = master.master
         self.view = None
         self.data = None
 
         self.valid_form = True
         self.calibration_timer = 0
+        self.session_start_time = None
 
     def bind(self, view: ConfigView):
         self.view = view
         self.view.create_view()
-        self.data = self.master.data_model
+        self.data = self.root.data_model
 
         self.__init_config_view_values()
         self.view.reset_view()
 
+        self.view.buttons["Connect Board"].configure(command=self.__connect_board)
         self.view.buttons["Start Session"].configure(command=self.__start_session)
         self.view.buttons["Stop Session"].configure(command=self.__stop_session)
         self.view.buttons["Save Session"].configure(command=self.__save_session)
@@ -85,11 +89,11 @@ class ConfigController(Controller):
             if percentage >= 100:
                 if self.data.trial_recording:
                     # Saves a trial that includes the calibration when the trial recording is switched on
-                    trial_handler.mark_trial(self.calibration_timer, time.time(), trial_handler.Labels.CALIBRATION)
+                    trial_handler.mark_trial(trial_handler.start_time, time.time(), trial_handler.Labels.CALIBRATION)
                 self.__stop_calibration()
                 self.view.hide_button("Abort")
                 self.view.show_button("Stop Session")
-                self.master.game_window.game_controller.start_game()
+                self.root.game_window.game_controller.start_game()
 
     def __stop_calibration(self):
         """Stops the calibration"""
@@ -105,6 +109,15 @@ class ConfigController(Controller):
             stop_stream()
             self.__discard_session()
 
+    def __connect_board(self):
+        """ Creates the connection to the board"""
+        from scripts.data.acquisition.read_data import init_board
+        if init_board():
+            self.view.hide_button("Connect Board")
+            self.view.show_button("Start Session")
+        else:
+            showinfo("Warning", "Connection failed. Try again.")
+
     def __start_session(self):
         """Starts the session, if the input fields are valid, by disabling the input fields, starting the game
         window and the liveplot."""
@@ -114,22 +127,28 @@ class ConfigController(Controller):
         if self.valid_form:
             self.view.disable_inputs()
             self.view.hide_button("Start Session")
-            self.__start_calibration()
+            self.session_start_time = datetime.now()
             self.__start_liveplot()
-            self.master.create_game_window()
+            self.root.create_game_window()
+
+            if live_Data:
+                self.__start_calibration()
+            else:
+                self.view.show_button("Stop Session")
+                self.root.game_window.game_controller.start_game()
 
     def __stop_session(self):
         """Stops the current session and changes the view according to the amount of recorded trials."""
         answer = askyesno(title="Confirmation", message="Are you sure that you want to stop the session?")
         if answer:
-            self.master.game_window.game_controller.show_end_screen()
+            self.root.game_window.game_controller.show_end_screen()
             self.view.hide_button("Stop Session")
             self.view.show_plot(False)
             self.data.draw_plot = False
             from scripts.data.acquisition.read_data import stop_stream
             stop_stream()
             # Only allow saving if trial recording is turned on
-            if self.data.trial_recording:
+            if self.data.trial_recording and live_Data:
                 from scripts.data.extraction.trial_handler import count_trials
                 if count_trials > 0:
                     self.view.show_button("Discard Session")
@@ -138,6 +157,9 @@ class ConfigController(Controller):
                 else:
                     showinfo("Information", "There are no trials to save.")
                     self.__discard_session()
+            elif not live_Data:
+                showinfo("Information", "A session replay cannot be saved.")
+                self.__discard_session()
             else:
                 self.__discard_session()
 
@@ -150,21 +172,22 @@ class ConfigController(Controller):
         self.__set_comment()
         from scripts.data.extraction.trial_handler import count_trials, count_event_types
         meta_data = MetaData(sid=self.data.subject_id, age=self.data.subject_age, sex=self.data.subject_sex,
-                             comment=self.data.comment, amount_events=count_event_types, amount_trials=count_trials)
+                             time=self.session_start_time.time(), comment=self.data.comment,
+                             amount_events=count_event_types, amount_trials=count_trials,
+                             channel_mapping=BCI_CHANNELS)
         print(meta_data.__str__())
-        file_name = "session-%s-%s" % (self.data.subject_id, datetime.now().strftime("%d%m%Y-%H%M%S"))
+        file_name = "session-%s-%s" % (self.data.subject_id, self.session_start_time.strftime("%d%m%Y-%H%M%S"))
 
         save_session(meta_data.turn_into_np_array(), file_name)
         showinfo("Information", "Successfully saved the session.")
-        self.master.destroy_game_window()
+        self.root.destroy_game_window()
         self.view.reset_view()
 
     def __discard_session(self):
         """Discards the current session."""
-        from scripts.data.extraction.trial_handler import reset_counters
-        reset_counters()
         self.view.reset_view()
-        self.master.destroy_game_window()
+        self.__clear_global_variables()
+        self.root.destroy_game_window()
 
     def __start_liveplot(self):
         """Binds the plot figure to the liveplot script and shows the plot if the toggle is activated"""
@@ -348,6 +371,14 @@ class ConfigController(Controller):
     def __on_valid(self, label):
         self.view.labels[label].config(foreground='black')
 
+    @staticmethod
+    def __clear_global_variables():
+        """Clears the global variables"""
+        from scripts.data.extraction.trial_handler import reset_data
+        from scripts.algorithms.cursor_online_control import clear_ring_buffer
+        reset_data()
+        clear_ring_buffer()
+
 
 class GameController(Controller):
     def __init__(self, master=None) -> None:
@@ -356,7 +387,7 @@ class GameController(Controller):
 
     def bind(self, view: GameView):
         self.view = view
-        self.view.bind_data(self.master.data_model)
+        self.view.bind_data(self.master.master.data_model)
         self.view.create_view()
 
     def start_game(self):

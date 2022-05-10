@@ -38,8 +38,9 @@ class QueueManager:
 
 
 # constants
-live_Data = True  # boolean to replay a recorded session with session_file_name as file name
+live_Data = False  # boolean to replay a recorded session with session_file_name as file name
 session_file_name = 'session-1-01052022-091646.npz'
+chan_labels = ['C3', 'C4', 'FC5', 'FC1', 'FC2', 'FC6', 'CP5', 'CP1', 'CP2', 'CP6']
 
 SAMPLING_RATE = BoardShim.get_sampling_rate(brainflow.board_shim.BoardIds.CYTON_DAISY_BOARD) if live_Data else 125
 
@@ -54,14 +55,14 @@ OFFSET_DURATION: float  # size of offset in s between two consecutive sliding wi
 OFFSET_SAMPLES: int  # size of offset in amount of samples, *8ms for time
 
 NUMBER_CHANNELS = len(BoardShim.get_eeg_channels(
-    brainflow.board_shim.BoardIds.CYTON_DAISY_BOARD)) if live_Data else len(
-    ['C3', 'Cz', 'C4', 'P3', 'P4', 'T3', 'F3', 'F4', 'T4'])
+    brainflow.board_shim.BoardIds.CYTON_DAISY_BOARD)) if live_Data else len(chan_labels)
 
 # global variables
 allow_window_creation = True
 first_window = True
 first_data = True
 stream_available = False  # indicates if stream is available
+
 board: BoardShim
 window_buffer: RingBuffer
 data_model: ConfigData
@@ -83,9 +84,10 @@ def init(data_mdl):
     """
     --- starting point ---
     Initializing steps:
-    (1) initialize the board
-    (2) search for the serial port
+    (1) initialize the data model
+    (2) initialize variables that are set over the gui
     (3) starts the data acquisition
+    :param Any data_mdl: data model object
     """
     connect_queues()
     global data_model, first_window
@@ -98,6 +100,25 @@ def init(data_mdl):
     OFFSET_DURATION = data_model.window_offset / 1000
     OFFSET_SAMPLES = int(OFFSET_DURATION / TIME_FOR_ONE_SAMPLE)
     window_buffer = [RingBuffer(capacity=SLIDING_WINDOW_SAMPLES, dtype=float) for _ in range(NUMBER_CHANNELS)]
+
+    if live_Data:
+        handle_samples()
+    else:
+        path = '../scripts/data/session/' + session_file_name
+        chan_data, label_data = get_channel_rawdata(session_path=path, ch_names=chan_labels)
+        global stream_available
+        stream_available = True
+        handle_samples(chan_data)
+
+
+def init_board():
+    """
+    Initializing steps:
+    (1) Search for the serial port
+    (2) Board get initialized
+    (3) Data stream get started
+    :return: bool: says if the connection was successful
+    """
 
     if live_Data:
         params = BrainFlowInputParams()
@@ -116,20 +137,17 @@ def init(data_mdl):
             global board, stream_available
             board = BoardShim(brainflow.board_shim.BoardIds.CYTON_DAISY_BOARD, params)
             try:
+                stream_available = True
                 board.prepare_session()
                 board.start_stream()
-                stream_available = True
-                handle_samples()
+                return stream_available
             except BrainFlowError as err:
                 print(err.args[0])
 
         else:
             print('Port not found')
-    else:
-        path = '../scripts/data/session/' + session_file_name
-        chan_labels = ['C3', 'Cz', 'C4', 'P3', 'P4', 'T3', 'F3', 'F4', 'T4']
-        chan_data, label_data = get_channel_rawdata(session_path=path, ch_names=chan_labels)
-        handle_samples(chan_data)
+            return False
+    return True
 
 
 def search_port():
@@ -167,9 +185,7 @@ def handle_samples(chan_data=None):
     global first_window, window_buffer, allow_window_creation, first_data
     count_samples = 0
     sample_index = 0
-
-    while (stream_available and data_model.session_recording) or (
-            chan_data is not None and len(chan_data[0]) > sample_index):
+    while stream_available and (live_Data or len(chan_data[0]) > sample_index):
         if chan_data is not None:
             data = np.ndarray((len(chan_data), 1))
             for channel_index, samples in enumerate(chan_data[:, sample_index]):
@@ -187,7 +203,7 @@ def handle_samples(chan_data=None):
             else:
                 continue
             # only sends trial_handler raw data if trial recording is wished
-        if data_model.trial_recording:
+        if data_model.trial_recording and live_Data:
             if first_data:
                 trial_handler.send_raw_data(data, start=time.time())
                 first_data = False
@@ -204,7 +220,8 @@ def handle_samples(chan_data=None):
             elif not first_window and count_samples == OFFSET_SAMPLES:
                 send_window()
                 count_samples = 0
-    stop_stream()
+    if live_Data:
+        stop_stream()
 
 
 def sort_channels(sliding_window, used_ch_names):
@@ -237,7 +254,7 @@ def send_window():
     if live_Data:
         window, used_channels = sort_channels(window, config.BCI_CHANNELS)
     else:
-        used_channels = ['C3', 'Cz', 'C4', 'P3', 'P4', 'T3', 'F3', 'F4', 'T4']
+        used_channels = chan_labels
     # push window to cursor control algorithm
     # TODO: change OFFSET_DURATION to percentage? Else change calculation in coc algorithm
     from scripts.algorithms.cursor_online_control import perform_algorithm
@@ -249,9 +266,12 @@ def stop_stream():
     """Stops the data stream and the releases session"""
     global stream_available
     stream_available = False
-    if live_Data:
-        board.stop_stream()
-        board.release_session()
+    if live_Data and 'board' in globals() and board:
+        try:
+            board.stop_stream()
+            board.release_session()
+        except BrainFlowError as err:
+            print(err.args[0])
 
 
 if __name__ == '__main__':

@@ -2,6 +2,7 @@ import datetime
 import numpy as np
 
 
+
 class ConfigData(object):
     def __init__(self,
                  subject_id: int = 1,
@@ -323,15 +324,10 @@ class MetaData:
     __comment: str
     __amount_different_events: int
 
-    # channel configuration of the headset we use
-    # bci_channels = ['C3', 'Cz', 'C4', 'P3', 'Pz', 'P4', 'O1', 'O2', 'FC5', 'FC1', 'FC2', 'FC6', 'CP5', 'CP1', 'CP2',
-    #                 'CP6']
 
-    bci_channels = ['C3', 'Cz', 'C4', 'P3', '?', 'P4', 'T3', '?', '?', 'F3', 'F4', '?', '?', '?', '?',
-                    'T4']  # large laplacian
 
-    def __init__(self, sid, sex, age, comment, amount_trials, amount_events, time=datetime.datetime.now().time(),
-                 sampling_rate=125, channel_mapping=bci_channels, recording_type='game', headset='BCI'):
+    def __init__(self, sid, sex, age, comment, amount_trials, amount_events, channel_mapping, time=datetime.datetime.now().time(),
+                 sampling_rate=125, recording_type='game', headset='BCI'):
         """Constructor method
 
         Date of the session is automatically the current date
@@ -371,7 +367,7 @@ class MetaData:
         :return: MetaData object as string
         """
         return (
-            f'======META DATA======\nRecording date: {self.__date.strftime("%d/%m/%y")} \nStart of session: {self.time.strftime("%H:%M:%S")} \n______Subject______\nID: {self.__subject_ID} \nSex: {self.__subject_sex} \nAge: {self.__subject_age} \n______Recording_____\nSampling Rate: {self.__sampling_rate} \nHeadset: {self.__headset} \nChannel Mapping: {self.__channel_mapping} \nRecording Type: {self.__recording_type} \n_______Trials______\nAmount of Trials: {self.__amount_trials} \nAmount of different events: {self.__amount_different_events} \n_______Comment_____\n {self.__comment} \n=====================')
+            f'======META DATA======\nRecording date: {self.__date.strftime("%d/%m/%y")} \nCreated: {self.time.strftime("%H:%M:%S")} \n______Subject______\nID: {self.__subject_ID} \nSex: {self.__subject_sex} \nAge: {self.__subject_age} \n______Recording_____\nSampling Rate: {self.__sampling_rate} \nHeadset: {self.__headset} \nChannel Mapping: {self.__channel_mapping} \nRecording Type: {self.__recording_type} \n_______Trials______\nAmount of Trials: {self.__amount_trials} \nAmount of different events: {self.__amount_different_events} \n_______Comment_____\n {self.__comment} \n=====================')
 
     def turn_into_np_array(self) -> np.ndarray:
         """

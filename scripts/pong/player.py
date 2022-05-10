@@ -101,9 +101,8 @@ class Player:
         Update the delta time (time between now and the time at the last update)
         :param delta_time: delta time for velocity x-axis
         """
+        self.collision_handler()
         self.velocity_x_axis = self.calculate_velocity() * delta_time
-
-        self.collision_with_target()
 
         # every time the direction is not updated the player gets slower
         if self.direction_update:
@@ -124,33 +123,7 @@ class Player:
         if self.start_pos:
             return 0
 
-        if self.direction == 1:
-            if self.pos[2] >= self.canvas_width:
-                if not self.wall_hit:
-                    self.wall_hit = True
-                return 0
-            if self.pos[0] <= 0:
-                if not self.wall_hit:
-                    self.wall_hit = True
-                    return 0
-                else:
-                    return 1
-            else:
-                return 1
-
-        elif self.direction == -1:
-            if self.pos[0] <= 0:
-                if self.wall_hit is False:
-                    self.wall_hit = True
-                return 0
-            elif self.pos[2] >= self.canvas_width:
-                if not self.wall_hit:
-                    self.wall_hit = True
-                    return 0
-                else:
-                    return -1
-            else:
-                return -1
+        return self.direction
 
     def draw(self):
         """Draw the player"""
@@ -188,6 +161,8 @@ class Player:
         self.direction = -1
         self.direction_update = True
 
+        self.collision_handler()
+
         # Checks only if the trial is valid if trials are recorded
         if self.root.data.trial_recording:
             self.is_trial_valid()
@@ -204,24 +179,49 @@ class Player:
         self.direction = 1
         self.direction_update = True
 
+        self.collision_handler()
+
         # Checks only if the trial is valid if trials are recorded
         if self.root.data.trial_recording:
             self.is_trial_valid()
+
+    def collision_with_border(self):
+        """
+        (1) Indicates a hit with the borders
+        (2) Stops movement of the player
+        """
+        hit_right = self.pos[2] + (self.velocity_x_axis * self.speed_factor * 2) >= self.canvas_width
+        hit_left = self.pos[0] + (self.velocity_x_axis * self.speed_factor * 2) <= 0
+        if (hit_left and (self.direction == -1)) or (hit_right and (self.direction == 1)):
+            if hit_left:
+                self.canvas.moveto(self.id, 0, self.y_pos)
+            else:
+                self.canvas.moveto(self.id, self.canvas_width - self.width, self.y_pos)
+            self.velocity_x_axis = 0
+            self.direction = 0
 
     def collision_with_target(self):
         """
         (1) Detects if target is hit
         (2) Initiates the handling of the hit
         """
-        hit_from_right = self.target.pos[0] <= self.pos[2]+(self.velocity_x_axis * self.speed_factor) <= self.target.pos[2]
-        hit_from_left = self.target.pos[2] >= self.pos[0]+(self.velocity_x_axis * self.speed_factor) >= self.target.pos[0]
+        hit_from_left = self.target.pos[0] <= self.pos[2] + (self.velocity_x_axis * self.speed_factor) <= \
+                        self.target.pos[2]
+        hit_from_right = self.target.pos[2] >= self.pos[0] + (self.velocity_x_axis * self.speed_factor) >= \
+                         self.target.pos[0]
         if hit_from_left or hit_from_right:
-            self.velocity_x_axis = 0
             self.root.change(game.Hit)
-            if hit_from_left:
+            if hit_from_right:
                 self.canvas.moveto(self.id, self.target.pos[2], self.y_pos)
             else:
-                self.canvas.moveto(self.id, self.target.pos[0]-self.width, self.y_pos)
+                self.canvas.moveto(self.id, self.target.pos[0] - self.width, self.y_pos)
+            self.velocity_x_axis = 0
+            self.direction = 0
+
+    def collision_handler(self):
+        """ Detects collision with target and borders"""
+        self.collision_with_target()
+        self.collision_with_border()
 
     def start_trial(self):
         """Saves the timestamp by the start of a trial"""
@@ -257,7 +257,7 @@ class Player:
     def stop_trial(self):
         """Stops the recording of a trial and stores valid trials"""
         stop_time_trial = time.time()
-        if (stop_time_trial - self.start_time_trial) > self.config_data.trial_min_duration/1000 and self.last_direction_update != 0:
+        if (stop_time_trial - self.start_time_trial) > self.config_data.trial_min_duration / 1000 and self.last_direction_update != 0:
             trial_handler.mark_trial(self.start_time_trial, stop_time_trial, self.trial_label)
             print("Valid trial is stored")
         self.last_direction_update = 0
