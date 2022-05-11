@@ -43,26 +43,6 @@ def standardize_data(in_data: np.ndarray):
     return out_data
 
 
-def mute_outliers(samples: np.ndarray):
-    """
-    Outliers of the signal that are smaller or larger than x times the standard deviation,
-    starting from the medium of the signal, are cut off.
-    :param samples: samples of a channel
-    :return: data without outliers
-    """
-    mean = np.mean(samples)
-    std = np.std(samples)
-    x = 4.0
-    output = samples
-    for i in range(len(samples)):
-        if samples[i] > mean + x * std:
-            output[i] = mean + x * std
-        if samples[i] < mean - x * std:
-            output[i] = mean - x * std
-
-    return output
-
-
 def calculate_laplacian(samples: np.ndarray):
     """
     Calculate average samples of the j electrodes surrounding the hand knob of
@@ -128,17 +108,9 @@ def calculate_spatial_filtering(samples_list: np.ndarray, used_ch_names: list):
     samples_average_c3 = calculate_laplacian(split_channels[0][:])
     samples_average_c4 = calculate_laplacian(split_channels[1][:])
 
-    # mute outliers
-    samples_c3 = mute_outliers(samples_list[0][:])
-    samples_c4 = mute_outliers(samples_list[1][:])
-    samples_average_c3 = mute_outliers(samples_average_c3)
-    samples_average_c4 = mute_outliers(samples_average_c4)
-
     for i in range(len(samples_list[0])):
-        # samples_c3a.append(samples_list[0][i] - samples_average_c3[i])
-        # samples_c4a.append(samples_list[1][i] - samples_average_c4[i])
-        samples_c3a.append(samples_c3[i] - samples_average_c3[i])
-        samples_c4a.append(samples_c4[i] - samples_average_c4[i])
+        samples_c3a.append(samples_list[0][i] - samples_average_c3[i])
+        samples_c4a.append(samples_list[1][i] - samples_average_c4[i])
 
     # convert back to np arrays
     samples_c3a = np.asarray(samples_c3a)
