@@ -5,8 +5,8 @@ import unittest
 import numpy as np
 from numpy import dtype
 
-from scripts.mvc.models import MetaData
 from scripts.data.extraction import trial_handler
+from scripts.mvc.models import MetaData
 
 
 class MyTestCase(unittest.TestCase):
@@ -66,7 +66,7 @@ class MyTestCase(unittest.TestCase):
 
         timestamp = datetime.datetime.now().time()
         ses = MetaData(sid=1, sex='f', age=27, amount_events=2, comment='hallo', amount_trials=7,
-                                  time=timestamp)
+                       time=timestamp)
         meta = [('id', 1), ('sex', 'f'), ('age', 27), ('date', datetime.date.today()), ('time', timestamp),
                 ('sampling_rate', 125), ('channels', MetaData.bci_channels),
                 ('recording_type', 'game'), ('headset', 'BCI'), ('amount_trials', 7), ('different_events', 2),

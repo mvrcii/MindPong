@@ -1,8 +1,9 @@
 import queue
 import sys
-from PyQt5 import QtWidgets, QtCore
-import pyqtgraph as pg
 import time
+
+import pyqtgraph as pg
+from PyQt5 import QtWidgets, QtCore
 
 main_window = None
 queues = list()

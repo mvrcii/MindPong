@@ -1,6 +1,7 @@
 import random
-import scripts.pong.game as game
+
 import scripts.config as config
+import scripts.pong.game as game
 
 
 class Target:

@@ -1,14 +1,16 @@
 import enum
-import scipy.integrate
+
 import mne
 import numpy as np
+import scipy.integrate
 from numpy import linspace
-from scipy import signal
 from numpy_ringbuffer import RingBuffer
+from scipy import signal
+
+import scripts.config as config
+from scripts.data.acquisition.read_data import QueueManager
 # from spectrum import arburg, arma2psd
 from scripts.utils.event_listener import post_event
-from scripts.data.acquisition.read_data import QueueManager
-import scripts.config as config
 
 
 class PSD_METHOD(enum.Enum):
@@ -209,7 +211,7 @@ def manage_ringbuffer(window_size, offset_in_percentage: float):
     """
     global ringbuffer_hcon
     if ringbuffer_hcon is None:
-        offset = window_size/(offset_in_percentage*100.0)
+        offset = window_size / (offset_in_percentage * 100.0)
         ringbuffer_hcon = RingBuffer(capacity=int(((30 - window_size) / offset) + 1))
     return ringbuffer_hcon
 
@@ -251,7 +253,7 @@ def perform_algorithm(sliding_window, used_ch_names, sample_rate, data_mdl, queu
     elif USED_METHOD == PSD_METHOD.periodogram:
         f_c3a, psd_c3a = perform_periodogram(samples_c3a)
         f_c4a, psd_c4a = perform_periodogram(samples_c4a)
-    elif  USED_METHOD == PSD_METHOD.burg:
+    elif USED_METHOD == PSD_METHOD.burg:
         f_c3a, psd_c3a = perform_burg(samples_c3a)
         f_c4a, psd_c4a = perform_burg(samples_c4a)
     elif USED_METHOD == PSD_METHOD.multitaper:
@@ -265,9 +267,9 @@ def perform_algorithm(sliding_window, used_ch_names, sample_rate, data_mdl, queu
     area_c4 = integrate_psd_values(psd_c4a, f_c4a, USED_METHOD)
 
     # 4. derivation of the control signal hcon from integrated PSD values of c3 and c4
-    hcon = (area_c4*config.WEIGHT) - area_c3
+    hcon = (area_c4 * config.WEIGHT) - area_c3
 
-    ringbuffer = manage_ringbuffer((len(sliding_window[0]) + 1)/sample_rate, offset_in_percentage)
+    ringbuffer = manage_ringbuffer((len(sliding_window[0]) + 1) / sample_rate, offset_in_percentage)
     # Conditional instruction is responsible for writing to the ring buffer only in the first 30 seconds.
     if not ringbuffer.is_full:
         ringbuffer.append(hcon)
@@ -281,7 +283,7 @@ def perform_algorithm(sliding_window, used_ch_names, sample_rate, data_mdl, queu
     standardized_hcon = (hcon - mean) / standard_deviation if standard_deviation else 0
 
     # converts the returned hcon to the corresponding label
-    if standardized_hcon > data_mdl.threshold-0.2:
+    if standardized_hcon > data_mdl.threshold - 0.2:
         # left signal
         calculated_label = 0
         # call move_left_direction event for the game to move left

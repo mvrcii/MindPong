@@ -1,6 +1,6 @@
 import queue
-import time
 from pathlib import Path
+
 import matplotlib
 import matplotlib.pyplot as plt
 import numpy as np
@@ -46,7 +46,7 @@ class PlotData:
         self.y_data = np.zeros(AXES_SIZE) if plot_label != 'label' else np.full(AXES_SIZE, -1)
         # use straight edges for label
         if plot_label == 'label':
-            self.line, = ax.step(self.x_data, self.y_data, color=colour,  label=self.designation)
+            self.line, = ax.step(self.x_data, self.y_data, color=colour, label=self.designation)
         else:
             self.line, = ax.plot(self.x_data, self.y_data, color=colour, label=self.designation)
         self.color = colour
@@ -74,7 +74,7 @@ def live_plotter(plot_data: PlotData):
     if share_plot_object is not None:
         # determine the min and max from both graphs within one plot
         min_value = min(np.min(plot_data.y_data), np.min(plotdata_object.y_data))
-        max_value = max(np.max(plot_data.y_data),  np.max(plotdata_object.y_data))
+        max_value = max(np.max(plot_data.y_data), np.max(plotdata_object.y_data))
 
         # adjust limits if new data goes beyond bounds, borders are defined within
         # MIN_Y_BORDER_SCALING and MAX_Y_BORDER_SCALING constants which means the scaling of the y-axis doesn't go
@@ -139,7 +139,7 @@ def initial_draw():
         fig.canvas.draw()
 
 
-def connect_queue(queue: queue.Queue, plot_label, row: int, color: str, name: str, column: int, position: int, y_labels:list = None):
+def connect_queue(queue: queue.Queue, plot_label, row: int, color: str, name: str, column: int, position: int, y_labels: list = None):
     """
     Creates a PlotData object for the queue and assigns the queue to a subplot.
     :param color: color of the plotted line graph

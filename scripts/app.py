@@ -1,14 +1,13 @@
-import tkinter as tk
-from threading import Thread
 import platform
+import tkinter as tk
+from pathlib import Path
+from threading import Thread
 
+import scripts.config as config
+import scripts.data.acquisition.read_data as read_data
 from scripts.mvc.controllers import ConfigController, GameController
 from scripts.mvc.models import ConfigData
 from scripts.mvc.view import ConfigView, GameView
-import scripts.data.acquisition.read_data as read_data
-import scripts.config as config
-
-from pathlib import Path
 
 
 class App(tk.Tk):

@@ -1,18 +1,18 @@
 import platform
 import time
-import numpy as np
-from numpy_ringbuffer import RingBuffer
 
+import brainflow
+import numpy as np
 import serial
 import serial.tools.list_ports
-import brainflow
 from brainflow.board_shim import BoardShim, BrainFlowInputParams, BrainFlowError
+from numpy_ringbuffer import RingBuffer
 
+import scripts.config as config
+from scripts.data.extraction import trial_handler
 from scripts.data.loader.game_dataset_loader import get_channel_rawdata
 from scripts.mvc.models import ConfigData
-from scripts.data.extraction import trial_handler
 from scripts.utils.QueueManager import QueueManager
-import scripts.config as config
 
 """ Script to read Data from the OpenBci-Headset and creating the Sliding-Windows """
 
