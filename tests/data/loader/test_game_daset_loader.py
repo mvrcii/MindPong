@@ -30,22 +30,22 @@ class MyTestCase(unittest.TestCase):
                                        [1.0369846, 1.9401181, 3.05990587, 3.96296898]])
         expected_chan_label = np.array([-1, 0, 0, 0, 0, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1])
 
-        for a, b in zip(expected_chan_data, chan_data):
-            for c, d in zip(a, b):
-                self.assertAlmostEqual(q, d, 2)
-        for a, b in zip(expected_chan_label, chan_label):
-            self.assertAlmostEqual(a, b, 2)
+        for expected_chan, chan in zip(expected_chan_data, chan_data):
+            for expected_data, data in zip(expected_chan, chan):
+                self.assertAlmostEqual(expected_data, data, 2)
+        for expected_label, label in zip(expected_chan_label, chan_label):
+            self.assertAlmostEqual(expected_label, label, 2)
 
         chan_data, chan_label = game_dataset_loader.get_channel_rawdata('../../../scripts/data/session/test_loader.npz',
                                                                         ['C4', 'C3'])
         expected_chan_data = np.array([[1.0369846, 1.9401181, 3.05990587, 3.96296898],
                                        [1.0369846, 1.9401181, 3.05990587, 3.96296898]])
 
-        for a, b in zip(expected_chan_data, chan_data):
-            for c, d in zip(a, b):
-                self.assertAlmostEqual(c, d, 2)
-        for a, b in zip(expected_chan_label, chan_label):
-            self.assertAlmostEqual(a, b, 2)
+        for expected_chan, chan in zip(expected_chan_data, chan_data):
+            for expected_data, data in zip(expected_chan, chan):
+                self.assertAlmostEqual(expected_data, data, 2)
+        for expected_label, label in zip(expected_chan_label, chan_label):
+            self.assertAlmostEqual(expected_label, label, 2)
 
         chan_data, chan_label = game_dataset_loader.get_channel_rawdata('../../../scripts/data/session/test_loader.npz',
                                                                         ['C4', 'C3', 'not a channel name'])
