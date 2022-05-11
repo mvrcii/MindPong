@@ -1,6 +1,8 @@
 import unittest
 
 import numpy as np
+import numpy_ringbuffer
+
 from tests.data.analysis import BCIC_dataset_loader as bdl
 from scripts.data.analysis import cursor_control_algorithm
 
@@ -131,7 +133,7 @@ class TestCursorControlAlgorithm(unittest.TestCase):
         Sets up unit test:
             - loads BCIC data
         """
-        cls.preloaded_data = load_bcic_dataset([0, 1, 1, 0, 1, 1, 0, 1, 0, 0, 0, 1, 0, 1, 1, 0, 1, 1, 0, 0, 0, 0])[0]
+        cls.preloaded_data, cls.preloaded_labels, cls.used_ch_names = load_bcic_dataset([0, 1, 1, 0, 1, 1, 0, 1, 0, 0, 0, 1, 0, 1, 1, 0, 1, 1, 0, 0, 0, 0])
 
     def setUp(self) -> None:
         """
@@ -139,10 +141,14 @@ class TestCursorControlAlgorithm(unittest.TestCase):
             - gets BCIC data
         """
         self.preloaded_data = TestCursorControlAlgorithm.preloaded_data
+        self.preloaded_labels = TestCursorControlAlgorithm.preloaded_labels
+        self.used_ch_names = TestCursorControlAlgorithm.used_ch_names
 
     def test_bcic_loader(self) -> None:
         """
         Tests BCIC loader
+        Expected result:
+            - Loader loads dataset correctly
         """
         self.expected = [0.00000, -5.19902, -4.98199, -1.59162, -4.06636, 1.64937, 1.06276, 6.46272, 4.92175, 4.05145,
                          7.59516, 6.20126, 6.09107, 7.72394, 6.74819, 7.14356, 4.94263, 8.94099, 13.21054, 14.13214,
@@ -155,27 +161,80 @@ class TestCursorControlAlgorithm(unittest.TestCase):
                          9.02904, 3.53276, 13.25546, 6.04107, 5.52800, 8.42714, 2.27360, 3.95059, 0.88638, 0.21508,
                          -0.18306, -1.52482, 1.67802, 2.71492, -1.63083, 0.87526, -6.34793, -5.81899, -8.05545, -8.31231]
         self.result = self.preloaded_data[0][0:100]
-        np.testing.assert_array_almost_equal(self.result, self.expected, decimal=5)
+        np.testing.assert_array_almost_equal(self.result, self.expected, decimal=5)  # dataset should be loaded properly
 
     def test_standardize_data_method(self) -> None:
         """
         Tests standardize_data() method
+        Expected result:
+            - mean value for standardized data is 0
+            - standard deviation value for standardized data is 1
         """
         self.data = self.preloaded_data[0][0:100]
         from scripts.data.analysis.cursor_control_algorithm import standardize_data
         self.result = standardize_data(self.data)
-        std = np.std(self.result)
-        np.testing.assert_almost_equal(np.mean(self.result), 0, decimal=5)
-        np.testing.assert_almost_equal(np.std(self.result), 1, decimal=5)
+        np.testing.assert_almost_equal(np.mean(self.result), 0, decimal=5)  # mean should be 0
+        np.testing.assert_almost_equal(np.std(self.result), 1, decimal=5)  # std should be 1
 
     def test_calculate_laplacian_method(self) -> None:
-        pass
+        """
+        Tests calculate_laplacian() method
+        Expected result:
+            - the method return the average for each element in each list
+            - in this example: the average is ((3+1)/2) = 2
+        """
+        self.data = np.asarray([[1, 1, 1, 1, 1], [3, 3, 3, 3, 3]])
+        self.expected = np.asarray([2, 2, 2, 2, 2])
+        from scripts.data.analysis.cursor_control_algorithm import calculate_laplacian
+        result = calculate_laplacian(self.data)
+        np.testing.assert_almost_equal(result, self.expected)  # each index is the average
 
     def test_split_laplacian_areas_method(self) -> None:
-        pass
+        """
+        Tests split_laplacian_areas() method
+        used_ch_names = ['C3', 'C4', 'FC3', 'FC1', 'FC2', 'FC4', 'CP3', 'CP1', 'CP2', 'CP4']
+        Expected result:
+            - Channels around C3: 'FC3', 'FC1', 'CP3', 'CP1'
+            - Channels around C4: 'FC2', 'FC4', 'CP2', 'CP4'
+        """
+        from scripts.data.analysis.cursor_control_algorithm import split_laplacian_areas
+        self.channels_around_c3, self.channels_around_c4 = split_laplacian_areas(self.preloaded_data[2:], self.used_ch_names[2:])
+        np.testing.assert_almost_equal(self.channels_around_c3[0], self.preloaded_data[2], decimal=5)  # FC3 around C3
+        np.testing.assert_almost_equal(self.channels_around_c3[1], self.preloaded_data[3], decimal=5)  # FC1 around C3
+        np.testing.assert_almost_equal(self.channels_around_c3[2], self.preloaded_data[6], decimal=5)  # CP3 around C3
+        np.testing.assert_almost_equal(self.channels_around_c3[3], self.preloaded_data[7], decimal=5)  # CP1 around C3
+        np.testing.assert_almost_equal(self.channels_around_c4[0], self.preloaded_data[4], decimal=5)  # FC2 around C4
+        np.testing.assert_almost_equal(self.channels_around_c4[1], self.preloaded_data[5], decimal=5)  # FC4 around C4
+        np.testing.assert_almost_equal(self.channels_around_c4[2], self.preloaded_data[8], decimal=5)  # CP2 around C4
+        np.testing.assert_almost_equal(self.channels_around_c4[3], self.preloaded_data[9], decimal=5)  # CP4 around C4
 
     def test_integrate_psd_values_method(self) -> None:
-        pass
+        """
+        Tests integrate_psd_values() method
+            with y = x^2
+        Expected result:
+            - result without filter == result with filter for x = [8, 12]
+        """
+        from scripts.data.analysis.cursor_control_algorithm import integrate_psd_values
+        x = np.asarray(range(20))
+        y = np.asarray([element*element for element in x])
+        result_without_filter = integrate_psd_values(y[8:13], x[8:13], False)
+        result_with_filter = integrate_psd_values(y, x, True, [8, 12])
+        self.assertEqual(result_without_filter, result_with_filter)
 
     def test_manage_ringbuffer_method(self) -> None:
-        pass
+        """
+        Tests manage_ringbuffer() method, especially the Singleton behaviour
+        Expected result:
+            - manage_ringbuffer() should return a numpy_ringbuffer.RingBuffer object
+            - multiple manage_ringbuffer() calls should return the same ringbuffer object
+        """
+        from scripts.data.analysis.cursor_control_algorithm import manage_ringbuffer
+        r1 = manage_ringbuffer(1.0, 0.05)
+        self.assertTrue(type(r1) == numpy_ringbuffer.RingBuffer)  # object should be a numpy_ringbuffer.RingBuffer
+        r2 = manage_ringbuffer(1.0, 0.05)
+        self.assertEqual(id(r2), id(r1))  # ringbuffer r1 should be the same as ringbuffer r2
+
+
+if __name__ == '__main__':
+    unittest.main()

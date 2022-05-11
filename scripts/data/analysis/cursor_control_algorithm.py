@@ -166,9 +166,10 @@ def perform_burg(sample: np.array):
     return PSD, space
 
 
-def integrate_psd_values(samples: np.ndarray, frequency_list: np.ndarray, used_filter):
+def integrate_psd_values(samples: np.ndarray, frequency_list: np.ndarray, used_filter: bool, freq_range: [int, int] = None):
     """
     Integrates over the calculated PSD values in between the specified frequencies (F_MIN, F_MAX)
+    :param freq_range: Optional frequency range
     :param used_filter: Set the previously used filter to control integration
     :param samples: F(C3), F(C4)
     :param frequency_list: list of the included frequencies
@@ -178,8 +179,14 @@ def integrate_psd_values(samples: np.ndarray, frequency_list: np.ndarray, used_f
     psds_in_band_power = list()
     requested_frequency_range = list()
 
+    # Set FMIN and FMAX if freq_range ist not None
+    if freq_range:
+        global F_MIN, F_MAX
+        F_MIN = freq_range[0]
+        F_MAX = freq_range[1]
+
     # psd methods whose return values do not automatically contain exclusively the desired frequency range must be modified.
-    if used_filter == PSD_METHOD.fft or used_filter == PSD_METHOD.burg or used_filter == PSD_METHOD.periodogram:
+    if used_filter == PSD_METHOD.fft or used_filter == PSD_METHOD.burg or used_filter == PSD_METHOD.periodogram or freq_range:
         for i in range(len(frequency_list)):
             if F_MAX >= frequency_list[i] >= F_MIN:
                 psds_in_band_power.append(samples[i])
@@ -201,9 +208,9 @@ def manage_ringbuffer(window_size, offset_in_percentage: float):
     :return: Ringbuffer instance
     """
     global ringbuffer_hcon
-    if not ringbuffer_hcon:
+    if ringbuffer_hcon is None:
         offset = window_size/(offset_in_percentage*100.0)
-        ringbuffer_hcon = RingBuffer(capacity=int(((30 - window_size) / offset) + 1), dtype=np.float)
+        ringbuffer_hcon = RingBuffer(capacity=int(((30 - window_size) / offset) + 1))
     return ringbuffer_hcon
 
 
