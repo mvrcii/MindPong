@@ -1,18 +1,12 @@
-import threading, queue
-import time
-import matplotlib.pyplot as plt
+import unittest
+
 import numpy as np
 from tests.data.analysis import BCIC_dataset_loader as bdl
 from scripts.data.analysis import cursor_control_algorithm
-import scripts.data.visualisation.liveplot_matlab as liveplot_matplot
 
 # constants
 TMIN = 100.0  # Minimum time value shown in the following figures
 TMAX = 850.0  # Maximum time value shown in the following figures
-
-# GLOBAL DATA
-num_used_channels = 0
-mutex = threading.Lock
 
 
 class ConfigData:
@@ -49,8 +43,6 @@ def load_bcic_dataset(ch_weight):
                 used_ch_names.insert(1, bdl.CHANNELS[i])
             else:
                 used_ch_names.append(bdl.CHANNELS[i])
-    global num_used_channels
-    num_used_channels = len(used_ch_names)
 
     chan_data, label_data = bdl.get_channel_rawdata(subject=7, n_class=2, ch_names=used_ch_names)
 
@@ -131,10 +123,59 @@ def test_algorithm_with_dataset():
     test_algorithm(preloaded_data, preloaded_labels, used_ch_names)
 
 
-if __name__ == '__main__':
-    print('CCA-test main started ...')
-    test_algorithm_with_dataset()
+class TestCursorControlAlgorithm(unittest.TestCase):
+    # See: https://stackoverflow.com/questions/14305941/run-setup-only-once-for-a-set-of-automated-tests
+    @classmethod
+    def setUpClass(cls):
+        """
+        Sets up unit test:
+            - loads BCIC data
+        """
+        cls.preloaded_data = load_bcic_dataset([0, 1, 1, 0, 1, 1, 0, 1, 0, 0, 0, 1, 0, 1, 1, 0, 1, 1, 0, 0, 0, 0])[0]
 
+    def setUp(self) -> None:
+        """
+        Sets up for each unit test:
+            - gets BCIC data
+        """
+        self.preloaded_data = TestCursorControlAlgorithm.preloaded_data
 
+    def test_bcic_loader(self) -> None:
+        """
+        Tests BCIC loader
+        """
+        self.expected = [0.00000, -5.19902, -4.98199, -1.59162, -4.06636, 1.64937, 1.06276, 6.46272, 4.92175, 4.05145,
+                         7.59516, 6.20126, 6.09107, 7.72394, 6.74819, 7.14356, 4.94263, 8.94099, 13.21054, 14.13214,
+                         14.65140, 7.83529, 6.76266, 0.58230, -7.19526, -7.52891, -11.83081, -7.76881, -11.94738, -12.35955,
+                         -10.61692, -9.71974, -3.45298, -2.50503, -0.23939, 0.21074, 0.05776, 2.13291, -0.87473, -5.01351,
+                         -2.14486, -8.18198, -1.90035, -2.85811, -5.88188, -1.71824, -4.94796, -2.46665, -5.91495, -7.72628,
+                         -5.09891, -4.64259, -2.93458, -8.53198, -9.03389, -11.02019, -12.98102, -3.84274, -6.85336, -2.48155,
+                         -0.53602, -4.76626, -0.79484, -1.56047, -1.54331, 1.35544, 0.27490, 3.71789, 5.58870, 7.79345,
+                         6.51788, 5.26750, 5.39956, 3.36294, 4.48316, 7.18784, 6.15883, 11.81859, 8.51150, 6.59374,
+                         9.02904, 3.53276, 13.25546, 6.04107, 5.52800, 8.42714, 2.27360, 3.95059, 0.88638, 0.21508,
+                         -0.18306, -1.52482, 1.67802, 2.71492, -1.63083, 0.87526, -6.34793, -5.81899, -8.05545, -8.31231]
+        self.result = self.preloaded_data[0][0:100]
+        np.testing.assert_array_almost_equal(self.result, self.expected, decimal=5)
 
+    def test_standardize_data_method(self) -> None:
+        """
+        Tests standardize_data() method
+        """
+        self.data = self.preloaded_data[0][0:100]
+        from scripts.data.analysis.cursor_control_algorithm import standardize_data
+        self.result = standardize_data(self.data)
+        std = np.std(self.result)
+        np.testing.assert_almost_equal(np.mean(self.result), 0, decimal=5)
+        np.testing.assert_almost_equal(np.std(self.result), 1, decimal=5)
 
+    def test_calculate_laplacian_method(self) -> None:
+        pass
+
+    def test_split_laplacian_areas_method(self) -> None:
+        pass
+
+    def test_integrate_psd_values_method(self) -> None:
+        pass
+
+    def test_manage_ringbuffer_method(self) -> None:
+        pass
