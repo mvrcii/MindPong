@@ -1,10 +1,10 @@
-from tkinter import *
-import tkinter as tk
 import time
+import tkinter as tk
+from tkinter import *
 
+import scripts.config as config
 import scripts.pong.player as player
 import scripts.pong.target as target
-import scripts.config as config
 
 
 class GameState(object):

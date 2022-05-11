@@ -1,16 +1,16 @@
 import time
 from abc import ABC, abstractmethod
+from datetime import datetime
 from tkinter.messagebox import askyesno, showinfo
 
 from scripts.config import CALIBRATION_TIME, BCI_CHANNELS
+from scripts.data.acquisition.read_data import live_Data
 from scripts.data.extraction import trial_handler
+from scripts.data.extraction.trial_handler import save_session
+from scripts.data.visualisation.liveplot_matlab import start_live_plot, perform_live_plot
+from scripts.mvc.models import MetaData
 from scripts.mvc.view import View, ConfigView, GameView
 from scripts.pong.game import End
-from scripts.data.extraction.trial_handler import save_session
-from scripts.mvc.models import MetaData
-from datetime import datetime
-from scripts.data.visualisation.liveplot_matlab import start_live_plot, perform_live_plot
-from scripts.data.acquisition.read_data import live_Data
 
 
 class Controller(ABC):
@@ -398,4 +398,3 @@ class GameController(Controller):
     def show_end_screen(self):
         """Stops the game and shows the end screen"""
         self.view.game.change(End)
-

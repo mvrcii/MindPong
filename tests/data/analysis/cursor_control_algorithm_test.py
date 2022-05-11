@@ -3,8 +3,8 @@ import unittest
 import numpy as np
 import numpy_ringbuffer
 
-from tests.data.analysis import BCIC_dataset_loader as bdl
 from scripts.data.analysis import cursor_control_algorithm
+from tests.data.analysis import BCIC_dataset_loader as bdl
 
 # constants
 TMIN = 100.0  # Minimum time value shown in the following figures
@@ -79,7 +79,7 @@ def test_algorithm(chan_data, label_data, used_ch_names):
             if label[i] == calculated_label:
                 found_label = True
 
-        if label[i] != label[i-1]:
+        if label[i] != label[i - 1]:
             if found_label:
                 accuracy += 1
 
@@ -95,10 +95,10 @@ def test_algorithm(chan_data, label_data, used_ch_names):
 
 def sort_incoming_channels(sliding_window, used_ch_names):
     #                 'C3', 'Cz', 'C4', 'P3', 'Pz', 'P4', 'O1', 'O2', 'FC5', 'FC1', 'FC2', 'FC6', 'CP5', 'CP1', 'CP2', 'CP6'
-    ch_names_weight = [1,    0,    1,    0,    0,    0,    0,    0,     1,     1,     1,     1,     1,     1,     1,    1]
+    ch_names_weight = [1, 0, 1, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1]
 
     #                 'C3', 'Cz', 'C4', 'P3', '?', 'P4', 'T3', '?', '?', 'F3', 'F4', '?', '?', '?', '?', 'T4'
-    ch_names_weight = [1,    1,    1,    1,    0,    1,    1,   0,   0,   1,    1,    0,   0,   0,   0,    1]
+    ch_names_weight = [1, 1, 1, 1, 0, 1, 1, 0, 0, 1, 1, 0, 0, 0, 0, 1]
 
     filtered_sliding_window = list()
     filtered_channel_names = list()
@@ -120,7 +120,7 @@ def sort_incoming_channels(sliding_window, used_ch_names):
 
 def test_algorithm_with_dataset():
     #                 Fz  FC3  FC1  FCz  FC2  FC4  C5  C3  C1  Cz  C2  C4  C6  CP3  CP1  CPz  CP2  CP4  P1  Pz  P2  POz
-    ch_names_weight = [0,  1,   1,   0,   1,   1,   0,  1,  0,  0,  0,  1,  0,  1,   1,   0,   1,   1,   0,  0,  0,  0]
+    ch_names_weight = [0, 1, 1, 0, 1, 1, 0, 1, 0, 0, 0, 1, 0, 1, 1, 0, 1, 1, 0, 0, 0, 0]
     preloaded_data, preloaded_labels, used_ch_names = load_bcic_dataset(ch_names_weight)
     test_algorithm(preloaded_data, preloaded_labels, used_ch_names)
 
@@ -217,7 +217,7 @@ class TestCursorControlAlgorithm(unittest.TestCase):
         """
         from scripts.data.analysis.cursor_control_algorithm import integrate_psd_values
         x = np.asarray(range(20))
-        y = np.asarray([element*element for element in x])
+        y = np.asarray([element * element for element in x])
         result_without_filter = integrate_psd_values(y[8:13], x[8:13])
         result_with_filter = integrate_psd_values(y, x, freq_range=[8, 12])
         self.assertEqual(result_without_filter, result_with_filter)

@@ -1,8 +1,8 @@
 import tkinter as tk
 import tkinter.ttk as ttk
+from abc import abstractmethod
 from tkinter import END
 from tkinter.scrolledtext import ScrolledText
-from abc import abstractmethod
 
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 

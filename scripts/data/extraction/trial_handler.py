@@ -5,8 +5,8 @@ import brainflow
 import numpy as np
 from brainflow import BoardShim
 
-
 """Skript for buffering the raw data and the trials; and saving them as an npz file"""
+
 
 class Labels(Enum):
     """An Enum Class for different trial labels for event types"""

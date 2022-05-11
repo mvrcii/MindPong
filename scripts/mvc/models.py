@@ -1,6 +1,7 @@
 import datetime
-import numpy as np
+from typing import List
 
+import numpy as np
 
 
 class ConfigData(object):
@@ -250,7 +251,6 @@ class ConfigData(object):
         """
         self.__draw_plot = value
 
-
     # Currently without persistence of the Config data
     # Variables in the model will always be overridden when the start button is pressed
     def load(self):
@@ -317,14 +317,12 @@ class MetaData:
     __date: datetime.date
     __time: datetime.time
     __sampling_rate: int = 125
-    __channel_mapping: np.ndarray
+    __channel_mapping: List[str]
     __recording_type: str
     __headset: str
     __amount_trials: int
     __comment: str
     __amount_different_events: int
-
-
 
     def __init__(self, sid, sex, age, comment, amount_trials, amount_events, channel_mapping, time=datetime.datetime.now().time(),
                  sampling_rate=125, recording_type='game', headset='BCI'):

@@ -1,4 +1,5 @@
 import unittest
+
 import numpy as np
 
 from scripts.data.loader import game_dataset_loader

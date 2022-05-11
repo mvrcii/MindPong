@@ -4,10 +4,11 @@ Script to read npz files from MindPong and converting them in a Format for the M
 """
 
 from typing import List
+
 import mne
 import numpy as np
+
 from scripts.config import NOTCH_FILTER_FREQ, NOTCH_FILTER
-from scripts.data.extraction.trial_handler import Labels
 
 
 def bp_notch_filtering(data: np.ndarray, samplerate: int = 125):

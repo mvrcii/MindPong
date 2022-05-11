@@ -1,9 +1,8 @@
 import time
 
-import scripts.pong.game as game
 import scripts.config as config
-
 import scripts.data.extraction.trial_handler as trial_handler
+import scripts.pong.game as game
 
 
 # Define player properties and functions

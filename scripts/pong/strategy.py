@@ -1,5 +1,5 @@
 from abc import ABCMeta, abstractmethod
-import scripts.pong.player as player
+
 from scripts.utils.event_listener import subscribe
 
 
