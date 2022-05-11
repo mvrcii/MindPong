@@ -219,7 +219,6 @@ def send_window():
     else:
         used_channels = chan_labels
     # push window to cursor control algorithm
-    # TODO: change OFFSET_DURATION to percentage? Else change calculation in coc algorithm
     from scripts.data.analysis.cursor_control_algorithm import perform_algorithm
     perform_algorithm(window, used_channels, SAMPLING_RATE, data_mdl=data_model, queue_manager=queue_manager,
                       offset_in_percentage=OFFSET_DURATION / SLIDING_WINDOW_DURATION)
@@ -235,7 +234,3 @@ def stop_stream():
             board.release_session()
         except BrainFlowError as err:
             print(err.args[0])
-
-
-if __name__ == '__main__':
-    pass
