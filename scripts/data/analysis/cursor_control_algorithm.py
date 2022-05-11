@@ -166,7 +166,7 @@ def perform_burg(sample: np.array):
     return PSD, space
 
 
-def integrate_psd_values(samples: np.ndarray, frequency_list: np.ndarray, used_filter: bool, freq_range: [int, int] = None):
+def integrate_psd_values(samples: np.ndarray, frequency_list: np.ndarray, used_filter: PSD_METHOD = None, freq_range: [int, int] = None):
     """
     Integrates over the calculated PSD values in between the specified frequencies (F_MIN, F_MAX)
     :param freq_range: Optional frequency range
@@ -186,7 +186,7 @@ def integrate_psd_values(samples: np.ndarray, frequency_list: np.ndarray, used_f
         F_MAX = freq_range[1]
 
     # psd methods whose return values do not automatically contain exclusively the desired frequency range must be modified.
-    if used_filter == PSD_METHOD.fft or used_filter == PSD_METHOD.burg or used_filter == PSD_METHOD.periodogram or freq_range:
+    if (used_filter is not None and (used_filter == PSD_METHOD.fft or used_filter == PSD_METHOD.burg or used_filter == PSD_METHOD.periodogram)) or freq_range:
         for i in range(len(frequency_list)):
             if F_MAX >= frequency_list[i] >= F_MIN:
                 psds_in_band_power.append(samples[i])

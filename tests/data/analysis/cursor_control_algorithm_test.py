@@ -218,8 +218,8 @@ class TestCursorControlAlgorithm(unittest.TestCase):
         from scripts.data.analysis.cursor_control_algorithm import integrate_psd_values
         x = np.asarray(range(20))
         y = np.asarray([element*element for element in x])
-        result_without_filter = integrate_psd_values(y[8:13], x[8:13], False)
-        result_with_filter = integrate_psd_values(y, x, True, [8, 12])
+        result_without_filter = integrate_psd_values(y[8:13], x[8:13])
+        result_with_filter = integrate_psd_values(y, x, freq_range=[8, 12])
         self.assertEqual(result_without_filter, result_with_filter)
 
     def test_manage_ringbuffer_method(self) -> None:
