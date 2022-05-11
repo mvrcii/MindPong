@@ -67,7 +67,7 @@ class MyTestCase(unittest.TestCase):
         timestamp = datetime.datetime.now().time()
         ses = MetaData(sid=1, sex='f', age=27, amount_events=2, comment='hallo', amount_trials=7,
                                   time=timestamp)
-        meta = [('id', 1), ('sex', 'f'), ('age', 27), ('date', datetime.date.today()), ('time', time),
+        meta = [('id', 1), ('sex', 'f'), ('age', 27), ('date', datetime.date.today()), ('time', timestamp),
                 ('sampling_rate', 125), ('channels', MetaData.bci_channels),
                 ('recording_type', 'game'), ('headset', 'BCI'), ('amount_trials', 7), ('different_events', 2),
                 ('comment', 'hallo')]
@@ -78,11 +78,11 @@ class MyTestCase(unittest.TestCase):
         expected_type = np.array([trial_handler.Labels.LEFT])
         trial_handler.save_session(metadata, 'test_trial_handler.npz')
         test = np.load('../../../scripts/data/session/test_trial_handler.npz', allow_pickle=True)
-        self.assertEqual(test['meta'].all(), expected_metadata.all())
-        self.assertEqual(test['raw_data'].all(), expected_array.all())
-        self.assertEqual(test['event_pos'].all(), expected_pos.all())
-        self.assertEqual(test['event_type'].all(), expected_type.all())
-        self.assertEqual(test['event_duration'].all(), expected_duration.all())
+        self.assertEqual(test['meta'].tolist(), expected_metadata.tolist())
+        self.assertEqual(test['raw_data'].tolist(), expected_array.tolist())
+        self.assertEqual(test['event_pos'].tolist(), expected_pos.tolist())
+        self.assertEqual(test['event_type'].tolist(), expected_type.tolist())
+        self.assertEqual(test['event_duration'].tolist(), expected_duration.tolist())
 
 
 if __name__ == '__main__':
