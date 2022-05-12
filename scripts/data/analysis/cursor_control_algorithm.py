@@ -202,7 +202,7 @@ def integrate_psd_values(samples: np.ndarray, frequency_list: np.ndarray, used_f
     return band_power
 
 
-def manage_ringbuffer(window_size, offset_in_percentage: float):
+def manage_ringbuffer(window_size=1.0, offset_in_percentage: float = 0.2):
     """
     Das ist ein Singleton :)
     amount of samples within 30 seconds = 30s / 1/250Hz
@@ -214,6 +214,11 @@ def manage_ringbuffer(window_size, offset_in_percentage: float):
         offset = window_size / (offset_in_percentage * 100.0)
         ringbuffer_hcon = RingBuffer(capacity=int(((30 - window_size) / offset) + 1))
     return ringbuffer_hcon
+
+
+def clear_ring_buffer():
+    global ringbuffer_hcon
+    ringbuffer_hcon = None
 
 
 def perform_algorithm(sliding_window, used_ch_names, sample_rate, data_mdl, queue_manager: QueueManager = None, offset_in_percentage=0.2):
