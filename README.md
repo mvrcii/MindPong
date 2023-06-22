@@ -6,4 +6,4 @@ Brain-Computer Interfaces (BCIs) convert the measured activities of the central 
 The aim of our project is to capture EEG trials in a playful manner, without tiring the test subject. This is achieved through a simple game where the player character must reach a goal.
 
 ## Overview
-![Poster](Poster.svg)
+![Poster](assets/Poster.svg)
