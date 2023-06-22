@@ -1,0 +1,3 @@
+# MindPong
+
+![Poster](Poster.svg)
